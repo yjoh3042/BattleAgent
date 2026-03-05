@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.omc/
+.claude/
+excel_output.txt
+*.tmp

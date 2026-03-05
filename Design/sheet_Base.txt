@@ -1,0 +1,5 @@
+[시트: Base]  (11행 x 3열)
+============================================================
+(None, 'BattleLength', 300)
+(None, 'Max Turn Time', 10)
+(None, 'Turn Fomula = BattleLength/Spd', None)
