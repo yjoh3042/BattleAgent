@@ -56,6 +56,7 @@ def _burn(skill_id: str, dot_ratio: float = 0.05, duration: int = 2) -> BuffData
         duration=duration,
         is_debuff=True,
         max_stacks=5,
+        buff_turn_reduce_timing="CharacterTurnStart",  # 틱 발동 후 턴 시작에 감소
     )
 
 

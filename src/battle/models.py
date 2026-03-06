@@ -45,6 +45,7 @@ class BuffData:
     dot_type: Optional[str] = None     # DoT 종류 ('burn', 'poison', ...)
     is_debuff: bool = False
     max_stacks: int = 1            # 최대 중첩 수 (DoT 계열)
+    buff_turn_reduce_timing: str = "CharacterTurnEnd"  # "CharacterTurnStart"(틱 계열) | "CharacterTurnEnd"(스탯/CC 계열)
     tags: List[str] = field(default_factory=list)
 
 

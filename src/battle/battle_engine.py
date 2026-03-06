@@ -153,7 +153,9 @@ class BattleEngine:
             # ─── Hard CC 처리 ──────────────────────────────────────
             if unit.hard_cc:
                 self._log.append(f"  ⛔ {unit.name} {unit.hard_cc.value}로 행동 불가")
-                self.buff_manager.tick_all_buffs(unit)
+                self.buff_manager.tick_turn_start(unit)  # 틱 효과 발동 (DoT 등)
+                self._flush_buff_log()
+                self.buff_manager.tick_turn_end(unit)    # 버프 지속시간 감소
                 self._flush_buff_log()
                 if not entry.is_extra:
                     self.turn_manager.reschedule_unit(unit)
@@ -169,7 +171,9 @@ class BattleEngine:
             if unit.soft_cc:
                 if random.random() < 0.3:
                     self._log.append(f"  ⛔ {unit.name} {unit.soft_cc.value}로 행동 실패 (30%)")
-                    self.buff_manager.tick_all_buffs(unit)
+                    self.buff_manager.tick_turn_start(unit)  # 틱 효과 발동 (DoT 등)
+                    self._flush_buff_log()
+                    self.buff_manager.tick_turn_end(unit)    # 버프 지속시간 감소
                     self._flush_buff_log()
                     if not entry.is_extra:
                         self.turn_manager.reschedule_unit(unit)
@@ -177,6 +181,11 @@ class BattleEngine:
                         self.recorder.set_skill("CC 행동실패", "cc_skip")
                         self.recorder.end_turn(self._log, None)
                     continue
+
+            # ─── 턴 시작 틱 (CharacterTurnStart: DoT 등) ──────────
+            if not entry.is_extra:
+                self.buff_manager.tick_turn_start(unit)
+                self._flush_buff_log()
 
             # ─── 얼티밋 우선 체크 (끼어들기) ─────────────────────
             if not entry.is_extra:
@@ -208,9 +217,9 @@ class BattleEngine:
                     self.recorder.add_event('death', dead.id, dead.id, 0, f'{dead.name} 사망')
 
             # ─── 턴 종료 버프 틱 ──────────────────────────────────
-            # Extra Turn은 턴 종료 처리 없음 (DoT 틱, 쿨타임 감소 없음)
+            # Extra Turn은 턴 종료 처리 없음 (쿨타임 감소 없음)
             if not entry.is_extra:
-                self.buff_manager.tick_all_buffs(unit)
+                self.buff_manager.tick_turn_end(unit)
                 self._flush_buff_log()
 
                 # 턴 종료 트리거

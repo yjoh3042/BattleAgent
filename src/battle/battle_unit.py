@@ -252,11 +252,31 @@ class BattleUnit:
     def can_use_active(self) -> bool:
         return self.active_skill_cooldown <= 0
 
-    # ─── 턴 종료 처리 ─────────────────────────────────────────────
+    # ─── 턴 처리 ──────────────────────────────────────────────────
+    def on_turn_start_tick(self) -> List[dict]:
+        """
+        턴 시작 시 처리 (CharacterTurnStart 버프):
+        - DoT/HoT 등 틱 발동 후 해당 버프의 remaining_turns -1
+        반환: 만료된 버프 목록
+        """
+        expired = []
+        new_buffs = []
+        for ab in self.active_buffs:
+            if ab.buff_data.buff_turn_reduce_timing == "CharacterTurnStart":
+                ab.remaining_turns -= 1
+                if ab.remaining_turns <= 0:
+                    expired.append({'buff': ab, 'stat': ab.buff_data.stat})
+                else:
+                    new_buffs.append(ab)
+            else:
+                new_buffs.append(ab)
+        self.active_buffs = new_buffs
+        return expired
+
     def on_turn_end(self) -> List[dict]:
         """
-        턴 종료 시 처리:
-        1. 버프 남은 턴 -1 (만료 제거)
+        턴 종료 시 처리 (CharacterTurnEnd 버프):
+        1. CharacterTurnEnd 버프 remaining_turns -1 (만료 제거)
         2. CC 틱
         3. 쿨타임 틱
         4. 도발 틱
@@ -265,9 +285,12 @@ class BattleUnit:
         expired = []
         new_buffs = []
         for ab in self.active_buffs:
-            ab.remaining_turns -= 1
-            if ab.remaining_turns <= 0:
-                expired.append({'buff': ab, 'stat': ab.buff_data.stat})
+            if ab.buff_data.buff_turn_reduce_timing == "CharacterTurnEnd":
+                ab.remaining_turns -= 1
+                if ab.remaining_turns <= 0:
+                    expired.append({'buff': ab, 'stat': ab.buff_data.stat})
+                else:
+                    new_buffs.append(ab)
             else:
                 new_buffs.append(ab)
         self.active_buffs = new_buffs

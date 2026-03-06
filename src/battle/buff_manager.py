@@ -61,34 +61,41 @@ class BuffManager:
         self._log.append(f"  → {unit.name} 버프 {action}: {buff_name} ({buff_data.remaining_turns if hasattr(buff_data, 'remaining_turns') else buff_data.duration}턴)")
         return is_new
 
-    # ─── 버프 틱 (턴 종료 시) ─────────────────────────────────────
-    def tick_all_buffs(self, unit: BattleUnit):
+    # ─── 버프 틱 (턴 시작: CharacterTurnStart) ───────────────────
+    def tick_turn_start(self, unit: BattleUnit):
         """
-        턴 종료 시:
-        1. DoT 피해/회복 발동
-        2. 버프 남은 턴 -1, 만료 제거
-        3. SPD 버프 만료 시 TurnManager 재계산
+        턴 시작 시 (CharacterTurnStart 버프):
+        1. DoT/HoT 틱 효과 발동 (버프가 살아있을 때 먼저)
+        2. CharacterTurnStart 버프 remaining_turns -1, 만료 처리
         """
-        # DoT 먼저 발동 (버프가 아직 살아있을 때)
         self._apply_dots(unit)
+        old_spd = unit.spd
+        expired = unit.on_turn_start_tick()
+        self._handle_expired(unit, expired, old_spd, timing_label="턴시작")
 
-        # 버프 틱 (BattleUnit.on_turn_end 호출)
+    # ─── 버프 틱 (턴 종료: CharacterTurnEnd) ─────────────────────
+    def tick_turn_end(self, unit: BattleUnit):
+        """
+        턴 종료 시 (CharacterTurnEnd 버프):
+        1. CharacterTurnEnd 버프 remaining_turns -1, 만료 처리
+        2. CC / 쿨타임 / 도발 틱
+        """
         old_spd = unit.spd
         expired = unit.on_turn_end()
+        self._handle_expired(unit, expired, old_spd, timing_label="턴종료")
 
-        # 만료된 SPD 버프가 있으면 TurnManager 재계산
+    def _handle_expired(self, unit: BattleUnit, expired: list, old_spd: float, timing_label: str = ""):
+        """만료 버프 공통 후처리: SPD 재계산 + DoT 태그 정리"""
         spd_expired = any(e.get('stat') == 'spd' for e in expired)
         if spd_expired and self._turn_manager:
             new_spd = unit.spd
             if abs(new_spd - old_spd) > 0.001:
                 self._turn_manager.on_spd_change(unit, old_spd)
-                self._log.append(f"  → {unit.name} SPD 버프 만료: {old_spd:.0f} → {new_spd:.0f}")
+                self._log.append(f"  → {unit.name} SPD 버프 만료({timing_label}): {old_spd:.0f} → {new_spd:.0f}")
 
-        # 화상 DoT 버프 만료 시 태그 정리
         for e in expired:
             buff = e.get('buff')
             if buff and buff.buff_data.logic_type == LogicType.DOT and buff.buff_data.dot_type == "burn":
-                # 스택 수만큼 태그 제거
                 for _ in range(buff.stack_count):
                     unit.remove_tag("burn")
                 self._log.append(f"  → {unit.name} 화상 만료 (스택 {buff.stack_count})")

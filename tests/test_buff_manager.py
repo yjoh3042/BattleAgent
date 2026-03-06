@@ -49,7 +49,7 @@ class TestDifferentSourceStack:
 
 class TestDotTick:
     def test_dot_deals_damage(self, make_simple_unit):
-        """DoT 턴 종료 시 피해 발동"""
+        """DoT 턴 시작 시 피해 발동 (CharacterTurnStart)"""
         u = make_simple_unit(name="피격자", hp=5000)
         bm = BuffManager()
         burn = BuffData(
@@ -57,10 +57,11 @@ class TestDotTick:
             source_skill_id="fire_skill", logic_type=LogicType.DOT,
             dot_type="burn", value=0.05, duration=2,
             is_debuff=True, max_stacks=5,
+            buff_turn_reduce_timing="CharacterTurnStart",
         )
         bm.apply_buff(u, burn, "attacker")
         hp_before = u.current_hp
-        bm.tick_all_buffs(u)
+        bm.tick_turn_start(u)   # 턴 시작: DoT 발동
         assert u.current_hp < hp_before  # DoT 피해 발생
 
 
