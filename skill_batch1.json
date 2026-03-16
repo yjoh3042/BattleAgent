@@ -1,0 +1,1070 @@
+[
+  {
+    "properties": {
+      "Skill Name": "모건 - 철화의 검",
+      "Character": "https://www.notion.so/320e3b3baf6181fcb7a0df35976de1e7",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.8x [enemy_near]",
+      "Multiplier": 1.8
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "모건 - 홍염의 비도",
+      "Character": "https://www.notion.so/320e3b3baf6181fcb7a0df35976de1e7",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 1.0x",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "모건 - 화도난무",
+      "Character": "https://www.notion.so/320e3b3baf6181fcb7a0df35976de1e7",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.6x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.6,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "다비 - 파이어리 서펀트",
+      "Character": "https://www.notion.so/320e3b3baf61810aac70d7af804087b7",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 2.0x [enemy_near]",
+      "Multiplier": 2.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "다비 - 화차",
+      "Character": "https://www.notion.so/320e3b3baf61810aac70d7af804087b7",
+      "Type": "Active",
+      "Target": "ENEMY_RANDOM",
+      "Effects": "DMG 1.7x [enemy_random] | DMG 1.0x [enemy_random]",
+      "Multiplier": 1.7,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "다비 - 나비효과",
+      "Character": "https://www.notion.so/320e3b3baf61810aac70d7af804087b7",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.4x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.4,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "구미호 - 꼬리의 매질",
+      "Character": "https://www.notion.so/320e3b3baf6181a5ae7cdce1ff31dc4b",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.5x [enemy_near]",
+      "Multiplier": 1.5
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "구미호 - 원혼의 아홉 꼬리",
+      "Character": "https://www.notion.so/320e3b3baf6181a5ae7cdce1ff31dc4b",
+      "Type": "Active",
+      "Target": "ENEMY_RANDOM",
+      "Effects": "DMG 2.0x [enemy_random] | DMG 1.0x [enemy_random]",
+      "Multiplier": 2.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "구미호 - 붉은 원망의 폭풍",
+      "Character": "https://www.notion.so/320e3b3baf6181a5ae7cdce1ff31dc4b",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.5x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.5,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "지바 - 물의 촉수",
+      "Character": "https://www.notion.so/320e3b3baf61819a8aa5f8ccf90165d9",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "지바 - 생명수",
+      "Character": "https://www.notion.so/320e3b3baf61819a8aa5f8ccf90165d9",
+      "Type": "Active",
+      "Target": "ALLY_LOWEST_HP",
+      "Effects": "DMG 1.0x [ally_lowest_hp] | DMG 1.0x [ally_lowest_hp]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "지바 - 대자연의 손길",
+      "Character": "https://www.notion.so/320e3b3baf61819a8aa5f8ccf90165d9",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "카라라트리 - 무기법",
+      "Character": "https://www.notion.so/320e3b3baf61810a8cb7e9103d2bacb9",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.5x [enemy_near]",
+      "Multiplier": 1.5
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "카라라트리 - 무루의 고통",
+      "Character": "https://www.notion.so/320e3b3baf61810a8cb7e9103d2bacb9",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 1.8x | DMG 1.0x",
+      "Multiplier": 1.8,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "카라라트리 - 출세간의 선법",
+      "Character": "https://www.notion.so/320e3b3baf61810a8cb7e9103d2bacb9",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.3x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.3,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "데레사 - 스틸 웨일링",
+      "Character": "https://www.notion.so/320e3b3baf61816999e8dc7454cf8870",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.5x [enemy_near]",
+      "Multiplier": 1.5
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "데레사 - 데털민트 소드",
+      "Character": "https://www.notion.so/320e3b3baf61816999e8dc7454cf8870",
+      "Type": "Active",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.8x [enemy_near] | DMG 1.0x | DMG 1.0x",
+      "Multiplier": 1.8,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "데레사 - 새크리파이스",
+      "Character": "https://www.notion.so/320e3b3baf61816999e8dc7454cf8870",
+      "Type": "Ultimate",
+      "Target": "SELF",
+      "Effects": "DMG 2.5x | DMG 1.0x [all_enemy]",
+      "Multiplier": 2.5,
+      "SP Cost": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "라가라자 - 지장",
+      "Character": "https://www.notion.so/320e3b3baf618155ba32e5fd45277778",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 2.0x [enemy_near] | DMG 1.0x",
+      "Multiplier": 2.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "라가라자 - 관음",
+      "Character": "https://www.notion.so/320e3b3baf618155ba32e5fd45277778",
+      "Type": "Active",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.5x [enemy_near] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.5,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "라가라자 - 맹화",
+      "Character": "https://www.notion.so/320e3b3baf618155ba32e5fd45277778",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 3.4x [all_enemy]",
+      "Multiplier": 3.4,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "살마키스 - 물의 손길",
+      "Character": "https://www.notion.so/320e3b3baf618113ad67c6d6bd703a2b",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "살마키스 - 축복",
+      "Character": "https://www.notion.so/320e3b3baf618113ad67c6d6bd703a2b",
+      "Type": "Active",
+      "Target": "ALLY_LOWEST_HP",
+      "Effects": "DMG 1.0x [ally_lowest_hp] | DMG 1.0x [ally_lowest_hp]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "살마키스 - 대축복",
+      "Character": "https://www.notion.so/320e3b3baf618113ad67c6d6bd703a2b",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 0.8x [all_enemy] | DMG 1.0x [all_enemy] | DMG 1.0x [all_ally]",
+      "Multiplier": 0.8,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "이브 - 다크 미스트",
+      "Character": "https://www.notion.so/320e3b3baf6181cbb8edf0810e755ecd",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 2.5x [enemy_near]",
+      "Multiplier": 2.5
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "이브 - 레인 드랍",
+      "Character": "https://www.notion.so/320e3b3baf6181cbb8edf0810e755ecd",
+      "Type": "Active",
+      "Target": "ENEMY_LOWEST_HP",
+      "Effects": "DMG 4.5x [enemy_lowest_hp] | DMG 3.0x {'target_hp_below': 0.3} [enemy_lowest_hp]",
+      "Multiplier": 4.5,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "이브 - 실낙원",
+      "Character": "https://www.notion.so/320e3b3baf6181cbb8edf0810e755ecd",
+      "Type": "Ultimate",
+      "Target": "ENEMY_LOWEST_HP",
+      "Effects": "DMG 3.5x [enemy_lowest_hp] | DMG 2.5x {'target_hp_below': 0.3} [enemy_lowest_hp]",
+      "Multiplier": 3.5,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "상아 - 수류",
+      "Character": "https://www.notion.so/320e3b3baf6181dd9df7ca8de17df99a",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "상아 - 수렁",
+      "Character": "https://www.notion.so/320e3b3baf6181dd9df7ca8de17df99a",
+      "Type": "Active",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.0x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "상아 - 대조수",
+      "Character": "https://www.notion.so/320e3b3baf6181dd9df7ca8de17df99a",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.0x [all_enemy] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "티스베 - 오아시스",
+      "Character": "https://www.notion.so/320e3b3baf6181ab9b99cd70b0ff5878",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "티스베 - 하늘의 창문",
+      "Character": "https://www.notion.so/320e3b3baf6181ab9b99cd70b0ff5878",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 1.0x | DMG 1.0x",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "티스베 - 헤븐리 웰",
+      "Character": "https://www.notion.so/320e3b3baf6181ab9b99cd70b0ff5878",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "바리 - 삼재",
+      "Character": "https://www.notion.so/320e3b3baf6181f7afd6e0185d3c8cfd",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.5x [enemy_near] | DMG 1.0x [enemy_near]",
+      "Multiplier": 1.5
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "바리 - 천라홍수",
+      "Character": "https://www.notion.so/320e3b3baf6181f7afd6e0185d3c8cfd",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 1.2x | DMG 1.0x",
+      "Multiplier": 1.2,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "바리 - 은하수 곡성",
+      "Character": "https://www.notion.so/320e3b3baf6181f7afd6e0185d3c8cfd",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.0x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.0,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "도계화 - 원거만리",
+      "Character": "https://www.notion.so/320e3b3baf61818fa343c9fcb67b3fe3",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 2.0x [enemy_near]",
+      "Multiplier": 2.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "도계화 - 신행귀신 속거천리",
+      "Character": "https://www.notion.so/320e3b3baf61818fa343c9fcb67b3fe3",
+      "Type": "Active",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.8x [enemy_near] | DMG 1.0x [enemy_near] | DMG 1.0x [enemy_near]",
+      "Multiplier": 1.8,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "도계화 - 급급여율령",
+      "Character": "https://www.notion.so/320e3b3baf61818fa343c9fcb67b3fe3",
+      "Type": "Ultimate",
+      "Target": "SELF",
+      "Effects": "DMG 1.5x | DMG 1.0x",
+      "Multiplier": 1.5,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "엘리시온 - 정화의 물",
+      "Character": "https://www.notion.so/320e3b3baf6181c9beeaf1d8de842e7d",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "엘리시온 - 생명수",
+      "Character": "https://www.notion.so/320e3b3baf6181c9beeaf1d8de842e7d",
+      "Type": "Active",
+      "Target": "ALLY_LOWEST_HP",
+      "Effects": "DMG 1.0x [ally_lowest_hp] | DMG 1.0x [ally_lowest_hp]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "엘리시온 - 성역",
+      "Character": "https://www.notion.so/320e3b3baf6181c9beeaf1d8de842e7d",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "브라우니 - 고급정보입니다!",
+      "Character": "https://www.notion.so/320e3b3baf6181c5a7a8ffe8b7634b85",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "브라우니 - 특급정보입니다!",
+      "Character": "https://www.notion.so/320e3b3baf6181c5a7a8ffe8b7634b85",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 1.0x",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "브라우니 - 데스페라도 친칠라",
+      "Character": "https://www.notion.so/320e3b3baf6181c5a7a8ffe8b7634b85",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "바토리 - 동반자 예우",
+      "Character": "https://www.notion.so/320e3b3baf61812a9a6ac735e6a031b0",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 2.2x [enemy_near]",
+      "Multiplier": 2.2
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "바토리 - 피의 맹세",
+      "Character": "https://www.notion.so/320e3b3baf61812a9a6ac735e6a031b0",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 2.25x | DMG 1.0x",
+      "Multiplier": 2.25,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "바토리 - 에스코트",
+      "Character": "https://www.notion.so/320e3b3baf61812a9a6ac735e6a031b0",
+      "Type": "Ultimate",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 3.5x [enemy_near]",
+      "Multiplier": 3.5,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "판 - 목동의 휘파람",
+      "Character": "https://www.notion.so/320e3b3baf6181ffbd1fcaef9a708472",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.5x [enemy_near]",
+      "Multiplier": 1.5
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "판 - 작은 양을 위한 굴레",
+      "Character": "https://www.notion.so/320e3b3baf6181ffbd1fcaef9a708472",
+      "Type": "Active",
+      "Target": "ENEMY_RANDOM",
+      "Effects": "DMG 2.0x [enemy_random] | DMG 1.0x [enemy_random]",
+      "Multiplier": 2.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "판 - 고요한 봄의 들판",
+      "Character": "https://www.notion.so/320e3b3baf6181ffbd1fcaef9a708472",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.5x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.5,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "미리암 - 웨이팅 포 딜",
+      "Character": "https://www.notion.so/320e3b3baf618115a292f93fa22e2298",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.7x [enemy_near]",
+      "Multiplier": 1.7
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "미리암 - 크로스 더 루비콘",
+      "Character": "https://www.notion.so/320e3b3baf618115a292f93fa22e2298",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 1.0x",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "미리암 - 퓨리오스",
+      "Character": "https://www.notion.so/320e3b3baf618115a292f93fa22e2298",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 2.38x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 2.38,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아우로라 - 기다림의 끝",
+      "Character": "https://www.notion.so/320e3b3baf61814892e9c68ed012b6e0",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아우로라 - 지켜주는 나무",
+      "Character": "https://www.notion.so/320e3b3baf61814892e9c68ed012b6e0",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 1.0x | DMG 1.0x",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아우로라 - 당신을 향한 고백",
+      "Character": "https://www.notion.so/320e3b3baf61814892e9c68ed012b6e0",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "메티스 - 지혜의 일격",
+      "Character": "https://www.notion.so/320e3b3baf61811688acf24d17721a13",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "메티스 - 철벽 수호",
+      "Character": "https://www.notion.so/320e3b3baf61811688acf24d17721a13",
+      "Type": "Active",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "메티스 - 지혜의 방패",
+      "Character": "https://www.notion.so/320e3b3baf61811688acf24d17721a13",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_enemy] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "그릴라 - 악마의 야망",
+      "Character": "https://www.notion.so/320e3b3baf6181b08b12cc12fb844fec",
+      "Type": "Normal",
+      "Target": "ENEMY_RANDOM",
+      "Effects": "DMG 2.0x [enemy_random]",
+      "Multiplier": 2.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "그릴라 - 발푸르기스의 밤",
+      "Character": "https://www.notion.so/320e3b3baf6181b08b12cc12fb844fec",
+      "Type": "Active",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "그릴라 - 드림 오브 레기온",
+      "Character": "https://www.notion.so/320e3b3baf6181b08b12cc12fb844fec",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.0,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "다누 - 생명의 손길",
+      "Character": "https://www.notion.so/320e3b3baf61812880abc95836899f78",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "다누 - 대지의 치유",
+      "Character": "https://www.notion.so/320e3b3baf61812880abc95836899f78",
+      "Type": "Active",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "다누 - 부활의 땅",
+      "Character": "https://www.notion.so/320e3b3baf61812880abc95836899f78",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x",
+      "Multiplier": 1.0,
+      "SP Cost": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아슈토레스 - 밤의 속삭임",
+      "Character": "https://www.notion.so/320e3b3baf61814386e0ed1153c354fd",
+      "Type": "Normal",
+      "Target": "SELF",
+      "Effects": "DMG 2.0x",
+      "Multiplier": 2.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아슈토레스 - 심연의 덫",
+      "Character": "https://www.notion.so/320e3b3baf61814386e0ed1153c354fd",
+      "Type": "Active",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 3.0x [enemy_near]",
+      "Multiplier": 3.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아슈토레스 - 가시 무도회",
+      "Character": "https://www.notion.so/320e3b3baf61814386e0ed1153c354fd",
+      "Type": "Ultimate",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 4.5x [enemy_near]",
+      "Multiplier": 4.5,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "시트리 - 폴 인 러브",
+      "Character": "https://www.notion.so/320e3b3baf61813aaddad5b218dfcd4f",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "시트리 - 크런치 캔디",
+      "Character": "https://www.notion.so/320e3b3baf61813aaddad5b218dfcd4f",
+      "Type": "Active",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "시트리 - 라 돌체 비타",
+      "Character": "https://www.notion.so/320e3b3baf61813aaddad5b218dfcd4f",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.15x [all_enemy] | DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.15,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "모나 - 이클립스",
+      "Character": "https://www.notion.so/320e3b3baf618118a50bc17f64c95107",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "모나 - 트릭스타",
+      "Character": "https://www.notion.so/320e3b3baf618118a50bc17f64c95107",
+      "Type": "Active",
+      "Target": "ALLY_LOWEST_HP",
+      "Effects": "DMG 1.0x [ally_lowest_hp] | DMG 1.0x [ally_lowest_hp]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "모나 - 사랑을 담아",
+      "Character": "https://www.notion.so/320e3b3baf618118a50bc17f64c95107",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "세멜레 - 신성 강타",
+      "Character": "https://www.notion.so/320e3b3baf61813080a5f12f79dbea5b",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 2.0x [enemy_near]",
+      "Multiplier": 2.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "세멜레 - 제우스의 불꽃",
+      "Character": "https://www.notion.so/320e3b3baf61813080a5f12f79dbea5b",
+      "Type": "Active",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near] | DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "세멜레 - 신의 번개",
+      "Character": "https://www.notion.so/320e3b3baf61813080a5f12f79dbea5b",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.5x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.5,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "티와즈 - 전쟁신의 검",
+      "Character": "https://www.notion.so/320e3b3baf6181c9935ae9fc0ca02b8f",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 2.0x [enemy_near]",
+      "Multiplier": 2.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "티와즈 - 관통 공격",
+      "Character": "https://www.notion.so/320e3b3baf6181c9935ae9fc0ca02b8f",
+      "Type": "Active",
+      "Target": "ENEMY_SAME_COL",
+      "Effects": "DMG 2.5x [enemy_same_col]",
+      "Multiplier": 2.5,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "티와즈 - 신의 선언",
+      "Character": "https://www.notion.so/320e3b3baf6181c9935ae9fc0ca02b8f",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.5x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.5,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "티타니아 - 요정의 손길",
+      "Character": "https://www.notion.so/320e3b3baf618165960ec9a2059f6039",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "티타니아 - 요정의 축복",
+      "Character": "https://www.notion.so/320e3b3baf618165960ec9a2059f6039",
+      "Type": "Active",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "티타니아 - 요정의 여왕",
+      "Character": "https://www.notion.so/320e3b3baf618165960ec9a2059f6039",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "오네이로이 - 꿈의 속삭임",
+      "Character": "https://www.notion.so/320e3b3baf618122b7abea1793688f65",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.5x [enemy_near]",
+      "Multiplier": 1.5
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "오네이로이 - 잠의 손길",
+      "Character": "https://www.notion.so/320e3b3baf618122b7abea1793688f65",
+      "Type": "Active",
+      "Target": "ENEMY_RANDOM",
+      "Effects": "DMG 2.5x [enemy_random] | DMG 1.0x [enemy_random]",
+      "Multiplier": 2.5,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "오네이로이 - 영원한 꿈",
+      "Character": "https://www.notion.so/320e3b3baf618122b7abea1793688f65",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.5x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.5,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "루미나 - 성광의 채찍",
+      "Character": "https://www.notion.so/320e3b3baf61818cac4bf67245d1f441",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.2x [enemy_near]",
+      "Multiplier": 1.2
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "루미나 - 빛의 축복",
+      "Character": "https://www.notion.so/320e3b3baf61818cac4bf67245d1f441",
+      "Type": "Active",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "루미나 - 성역의 은총",
+      "Character": "https://www.notion.so/320e3b3baf61818cac4bf67245d1f441",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally] | DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "프레이 - 그림 리퍼",
+      "Character": "https://www.notion.so/320e3b3baf618125b87edf2d5946c984",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.5x [enemy_near]",
+      "Multiplier": 1.5
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "프레이 - 사신의 잔상",
+      "Character": "https://www.notion.so/320e3b3baf618125b87edf2d5946c984",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 1.0x | DMG 1.0x | DMG 1.0x",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "프레이 - 트릭스터",
+      "Character": "https://www.notion.so/320e3b3baf618125b87edf2d5946c984",
+      "Type": "Ultimate",
+      "Target": "SELF",
+      "Effects": "DMG 2.0x | DMG 1.0x",
+      "Multiplier": 2.0,
+      "SP Cost": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "반시 - 4연격",
+      "Character": "https://www.notion.so/320e3b3baf6181b497c4f6eab211f667",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x x4 [enemy_near]",
+      "Multiplier": 1.0,
+      "Hit Count": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "반시 - 전투 기도",
+      "Character": "https://www.notion.so/320e3b3baf6181b497c4f6eab211f667",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 1.0x | DMG 1.0x",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "반시 - 뱅시의 절규",
+      "Character": "https://www.notion.so/320e3b3baf6181b497c4f6eab211f667",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.5x [all_enemy]",
+      "Multiplier": 1.5,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아르테미스 - 나이트메어 이블",
+      "Character": "https://www.notion.so/320e3b3baf618183a0ccf2b31e78676f",
+      "Type": "Normal",
+      "Target": "ENEMY_RANDOM",
+      "Effects": "DMG 2.0x x4 [enemy_random]",
+      "Multiplier": 2.0,
+      "Hit Count": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아르테미스 - 광포한 분노",
+      "Character": "https://www.notion.so/320e3b3baf618183a0ccf2b31e78676f",
+      "Type": "Active",
+      "Target": "SELF",
+      "Effects": "DMG 1.0x",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아르테미스 - 침식하는 어둠",
+      "Character": "https://www.notion.so/320e3b3baf618183a0ccf2b31e78676f",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.8x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.8,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "미르칼라 - 흡혈",
+      "Character": "https://www.notion.so/320e3b3baf618173b9c5da449bba679d",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.8x [enemy_near]",
+      "Multiplier": 1.8
+    }
+  }
+]

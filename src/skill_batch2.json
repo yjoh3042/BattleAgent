@@ -1,0 +1,154 @@
+[
+  {
+    "properties": {
+      "Skill Name": "미르칼라 - 핏빛 저주",
+      "Character": "https://www.notion.so/320e3b3baf618173b9c5da449bba679d",
+      "Type": "Active",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 2.0x [enemy_near] | DMG 1.0x [enemy_near] | DMG 1.0x [enemy_near]",
+      "Multiplier": 2.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "미르칼라 - 뱀파이어 폭풍",
+      "Character": "https://www.notion.so/320e3b3baf618173b9c5da449bba679d",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.8x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.8,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "유나 - 달그림자",
+      "Character": "https://www.notion.so/320e3b3baf618110b695e4ec76aecd5c",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.0x [enemy_near]",
+      "Multiplier": 1.0
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "유나 - 어둠의 가호",
+      "Character": "https://www.notion.so/320e3b3baf618110b695e4ec76aecd5c",
+      "Type": "Active",
+      "Target": "ALLY_LOWEST_HP",
+      "Effects": "DMG 1.0x [ally_lowest_hp] | DMG 1.0x [ally_lowest_hp]",
+      "Multiplier": 1.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "유나 - 달의 수호",
+      "Character": "https://www.notion.so/320e3b3baf618110b695e4ec76aecd5c",
+      "Type": "Ultimate",
+      "Target": "ALL_ALLY",
+      "Effects": "DMG 1.0x [all_ally] | DMG 1.0x [all_ally]",
+      "Multiplier": 1.0,
+      "SP Cost": 4
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "쿠바바 - 여왕의 일격",
+      "Character": "https://www.notion.so/320e3b3baf6181a18f86f7eb0a563090",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.9x [enemy_near]",
+      "Multiplier": 1.9
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "쿠바바 - 왕권 분쇄",
+      "Character": "https://www.notion.so/320e3b3baf6181a18f86f7eb0a563090",
+      "Type": "Active",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 1.8x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 1.8,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "쿠바바 - 동행자의 힘",
+      "Character": "https://www.notion.so/320e3b3baf6181a18f86f7eb0a563090",
+      "Type": "Ultimate",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 7.2x [enemy_near]",
+      "Multiplier": 7.2,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아누비스 - 사자의 인도",
+      "Character": "https://www.notion.so/320e3b3baf61816d98c6e211c80794f9",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 1.7x [enemy_near]",
+      "Multiplier": 1.7
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아누비스 - 직선 심판",
+      "Character": "https://www.notion.so/320e3b3baf61816d98c6e211c80794f9",
+      "Type": "Active",
+      "Target": "ENEMY_SAME_COL",
+      "Effects": "DMG 2.5x x3 [enemy_same_col]",
+      "Multiplier": 2.5,
+      "Hit Count": 3,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "아누비스 - 심판의 저울",
+      "Character": "https://www.notion.so/320e3b3baf61816d98c6e211c80794f9",
+      "Type": "Ultimate",
+      "Target": "ENEMY_LOWEST_HP",
+      "Effects": "DMG 3.0x [enemy_lowest_hp]",
+      "Multiplier": 3.0,
+      "SP Cost": 6
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "에레보스 - 심연의 쌍격",
+      "Character": "https://www.notion.so/320e3b3baf6181b08546d09cf873ce65",
+      "Type": "Normal",
+      "Target": "ENEMY_NEAR",
+      "Effects": "DMG 2.5x x2 [enemy_near]",
+      "Multiplier": 2.5,
+      "Hit Count": 2
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "에레보스 - 종결자의 일격",
+      "Character": "https://www.notion.so/320e3b3baf6181b08546d09cf873ce65",
+      "Type": "Active",
+      "Target": "ENEMY_LOWEST_HP",
+      "Effects": "DMG 5.0x [enemy_lowest_hp] | DMG 3.0x {'target_hp_below': 0.5} [enemy_lowest_hp] | DMG 1.0x [enemy_lowest_hp]",
+      "Multiplier": 5.0,
+      "Cooldown": 3
+    }
+  },
+  {
+    "properties": {
+      "Skill Name": "에레보스 - 심판의 심연",
+      "Character": "https://www.notion.so/320e3b3baf6181b08546d09cf873ce65",
+      "Type": "Ultimate",
+      "Target": "ALL_ENEMY",
+      "Effects": "DMG 3.5x [all_enemy] | DMG 1.0x [all_enemy] | DMG 1.0x [all_enemy]",
+      "Multiplier": 3.5,
+      "SP Cost": 6
+    }
+  }
+]
