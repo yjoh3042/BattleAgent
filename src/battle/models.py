@@ -1,7 +1,7 @@
 """불변 데이터 모델 정의 - 캐릭터, 스킬, 버프의 기획 데이터"""
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from battle.enums import Element, Role, SkillType, LogicType, CCType, TargetType, StatType, TriggerEvent
 
 
@@ -88,3 +88,5 @@ class CharacterData:
     sp_cost: int = 5               # 얼티밋 SP 비용 (4~6)
     triggers: List[TriggerData] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)   # 기본 태그 (e.g. 'burn_synergy')
+    tile_pos: Tuple[int, int] = field(default_factory=lambda: (0, 0))
+    # (row, col) 3×3 그리드 위치  row 0=전열·1=중열·2=후열, col 0=좌·1=중·2=우

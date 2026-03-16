@@ -43,6 +43,7 @@ class BattleUnit:
 
         # 스킬 상태
         self.active_skill_cooldown: int = 0    # 0이면 사용 가능
+        self.ultimate_cooldown: int = 0        # 얼티밋 쿨타임 (0이면 사용 가능)
         self.used_ultimate_this_round: bool = False
 
         # 상태이상
@@ -73,6 +74,21 @@ class BattleUnit:
     def is_alive(self) -> bool:
         return self.current_hp > 0
 
+    # ─── 타일 포지션 (3×3 그리드) ────────────────────────────────
+    @property
+    def tile_pos(self) -> tuple:
+        return self.data.tile_pos
+
+    @property
+    def tile_row(self) -> int:
+        """행(row): 0=전열, 1=중열, 2=후열"""
+        return self.data.tile_pos[0]
+
+    @property
+    def tile_col(self) -> int:
+        """열(col): 0=좌, 1=중, 2=우"""
+        return self.data.tile_pos[1]
+
     # ─── 스탯 (버프 합산) ─────────────────────────────────────────
     def _get_buff_delta(self, stat: str) -> float:
         """해당 스탯에 걸린 모든 버프/디버프의 합산값 반환"""
@@ -97,7 +113,7 @@ class BattleUnit:
 
     @property
     def spd(self) -> float:
-        return max(1.0, self.data.stats.spd + self._get_buff_delta("spd"))
+        return max(25.0, self.data.stats.spd + self._get_buff_delta("spd"))
 
     @property
     def cri_ratio(self) -> float:
@@ -244,13 +260,27 @@ class BattleUnit:
         """액티브 스킬 사용 → 2턴 쿨타임 시작"""
         self.active_skill_cooldown = self.data.active_skill.cooldown_turns or 2
 
+    def use_ultimate_skill(self):
+        """얼티밋 사용 → 쿨타임 시작 (전 직업 공통 4턴, 자기 턴 기준 감소)"""
+        from battle.rules import ULT_COOLDOWN
+        cd = self.data.ultimate_skill.cooldown_turns
+        if cd <= 0:
+            cd = ULT_COOLDOWN  # 전 직업 공통 4턴
+        self.ultimate_cooldown = cd
+
     def tick_cooldown(self):
-        """쿨타임 1 감소"""
+        """쿨타임 1 감소 (액티브 + 얼티밋)"""
         if self.active_skill_cooldown > 0:
             self.active_skill_cooldown -= 1
+        if self.ultimate_cooldown > 0:
+            self.ultimate_cooldown -= 1
 
     def can_use_active(self) -> bool:
         return self.active_skill_cooldown <= 0
+
+    def can_use_ultimate(self) -> bool:
+        """얼티밋 사용 가능 여부 (쿨타임 + 라운드 제한)"""
+        return self.ultimate_cooldown <= 0 and not self.used_ultimate_this_round
 
     # ─── 턴 처리 ──────────────────────────────────────────────────
     def on_turn_start_tick(self) -> List[dict]:

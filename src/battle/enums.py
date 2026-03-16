@@ -81,6 +81,20 @@ class TargetType(Enum):
     ALLY_DEAD_RANDOM = "ally_dead_random"  # 사망한 아군 1명 (부활용)
     ALLY_LOWEST_HP_2 = "ally_lowest_hp_2"  # 체력 낮은 아군 2명
     ALLY_ROLE_ATTACKER = "ally_role_attacker"  # 공격형 아군 전체
+    ALLY_ROLE_DEFENDER = "ally_role_defender"  # 방어형 아군 전체
+
+    # ── 타일 포지셔닝 기반 (3×3 그리드) ────────────────────────────
+    # Near 계열: 타일 거리 기반 (거리 = caster.row + target.row + |caster.col - target.col|)
+    ENEMY_NEAR       = "enemy_near"       # 가장 가까운 적 1명 (2000011: 가까운 적 1명)
+    ENEMY_NEAR_ROW   = "enemy_near_row"   # 가장 가까운 적 + 동일 행 전체 (2000014: 가까운 적 1명 2행)
+    ENEMY_NEAR_CROSS = "enemy_near_cross" # 가장 가까운 적 + 십자(±1행 & ±1열) (2000016: 가까운 적 1명 십자)
+    ENEMY_LAST_COL   = "enemy_last_col"   # 적 최우열(col 최댓값) 전체 (920013: 논타겟 적 3열)
+    ENEMY_FRONT_ROW  = "enemy_front_row"  # 적 최전열 전체 (생존자 중 row 최솟값)
+    ENEMY_BACK_ROW   = "enemy_back_row"   # 적 최후열 전체 (생존자 중 row 최댓값)
+    ENEMY_SAME_COL   = "enemy_same_col"   # 시전자와 동일 열(col)의 적 — 관통 공격
+    ENEMY_ADJACENT   = "enemy_adjacent"   # 시전자 기준 ±1행·±1열 인접 타일의 적
+    ALLY_SAME_ROW    = "ally_same_row"    # 시전자와 동일 행(row)의 아군
+    ALLY_BEHIND      = "ally_behind"      # 자신 바로 뒤 1칸 (6: 자신 뒤 1칸)
 
 
 class TriggerEvent(Enum):

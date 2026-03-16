@@ -1,5 +1,8 @@
 """BattleEngine - 전투 메인 루프 오케스트레이터
-CTB 방식의 전투 진행, SP 관리, 스킬 실행, 트리거 처리를 통합 관리
+
+ATB(Active Time Battle) 기획을 CTB(Conditional Turn-Based) heapq 큐로 구현.
+두 방식은 행동 간격 = BATTLE_LENGTH / SPD 공식이 동일하여 결과가 같다.
+SP 관리, 스킬 실행, 트리거 처리를 통합 관리한다.
 """
 from __future__ import annotations
 import random
@@ -16,15 +19,17 @@ from battle.sp_manager import SPManager
 from battle.buff_manager import BuffManager
 from battle.skill_executor import SkillExecutor, EngineContext
 from battle.trigger_system import TriggerSystem
+from battle.rules import BATTLE_LENGTH
 
-MAX_TURNS: int = 500        # 무한 루프 방지 턴 한계
-MAX_TIME: float = 300.0     # 최대 전투 시간 (타임오버)
+MAX_TURNS: int = 500                    # 무한 루프 방지 턴 한계
+MAX_TIME: float = float(BATTLE_LENGTH)  # 최대 전투 시간 (타임오버)
 
 
 class BattleEngine:
     """
-    CTB 전투 엔진.
-    - TurnManager: heapq 기반 행동 순서
+    ATB/CTB 전투 엔진.
+    ATB 기획(게이지 충전)을 CTB(heapq 행동 예약)로 동일하게 시뮬레이션.
+    - TurnManager: heapq 기반 행동 순서 (행동 간격 = BATTLE_LENGTH / SPD)
     - SPManager: 공용 SP 관리
     - BuffManager: 버프 적용/틱
     - SkillExecutor: 스킬 효과 실행
@@ -120,10 +125,11 @@ class BattleEngine:
                 # 라운드 전환 시 얼티밋 사용 플래그 리셋
                 for u in self.all_units.values():
                     u.used_ultimate_this_round = False
+                # 라운드 전환 시 전원 행동큐 재계산 (현재 SPD 기준)
+                alive_units = [u for u in self.all_units.values() if u.is_alive]
+                self.turn_manager.recalculate_all(alive_units)
                 ctx = self._make_ctx()
-                self.trigger_system.evaluate_round_start(
-                    [u for u in self.all_units.values() if u.is_alive], ctx
-                )
+                self.trigger_system.evaluate_round_start(alive_units, ctx)
 
             # ─── 엑스트라 턴은 SP 충전 없음 ──────────────────────
             if not entry.is_extra:
@@ -194,6 +200,7 @@ class BattleEngine:
             # ─── 스킬 결정 (엑스트라 턴: 얼티밋 실행) ───────────
             if entry.is_extra:
                 skill = unit.data.ultimate_skill
+                unit.use_ultimate_skill()   # 얼티밋 쿨타임 시작
                 self._log.append(f"  💥 {unit.name} 얼티밋: {skill.name}")
             else:
                 skill = self._decide_skill(unit)
@@ -250,7 +257,7 @@ class BattleEngine:
         """
         if not self.allow_ultimate:
             return
-        if unit.used_ultimate_this_round:
+        if not unit.can_use_ultimate():
             return
 
         ult = unit.data.ultimate_skill
@@ -313,6 +320,7 @@ class BattleEngine:
             sp_manager=self.sp_manager,
             turn_manager=self.turn_manager,
             log=self._log,
+            trigger_system=self.trigger_system,
         )
 
     # ─── 버프 로그 플러시 ─────────────────────────────────────────

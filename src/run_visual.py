@@ -1,186 +1,98 @@
-"""run_visual.py - 9개 시나리오 배틀 리플레이 HTML 생성 및 브라우저 오픈
-엑셀 기준 시나리오: NormalOnly / AddActive / RandomUltimate / SettingUltimate / ChangePartyRandom / ChangePartySetting / OptimizedOrder / BestOrder / AbsoluteBest
-실행: python -X utf8 src/run_visual.py
+"""run_visual.py – 배틀 리플레이 HTML 생성 + HTTP 서버
+캐릭터 데이터를 fixtures/test_data.py 에 추가한 뒤 SCENARIOS 를 채우세요.
+실행: py -X utf8 src/run_visual.py
 """
 import sys
 import os
-import webbrowser
+import http.server
+import threading
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from battle.battle_engine import BattleEngine
-from battle.battle_recorder import BattleRecorder
-from fixtures.test_data import (
-    get_party1, get_party2, get_enemies, get_enemies_5,
-    make_hildred, make_arahan, make_gumiho, make_kararatri, make_cain,
-)
+PORT = 8000
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+OUTPUT_FILE = os.path.join(PROJECT_ROOT, "battle_replay.html")
 
-def get_best_party():
-    """전수탐색 1위 조합: 힐드·아라한·구미호·카라라트리·카인"""
-    return [make_hildred(), make_arahan(), make_gumiho(), make_kararatri(), make_cain()]
-from html_visualizer import generate_multi_html
-
-OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "..", "battle_replay.html")
-
-# ─── 시나리오 정의 (엑셀 기준 6개) ──────────────────────────────
-SCENARIOS = [
-    {
-        "label": "Scenario 1: NormalOnly",
-        "ally_factory": get_party1,
-        "allow_active": False,
-        "allow_ultimate": False,
-        "ultimate_mode": "auto",
-        "ultimate_order": [],
-    },
-    {
-        "label": "Scenario 2: AddActive",
-        "ally_factory": get_party1,
-        "allow_active": True,
-        "allow_ultimate": False,
-        "ultimate_mode": "auto",
-        "ultimate_order": [],
-    },
-    {
-        "label": "Scenario 3: RandomUltimate",
-        "ally_factory": get_party1,
-        "allow_active": True,
-        "allow_ultimate": True,
-        "ultimate_mode": "auto",
-        "ultimate_order": [],
-    },
-    {
-        "label": "Scenario 4: SettingUltimate",
-        "ally_factory": get_party1,
-        "allow_active": True,
-        "allow_ultimate": True,
-        "ultimate_mode": "manual_ordered",
-        "ultimate_order": ["citria", "hild", "arahan", "frey", "dana"],
-    },
-    {
-        "label": "Scenario 5: ChangePartyRandom",
-        "ally_factory": get_party2,
-        "allow_active": True,
-        "allow_ultimate": True,
-        "ultimate_mode": "auto",
-        "ultimate_order": [],
-    },
-    {
-        "label": "Scenario 6: ChangePartySetting",
-        "ally_factory": get_party2,
-        "allow_active": True,
-        "allow_ultimate": True,
-        "ultimate_mode": "manual_ordered",
-        "ultimate_order": ["citria", "laga", "gumiho", "kara", "cain"],
-    },
-    {
-        "label": "Scenario 7: OptimizedOrder",
-        "ally_factory": get_party2,
-        "allow_active": True,
-        "allow_ultimate": True,
-        "ultimate_mode": "manual_ordered",
-        # 화상 시너지 우선: 구미호(전체화상) → 카인(화상×200%) → 시트리(속도버프) → 카라(기절) → 라가(반격버프)
-        "ultimate_order": ["gumiho", "cain", "citria", "kara", "laga"],
-    },
-    {
-        "label": "Scenario 8: BestOrder",
-        "ally_factory": get_party2,
-        "allow_active": True,
-        "allow_ultimate": True,
-        "ultimate_mode": "manual_ordered",
-        # 전수탐색 1위 (120가지 중 최단 36턴)
-        # 카인 먼저(전체딜) → 시트리(속도버프 조기발동) → 구미호(전체화상) → 카라(기절) → 라가(반격)
-        "ultimate_order": ["cain", "citria", "gumiho", "kara", "laga"],
-    },
-    {
-        "label": "Scenario 9: AbsoluteBest",
-        "ally_factory": get_best_party,
-        "allow_active": True,
-        "allow_ultimate": True,
-        "ultimate_mode": "manual_ordered",
-        # 전수탐색 절대 최단 (126조합×120순서 중 1위, 27턴)
-        # 파티: 힐드·아라한·구미호·카라라트리·카인
-        # 카인(전체딜선제) → 힐드(ATK버프) → 카라라트리(기절) → 아라한(지원) → 구미호(전체화상)
-        "ultimate_order": ["cain", "hild", "kara", "arahan", "gumiho"],
-    },
-    {
-        "label": "Scenario 10: 5Monster_NormalParty",
-        "ally_factory": get_party1,
-        "enemy_factory": get_enemies_5,
-        "allow_active": True,
-        "allow_ultimate": True,
-        "ultimate_mode": "manual_ordered",
-        "ultimate_order": ["citria", "hild", "arahan", "frey", "dana"],
-    },
-    {
-        "label": "Scenario 11: 5Monster_BurnParty",
-        "ally_factory": get_party2,
-        "enemy_factory": get_enemies_5,
-        "allow_active": True,
-        "allow_ultimate": True,
-        "ultimate_mode": "manual_ordered",
-        "ultimate_order": ["cain", "citria", "gumiho", "kara", "laga"],
-    },
-]
+# ─── 시나리오 정의 ────────────────────────────────────────────────
+# 예시:
+# from fixtures.test_data import get_my_party, get_enemies
+# SCENARIOS = [
+#     {
+#         "label": "Scenario 1",
+#         "ally_factory": get_my_party,
+#         "enemy_factory": get_enemies,
+#         "allow_active": True,
+#         "allow_ultimate": True,
+#         "ultimate_mode": "auto",
+#     },
+# ]
+SCENARIOS = []
 
 
-def run_all():
-    print("=" * 60)
-    print("  ⚔️  CTB 배틀 리플레이 - 11개 시나리오 실행")
-    print("=" * 60)
+def generate_html():
+    if not SCENARIOS:
+        html = """<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><title>Battle Visual</title>
+<style>
+  body { font-family: sans-serif; display: flex; align-items: center;
+         justify-content: center; height: 100vh; margin: 0; background: #1a1a2e; color: #eee; }
+  .box { text-align: center; padding: 2rem; border: 1px solid #444; border-radius: 8px; }
+  code { background: #333; padding: 2px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>⚔️ Battle Visual</h2>
+  <p>SCENARIOS 가 비어 있습니다.</p>
+  <p><code>src/run_visual.py</code> 에서 SCENARIOS 를 정의한 뒤 서버를 재시작하세요.</p>
+</div>
+</body>
+</html>"""
+        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+            f.write(html)
+        print("placeholder HTML 생성 완료 (SCENARIOS 없음)")
+        return
 
-    all_battle_data = []
-    all_labels = []
+    from battle.battle_engine import BattleEngine
+    from html_visualizer import generate_multi_html
 
-    for scen in SCENARIOS:
-        print(f"\n{'─'*60}")
-        print(f"▶ {scen['label']} 실행 중...")
-        print(f"{'─'*60}")
-
-        recorder = BattleRecorder()
-        recorder.scenario_label = scen["label"]
-
+    all_logs = []
+    for s in SCENARIOS:
         engine = BattleEngine(
-            ally_units=scen["ally_factory"](),
-            enemy_units=scen.get("enemy_factory", get_enemies)(),
-            allow_active=scen["allow_active"],
-            allow_ultimate=scen["allow_ultimate"],
-            ultimate_mode=scen["ultimate_mode"],
-            ultimate_order=scen["ultimate_order"],
-            recorder=recorder,
+            ally_units=s["ally_factory"](),
+            enemy_units=s["enemy_factory"](),
+            allow_active=s.get("allow_active", True),
+            allow_ultimate=s.get("allow_ultimate", True),
+            ultimate_mode=s.get("ultimate_mode", "auto"),
+            ultimate_order=s.get("ultimate_order", []),
             seed=42,
         )
-        result = engine.run()
-        engine.print_summary()
+        engine.run()
+        all_logs.append((s["label"], engine.recorder))
 
-        print(f"  → {len(recorder.records)}턴 기록됨")
-        all_battle_data.append(recorder.to_dict())
-        all_labels.append(scen["label"])
+    html = generate_multi_html(all_logs)
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"HTML 저장 완료: {OUTPUT_FILE}")
 
-    # ─── HTML 생성 ────────────────────────────────────────────────
-    print(f"\n{'='*60}")
-    print(f"총 {len(all_battle_data)}개 시나리오 완료.")
-    print("HTML 파일 생성 중...")
 
-    html_content = generate_multi_html(all_battle_data, all_labels)
+def main():
+    generate_html()
 
-    out_path = os.path.abspath(OUTPUT_FILE)
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
+    os.chdir(PROJECT_ROOT)
 
-    size_kb = os.path.getsize(out_path) / 1024
-    print(f"저장 완료: {out_path}  ({size_kb:.1f} KB)")
+    handler = http.server.SimpleHTTPRequestHandler
 
-    # ─── 브라우저 오픈 ────────────────────────────────────────────
-    print("브라우저에서 열기...")
-    webbrowser.open(f"file:///{out_path.replace(os.sep, '/')}")
-    print("Done! 브라우저에서 battle_replay.html을 확인하세요.")
-    print("\n[조작법]")
-    print("  시나리오 탭 클릭    : 시나리오 전환")
-    print("  ◀ / ▶ 또는 방향키  : 이전/다음 턴")
-    print("  Home / End         : 처음/마지막 턴")
-    print("  Space              : 자동재생 토글")
-    print("  슬라이더            : 임의 턴 이동")
+    class QuietHandler(handler):
+        def log_message(self, fmt, *args):
+            pass  # suppress per-request noise
+
+    server = http.server.HTTPServer(("", PORT), QuietHandler)
+    print(f"서버 시작: http://localhost:{PORT}/battle_replay.html")
+    sys.stdout.flush()
+    server.serve_forever()
 
 
 if __name__ == "__main__":
-    run_all()
+    main()

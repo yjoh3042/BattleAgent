@@ -1,0 +1,2672 @@
+{
+  "metadata": {
+    "timestamp": "2026-03-13 15:21:00",
+    "pool_size": 9,
+    "party_size": 5,
+    "seeds": 10,
+    "total_combos": 126,
+    "total_orders_per_combo": 120,
+    "pool": [
+      {
+        "name": "루미나",
+        "role": "SUP",
+        "element": "光",
+        "atk": 230,
+        "hp": 6800,
+        "spd": 120
+      },
+      {
+        "name": "에레보스",
+        "role": "ATK",
+        "element": "暗",
+        "atk": 530,
+        "hp": 5500,
+        "spd": 85
+      },
+      {
+        "name": "시트리",
+        "role": "SUP",
+        "element": "火",
+        "atk": 172,
+        "hp": 5400,
+        "spd": 108
+      },
+      {
+        "name": "아르테미스",
+        "role": "ATK",
+        "element": "木",
+        "atk": 385,
+        "hp": 4700,
+        "spd": 75
+      },
+      {
+        "name": "다누",
+        "role": "HLR",
+        "element": "水",
+        "atk": 160,
+        "hp": 6100,
+        "spd": 95
+      },
+      {
+        "name": "이브",
+        "role": "ATK",
+        "element": "暗",
+        "atk": 410,
+        "hp": 4500,
+        "spd": 78
+      },
+      {
+        "name": "쿠바바",
+        "role": "ATK",
+        "element": "火",
+        "atk": 380,
+        "hp": 4800,
+        "spd": 80
+      },
+      {
+        "name": "엘리시온",
+        "role": "SUP",
+        "element": "光",
+        "atk": 165,
+        "hp": 5800,
+        "spd": 105
+      },
+      {
+        "name": "아우로라",
+        "role": "DEF",
+        "element": "水",
+        "atk": 145,
+        "hp": 7200,
+        "spd": 90
+      }
+    ],
+    "rules": "cri_ratio=0.15, penetration=0.0 (2026-03-13 통일)",
+    "enemy": "봉제인형 5마리 (get_enemies_5)",
+    "assumptions": [
+      "auto 모드: 엔진이 SP 충족 즉시 얼티밋 발동",
+      "setting 모드: 지정 순서대로 얼티밋 발동",
+      "피해량 = 사망자 max_hp + 생존자 (max_hp - current_hp)",
+      "타이브레이커: 평균턴 동일 시 평균피해량이 낮은 쪽 우선"
+    ]
+  },
+  "phase1_all": [
+    {
+      "rank": 1,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "이브"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 24.0,
+      "min_turn": 20,
+      "max_turn": 27,
+      "avg_damage_taken": 197.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 735.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 2,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 24.8,
+      "min_turn": 22,
+      "max_turn": 28,
+      "avg_damage_taken": 365.0,
+      "min_damage_taken": 296.0,
+      "max_damage_taken": 517.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 3,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 24.9,
+      "min_turn": 21,
+      "max_turn": 28,
+      "avg_damage_taken": 168.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 735.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 4,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "이브",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 26.6,
+      "min_turn": 22,
+      "max_turn": 28,
+      "avg_damage_taken": 529.0,
+      "min_damage_taken": 129.0,
+      "max_damage_taken": 1012.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 5,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "이브",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 26.9,
+      "min_turn": 22,
+      "max_turn": 29,
+      "avg_damage_taken": 4238.0,
+      "min_damage_taken": 3878.0,
+      "max_damage_taken": 4654.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 6,
+      "party": [
+        "루미나",
+        "에레보스",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 27.9,
+      "min_turn": 23,
+      "max_turn": 30,
+      "avg_damage_taken": 617.0,
+      "min_damage_taken": 129.0,
+      "max_damage_taken": 1008.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 7,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 28.6,
+      "min_turn": 25,
+      "max_turn": 30,
+      "avg_damage_taken": 297.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1042.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 8,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 28.6,
+      "min_turn": 27,
+      "max_turn": 31,
+      "avg_damage_taken": 693.0,
+      "min_damage_taken": 164.0,
+      "max_damage_taken": 1217.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 9,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "이브",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 29.5,
+      "min_turn": 27,
+      "max_turn": 33,
+      "avg_damage_taken": 545.0,
+      "min_damage_taken": 193.0,
+      "max_damage_taken": 773.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 10,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "이브",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 30.7,
+      "min_turn": 25,
+      "max_turn": 33,
+      "avg_damage_taken": 982.0,
+      "min_damage_taken": 802.0,
+      "max_damage_taken": 1178.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 11,
+      "party": [
+        "루미나",
+        "에레보스",
+        "이브",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 30.8,
+      "min_turn": 28,
+      "max_turn": 33,
+      "avg_damage_taken": 393.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1080.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 12,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "이브",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 30.9,
+      "min_turn": 27,
+      "max_turn": 33,
+      "avg_damage_taken": 996.0,
+      "min_damage_taken": 896.0,
+      "max_damage_taken": 1130.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 13,
+      "party": [
+        "루미나",
+        "에레보스",
+        "이브",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 31.7,
+      "min_turn": 25,
+      "max_turn": 38,
+      "avg_damage_taken": 507.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1013.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 14,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 31.7,
+      "min_turn": 26,
+      "max_turn": 44,
+      "avg_damage_taken": 976.0,
+      "min_damage_taken": 168.0,
+      "max_damage_taken": 2429.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 15,
+      "party": [
+        "에레보스",
+        "시트리",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 31.7,
+      "min_turn": 31,
+      "max_turn": 33,
+      "avg_damage_taken": 5323.0,
+      "min_damage_taken": 5026.0,
+      "max_damage_taken": 5725.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 16,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "이브",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 32.3,
+      "min_turn": 23,
+      "max_turn": 35,
+      "avg_damage_taken": 5403.0,
+      "min_damage_taken": 4837.0,
+      "max_damage_taken": 5810.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 17,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 32.6,
+      "min_turn": 32,
+      "max_turn": 33,
+      "avg_damage_taken": 983.0,
+      "min_damage_taken": 836.0,
+      "max_damage_taken": 1179.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 18,
+      "party": [
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 32.8,
+      "min_turn": 31,
+      "max_turn": 34,
+      "avg_damage_taken": 1992.0,
+      "min_damage_taken": 1805.0,
+      "max_damage_taken": 2405.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 19,
+      "party": [
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 33.8,
+      "min_turn": 33,
+      "max_turn": 34,
+      "avg_damage_taken": 4840.0,
+      "min_damage_taken": 4594.0,
+      "max_damage_taken": 5172.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 20,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 34.3,
+      "min_turn": 32,
+      "max_turn": 43,
+      "avg_damage_taken": 768.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1374.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 21,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 34.4,
+      "min_turn": 30,
+      "max_turn": 38,
+      "avg_damage_taken": 881.0,
+      "min_damage_taken": 406.0,
+      "max_damage_taken": 1172.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 22,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "다누",
+        "이브"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 34.7,
+      "min_turn": 34,
+      "max_turn": 35,
+      "avg_damage_taken": 0.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 0.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 23,
+      "party": [
+        "루미나",
+        "시트리",
+        "아르테미스",
+        "이브",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 34.7,
+      "min_turn": 28,
+      "max_turn": 52,
+      "avg_damage_taken": 922.0,
+      "min_damage_taken": 240.0,
+      "max_damage_taken": 1941.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 24,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "다누",
+        "이브"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 34.8,
+      "min_turn": 33,
+      "max_turn": 36,
+      "avg_damage_taken": 464.0,
+      "min_damage_taken": 363.0,
+      "max_damage_taken": 556.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 25,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 35.0,
+      "min_turn": 32,
+      "max_turn": 38,
+      "avg_damage_taken": 5633.0,
+      "min_damage_taken": 5102.0,
+      "max_damage_taken": 5957.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 26,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "다누",
+        "이브"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 35.1,
+      "min_turn": 33,
+      "max_turn": 36,
+      "avg_damage_taken": 1462.0,
+      "min_damage_taken": 1298.0,
+      "max_damage_taken": 1669.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 27,
+      "party": [
+        "에레보스",
+        "시트리",
+        "이브",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 35.3,
+      "min_turn": 32,
+      "max_turn": 38,
+      "avg_damage_taken": 447.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1228.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 28,
+      "party": [
+        "루미나",
+        "에레보스",
+        "다누",
+        "이브",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 35.9,
+      "min_turn": 32,
+      "max_turn": 39,
+      "avg_damage_taken": 318.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 716.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 29,
+      "party": [
+        "루미나",
+        "에레보스",
+        "다누",
+        "이브",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 36.1,
+      "min_turn": 33,
+      "max_turn": 41,
+      "avg_damage_taken": 250.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 574.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 30,
+      "party": [
+        "에레보스",
+        "시트리",
+        "다누",
+        "이브",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 36.3,
+      "min_turn": 33,
+      "max_turn": 39,
+      "avg_damage_taken": 331.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1137.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 31,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 37.3,
+      "min_turn": 33,
+      "max_turn": 41,
+      "avg_damage_taken": 849.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1475.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 32,
+      "party": [
+        "에레보스",
+        "아르테미스",
+        "다누",
+        "이브",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 37.3,
+      "min_turn": 35,
+      "max_turn": 41,
+      "avg_damage_taken": 1483.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 2361.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 33,
+      "party": [
+        "에레보스",
+        "아르테미스",
+        "다누",
+        "이브",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 37.7,
+      "min_turn": 36,
+      "max_turn": 41,
+      "avg_damage_taken": 1019.0,
+      "min_damage_taken": 93.0,
+      "max_damage_taken": 2524.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 34,
+      "party": [
+        "에레보스",
+        "시트리",
+        "이브",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 37.8,
+      "min_turn": 32,
+      "max_turn": 43,
+      "avg_damage_taken": 659.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1602.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 35,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "다누",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 38.0,
+      "min_turn": 36,
+      "max_turn": 42,
+      "avg_damage_taken": 560.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 776.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 36,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 38.1,
+      "min_turn": 30,
+      "max_turn": 46,
+      "avg_damage_taken": 350.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1181.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 37,
+      "party": [
+        "에레보스",
+        "시트리",
+        "다누",
+        "이브",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 38.1,
+      "min_turn": 36,
+      "max_turn": 41,
+      "avg_damage_taken": 668.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1587.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 38,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "다누",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 38.5,
+      "min_turn": 35,
+      "max_turn": 43,
+      "avg_damage_taken": 797.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1127.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 39,
+      "party": [
+        "루미나",
+        "아르테미스",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 38.6,
+      "min_turn": 29,
+      "max_turn": 48,
+      "avg_damage_taken": 1436.0,
+      "min_damage_taken": 382.0,
+      "max_damage_taken": 2933.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 40,
+      "party": [
+        "에레보스",
+        "아르테미스",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 38.7,
+      "min_turn": 34,
+      "max_turn": 46,
+      "avg_damage_taken": 755.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1448.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 41,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "다누"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 39.2,
+      "min_turn": 36,
+      "max_turn": 43,
+      "avg_damage_taken": 261.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 704.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 42,
+      "party": [
+        "루미나",
+        "시트리",
+        "아르테미스",
+        "이브",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 39.3,
+      "min_turn": 34,
+      "max_turn": 46,
+      "avg_damage_taken": 834.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1357.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 43,
+      "party": [
+        "에레보스",
+        "다누",
+        "이브",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 39.8,
+      "min_turn": 35,
+      "max_turn": 41,
+      "avg_damage_taken": 600.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1970.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 44,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "다누",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 40.5,
+      "min_turn": 36,
+      "max_turn": 50,
+      "avg_damage_taken": 636.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1647.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 45,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "다누",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 40.8,
+      "min_turn": 35,
+      "max_turn": 44,
+      "avg_damage_taken": 162.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1175.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 46,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 41.1,
+      "min_turn": 35,
+      "max_turn": 49,
+      "avg_damage_taken": 1010.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 2193.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 47,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "다누",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 41.3,
+      "min_turn": 37,
+      "max_turn": 44,
+      "avg_damage_taken": 252.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 719.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 48,
+      "party": [
+        "루미나",
+        "에레보스",
+        "다누",
+        "이브",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 41.5,
+      "min_turn": 35,
+      "max_turn": 43,
+      "avg_damage_taken": 19.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 193.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 49,
+      "party": [
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 41.6,
+      "min_turn": 36,
+      "max_turn": 44,
+      "avg_damage_taken": 612.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1363.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 50,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 41.6,
+      "min_turn": 34,
+      "max_turn": 43,
+      "avg_damage_taken": 1133.0,
+      "min_damage_taken": 1077.0,
+      "max_damage_taken": 1248.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 51,
+      "party": [
+        "에레보스",
+        "아르테미스",
+        "다누",
+        "이브",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 42.1,
+      "min_turn": 41,
+      "max_turn": 46,
+      "avg_damage_taken": 109.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1086.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 52,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 42.9,
+      "min_turn": 39,
+      "max_turn": 50,
+      "avg_damage_taken": 248.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1077.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 53,
+      "party": [
+        "시트리",
+        "아르테미스",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 43.1,
+      "min_turn": 35,
+      "max_turn": 46,
+      "avg_damage_taken": 6091.0,
+      "min_damage_taken": 5529.0,
+      "max_damage_taken": 6751.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 54,
+      "party": [
+        "루미나",
+        "시트리",
+        "아르테미스",
+        "이브",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 43.5,
+      "min_turn": 38,
+      "max_turn": 50,
+      "avg_damage_taken": 120.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 682.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 55,
+      "party": [
+        "에레보스",
+        "다누",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 43.8,
+      "min_turn": 42,
+      "max_turn": 45,
+      "avg_damage_taken": 739.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1450.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 56,
+      "party": [
+        "에레보스",
+        "이브",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 43.9,
+      "min_turn": 41,
+      "max_turn": 45,
+      "avg_damage_taken": 728.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 989.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 57,
+      "party": [
+        "에레보스",
+        "다누",
+        "이브",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 44.3,
+      "min_turn": 41,
+      "max_turn": 46,
+      "avg_damage_taken": 927.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1522.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 58,
+      "party": [
+        "에레보스",
+        "아르테미스",
+        "다누",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 44.6,
+      "min_turn": 42,
+      "max_turn": 55,
+      "avg_damage_taken": 457.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 953.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 59,
+      "party": [
+        "루미나",
+        "에레보스",
+        "다누",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 45.0,
+      "min_turn": 42,
+      "max_turn": 54,
+      "avg_damage_taken": 339.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 942.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 60,
+      "party": [
+        "루미나",
+        "에레보스",
+        "다누",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 45.0,
+      "min_turn": 44,
+      "max_turn": 46,
+      "avg_damage_taken": 879.0,
+      "min_damage_taken": 770.0,
+      "max_damage_taken": 1088.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 61,
+      "party": [
+        "루미나",
+        "아르테미스",
+        "이브",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 45.6,
+      "min_turn": 36,
+      "max_turn": 57,
+      "avg_damage_taken": 646.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1389.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 62,
+      "party": [
+        "루미나",
+        "시트리",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 46.1,
+      "min_turn": 42,
+      "max_turn": 54,
+      "avg_damage_taken": 817.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1348.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 63,
+      "party": [
+        "에레보스",
+        "시트리",
+        "다누",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 46.6,
+      "min_turn": 42,
+      "max_turn": 53,
+      "avg_damage_taken": 0.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 0.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 64,
+      "party": [
+        "에레보스",
+        "아르테미스",
+        "다누",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 46.7,
+      "min_turn": 41,
+      "max_turn": 60,
+      "avg_damage_taken": 1575.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 2246.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 65,
+      "party": [
+        "에레보스",
+        "아르테미스",
+        "다누",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 47.0,
+      "min_turn": 41,
+      "max_turn": 54,
+      "avg_damage_taken": 865.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1872.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 66,
+      "party": [
+        "에레보스",
+        "시트리",
+        "다누",
+        "이브",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 47.4,
+      "min_turn": 41,
+      "max_turn": 49,
+      "avg_damage_taken": 396.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 570.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 67,
+      "party": [
+        "에레보스",
+        "시트리",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 47.6,
+      "min_turn": 43,
+      "max_turn": 55,
+      "avg_damage_taken": 190.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 528.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 68,
+      "party": [
+        "에레보스",
+        "시트리",
+        "다누",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 48.3,
+      "min_turn": 48,
+      "max_turn": 50,
+      "avg_damage_taken": 45.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 449.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 69,
+      "party": [
+        "루미나",
+        "에레보스",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 48.3,
+      "min_turn": 42,
+      "max_turn": 56,
+      "avg_damage_taken": 386.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1140.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 70,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "다누",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 48.5,
+      "min_turn": 44,
+      "max_turn": 53,
+      "avg_damage_taken": 0.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 0.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 71,
+      "party": [
+        "루미나",
+        "아르테미스",
+        "다누",
+        "이브",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 52.5,
+      "min_turn": 42,
+      "max_turn": 63,
+      "avg_damage_taken": 68.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 381.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 72,
+      "party": [
+        "루미나",
+        "시트리",
+        "이브",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 52.6,
+      "min_turn": 40,
+      "max_turn": 62,
+      "avg_damage_taken": 42.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 416.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 73,
+      "party": [
+        "루미나",
+        "아르테미스",
+        "이브",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 52.8,
+      "min_turn": 45,
+      "max_turn": 61,
+      "avg_damage_taken": 142.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 698.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 74,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "다누",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 52.9,
+      "min_turn": 43,
+      "max_turn": 62,
+      "avg_damage_taken": 394.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 866.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 75,
+      "party": [
+        "에레보스",
+        "다누",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 53.0,
+      "min_turn": 45,
+      "max_turn": 64,
+      "avg_damage_taken": 286.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 966.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 76,
+      "party": [
+        "루미나",
+        "아르테미스",
+        "다누",
+        "이브",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 53.3,
+      "min_turn": 42,
+      "max_turn": 63,
+      "avg_damage_taken": 278.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1510.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 77,
+      "party": [
+        "시트리",
+        "아르테미스",
+        "이브",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 53.4,
+      "min_turn": 43,
+      "max_turn": 64,
+      "avg_damage_taken": 568.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1343.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 78,
+      "party": [
+        "시트리",
+        "아르테미스",
+        "다누",
+        "이브",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 53.5,
+      "min_turn": 50,
+      "max_turn": 61,
+      "avg_damage_taken": 757.0,
+      "min_damage_taken": 446.0,
+      "max_damage_taken": 1739.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 79,
+      "party": [
+        "루미나",
+        "아르테미스",
+        "다누",
+        "이브",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 53.9,
+      "min_turn": 44,
+      "max_turn": 65,
+      "avg_damage_taken": 39.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 129.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 80,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "다누",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 54.0,
+      "min_turn": 54,
+      "max_turn": 54,
+      "avg_damage_taken": 0.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 0.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 81,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "다누",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 54.0,
+      "min_turn": 47,
+      "max_turn": 57,
+      "avg_damage_taken": 43.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 143.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 82,
+      "party": [
+        "루미나",
+        "시트리",
+        "아르테미스",
+        "다누",
+        "이브"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 54.0,
+      "min_turn": 36,
+      "max_turn": 65,
+      "avg_damage_taken": 386.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1818.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 83,
+      "party": [
+        "시트리",
+        "아르테미스",
+        "이브",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 54.6,
+      "min_turn": 47,
+      "max_turn": 68,
+      "avg_damage_taken": 364.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1411.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 84,
+      "party": [
+        "루미나",
+        "에레보스",
+        "다누",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 55.0,
+      "min_turn": 46,
+      "max_turn": 57,
+      "avg_damage_taken": 80.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 799.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 85,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 55.3,
+      "min_turn": 46,
+      "max_turn": 57,
+      "avg_damage_taken": 14.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 143.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 86,
+      "party": [
+        "루미나",
+        "이브",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 56.3,
+      "min_turn": 39,
+      "max_turn": 66,
+      "avg_damage_taken": 81.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 356.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 87,
+      "party": [
+        "루미나",
+        "시트리",
+        "아르테미스",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 56.6,
+      "min_turn": 54,
+      "max_turn": 63,
+      "avg_damage_taken": 270.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1309.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 88,
+      "party": [
+        "루미나",
+        "시트리",
+        "이브",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 58.1,
+      "min_turn": 54,
+      "max_turn": 71,
+      "avg_damage_taken": 12.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 120.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 89,
+      "party": [
+        "루미나",
+        "다누",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 58.4,
+      "min_turn": 54,
+      "max_turn": 65,
+      "avg_damage_taken": 58.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 193.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 90,
+      "party": [
+        "루미나",
+        "다누",
+        "이브",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 60.6,
+      "min_turn": 56,
+      "max_turn": 67,
+      "avg_damage_taken": 119.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 178.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 91,
+      "party": [
+        "루미나",
+        "시트리",
+        "다누",
+        "이브",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 61.8,
+      "min_turn": 54,
+      "max_turn": 70,
+      "avg_damage_taken": 71.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 190.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 92,
+      "party": [
+        "루미나",
+        "시트리",
+        "다누",
+        "이브",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 62.0,
+      "min_turn": 56,
+      "max_turn": 64,
+      "avg_damage_taken": 110.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 193.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 93,
+      "party": [
+        "시트리",
+        "아르테미스",
+        "다누",
+        "이브",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 62.3,
+      "min_turn": 51,
+      "max_turn": 68,
+      "avg_damage_taken": 240.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 431.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 94,
+      "party": [
+        "시트리",
+        "다누",
+        "이브",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 63.0,
+      "min_turn": 63,
+      "max_turn": 63,
+      "avg_damage_taken": 126.0,
+      "min_damage_taken": 120.0,
+      "max_damage_taken": 180.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 95,
+      "party": [
+        "시트리",
+        "아르테미스",
+        "다누",
+        "이브",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 63.3,
+      "min_turn": 55,
+      "max_turn": 70,
+      "avg_damage_taken": 648.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 921.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 96,
+      "party": [
+        "에레보스",
+        "시트리",
+        "다누",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 63.9,
+      "min_turn": 63,
+      "max_turn": 69,
+      "avg_damage_taken": 880.0,
+      "min_damage_taken": 771.0,
+      "max_damage_taken": 1213.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 97,
+      "party": [
+        "루미나",
+        "다누",
+        "이브",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 64.5,
+      "min_turn": 63,
+      "max_turn": 65,
+      "avg_damage_taken": 120.0,
+      "min_damage_taken": 120.0,
+      "max_damage_taken": 120.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 98,
+      "party": [
+        "루미나",
+        "시트리",
+        "아르테미스",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 65.2,
+      "min_turn": 55,
+      "max_turn": 88,
+      "avg_damage_taken": 37.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 371.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 99,
+      "party": [
+        "루미나",
+        "아르테미스",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 65.4,
+      "min_turn": 55,
+      "max_turn": 88,
+      "avg_damage_taken": 772.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 2916.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 100,
+      "party": [
+        "아르테미스",
+        "다누",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 66.3,
+      "min_turn": 54,
+      "max_turn": 79,
+      "avg_damage_taken": 1455.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 3182.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 101,
+      "party": [
+        "시트리",
+        "이브",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 67.0,
+      "min_turn": 53,
+      "max_turn": 79,
+      "avg_damage_taken": 521.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 841.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 102,
+      "party": [
+        "루미나",
+        "시트리",
+        "다누",
+        "이브",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 68.4,
+      "min_turn": 55,
+      "max_turn": 74,
+      "avg_damage_taken": 37.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 249.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 103,
+      "party": [
+        "아르테미스",
+        "이브",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 69.8,
+      "min_turn": 54,
+      "max_turn": 89,
+      "avg_damage_taken": 1497.0,
+      "min_damage_taken": 103.0,
+      "max_damage_taken": 2761.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 104,
+      "party": [
+        "루미나",
+        "시트리",
+        "아르테미스",
+        "다누",
+        "쿠바바"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 70.7,
+      "min_turn": 59,
+      "max_turn": 92,
+      "avg_damage_taken": 588.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 2643.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 105,
+      "party": [
+        "아르테미스",
+        "다누",
+        "이브",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 72.1,
+      "min_turn": 62,
+      "max_turn": 99,
+      "avg_damage_taken": 496.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 967.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 106,
+      "party": [
+        "시트리",
+        "다누",
+        "이브",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 75.5,
+      "min_turn": 54,
+      "max_turn": 90,
+      "avg_damage_taken": 315.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 1306.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 107,
+      "party": [
+        "시트리",
+        "다누",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 80.6,
+      "min_turn": 62,
+      "max_turn": 102,
+      "avg_damage_taken": 352.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 910.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 108,
+      "party": [
+        "다누",
+        "이브",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 82.8,
+      "min_turn": 66,
+      "max_turn": 90,
+      "avg_damage_taken": 42.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 180.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 109,
+      "party": [
+        "루미나",
+        "아르테미스",
+        "다누",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 84.2,
+      "min_turn": 65,
+      "max_turn": 107,
+      "avg_damage_taken": 150.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 905.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 110,
+      "party": [
+        "루미나",
+        "시트리",
+        "아르테미스",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 84.7,
+      "min_turn": 73,
+      "max_turn": 97,
+      "avg_damage_taken": 858.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 3536.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 111,
+      "party": [
+        "루미나",
+        "아르테미스",
+        "다누",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 86.1,
+      "min_turn": 68,
+      "max_turn": 105,
+      "avg_damage_taken": 878.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 3964.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 112,
+      "party": [
+        "시트리",
+        "아르테미스",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 88.6,
+      "min_turn": 69,
+      "max_turn": 110,
+      "avg_damage_taken": 707.0,
+      "min_damage_taken": 158.0,
+      "max_damage_taken": 1261.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 113,
+      "party": [
+        "루미나",
+        "시트리",
+        "아르테미스",
+        "다누",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 89.9,
+      "min_turn": 72,
+      "max_turn": 116,
+      "avg_damage_taken": 716.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 2025.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 114,
+      "party": [
+        "시트리",
+        "아르테미스",
+        "다누",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 97.1,
+      "min_turn": 69,
+      "max_turn": 129,
+      "avg_damage_taken": 136.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 518.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 115,
+      "party": [
+        "루미나",
+        "시트리",
+        "아르테미스",
+        "다누",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 98.0,
+      "min_turn": 86,
+      "max_turn": 128,
+      "avg_damage_taken": 50.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 281.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 116,
+      "party": [
+        "루미나",
+        "시트리",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 98.4,
+      "min_turn": 97,
+      "max_turn": 101,
+      "avg_damage_taken": 0.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 0.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 117,
+      "party": [
+        "루미나",
+        "시트리",
+        "다누",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 98.6,
+      "min_turn": 78,
+      "max_turn": 111,
+      "avg_damage_taken": 135.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 287.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 118,
+      "party": [
+        "시트리",
+        "아르테미스",
+        "다누",
+        "쿠바바",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 100.6,
+      "min_turn": 73,
+      "max_turn": 115,
+      "avg_damage_taken": 727.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 2265.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 119,
+      "party": [
+        "루미나",
+        "아르테미스",
+        "다누",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 101.2,
+      "min_turn": 89,
+      "max_turn": 132,
+      "avg_damage_taken": 55.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 263.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 120,
+      "party": [
+        "시트리",
+        "아르테미스",
+        "다누",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 108.8,
+      "min_turn": 83,
+      "max_turn": 131,
+      "avg_damage_taken": 184.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 625.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 121,
+      "party": [
+        "아르테미스",
+        "다누",
+        "이브",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 109.7,
+      "min_turn": 62,
+      "max_turn": 134,
+      "avg_damage_taken": 246.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 658.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 122,
+      "party": [
+        "아르테미스",
+        "다누",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 131.6,
+      "min_turn": 100,
+      "max_turn": 155,
+      "avg_damage_taken": 86.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 190.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 123,
+      "party": [
+        "루미나",
+        "시트리",
+        "다누",
+        "쿠바바",
+        "엘리시온"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 141.4,
+      "min_turn": 138,
+      "max_turn": 142,
+      "avg_damage_taken": 0.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 0.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 124,
+      "party": [
+        "루미나",
+        "다누",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 156.7,
+      "min_turn": 123,
+      "max_turn": 196,
+      "avg_damage_taken": 30.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 300.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 125,
+      "party": [
+        "시트리",
+        "다누",
+        "쿠바바",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 1.0,
+      "avg_turn": 160.2,
+      "min_turn": 159,
+      "max_turn": 161,
+      "avg_damage_taken": 0.0,
+      "min_damage_taken": 0.0,
+      "max_damage_taken": 0.0,
+      "avg_survivors": 5.0
+    },
+    {
+      "rank": 126,
+      "party": [
+        "루미나",
+        "시트리",
+        "다누",
+        "엘리시온",
+        "아우로라"
+      ],
+      "win_rate": 0.0,
+      "avg_turn": 999,
+      "min_turn": 999,
+      "max_turn": 999,
+      "avg_damage_taken": 99999,
+      "min_damage_taken": 99999,
+      "max_damage_taken": 99999,
+      "avg_survivors": 0
+    }
+  ],
+  "phase2_top10": [
+    {
+      "rank": 1,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "이브",
+        "아우로라"
+      ],
+      "best_ultimate_order": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "이브",
+        "아우로라"
+      ],
+      "avg_turn": 32.6,
+      "avg_damage_taken": 3899.0,
+      "best_min_turn": 32,
+      "auto_avg_turn": 30.7,
+      "auto_avg_dmg": 982.0,
+      "order_turn_variance": 0.0
+    },
+    {
+      "rank": 2,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "이브"
+      ],
+      "best_ultimate_order": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "이브"
+      ],
+      "avg_turn": 32.8,
+      "avg_damage_taken": 4095.0,
+      "best_min_turn": 31,
+      "auto_avg_turn": 24.0,
+      "auto_avg_dmg": 197.0,
+      "order_turn_variance": 0.0
+    },
+    {
+      "rank": 3,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "쿠바바"
+      ],
+      "best_ultimate_order": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "쿠바바"
+      ],
+      "avg_turn": 36.6,
+      "avg_damage_taken": 5411.0,
+      "best_min_turn": 29,
+      "auto_avg_turn": 24.8,
+      "auto_avg_dmg": 365.0,
+      "order_turn_variance": 0.0
+    },
+    {
+      "rank": 4,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "이브",
+        "쿠바바"
+      ],
+      "best_ultimate_order": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "이브",
+        "쿠바바"
+      ],
+      "avg_turn": 36.8,
+      "avg_damage_taken": 5446.0,
+      "best_min_turn": 29,
+      "auto_avg_turn": 26.9,
+      "auto_avg_dmg": 4238.0,
+      "order_turn_variance": 0.0
+    },
+    {
+      "rank": 5,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "이브",
+        "쿠바바"
+      ],
+      "best_ultimate_order": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "이브",
+        "쿠바바"
+      ],
+      "avg_turn": 36.9,
+      "avg_damage_taken": 4527.0,
+      "best_min_turn": 30,
+      "auto_avg_turn": 26.6,
+      "auto_avg_dmg": 529.0,
+      "order_turn_variance": 0.0
+    },
+    {
+      "rank": 6,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "아우로라"
+      ],
+      "best_ultimate_order": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "아우로라"
+      ],
+      "avg_turn": 37.7,
+      "avg_damage_taken": 5408.0,
+      "best_min_turn": 32,
+      "auto_avg_turn": 24.9,
+      "auto_avg_dmg": 168.0,
+      "order_turn_variance": 0.0
+    },
+    {
+      "rank": 7,
+      "party": [
+        "루미나",
+        "에레보스",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "best_ultimate_order": [
+        "루미나",
+        "에레보스",
+        "이브",
+        "쿠바바",
+        "아우로라"
+      ],
+      "avg_turn": 38.5,
+      "avg_damage_taken": 5519.0,
+      "best_min_turn": 31,
+      "auto_avg_turn": 27.9,
+      "auto_avg_dmg": 617.0,
+      "order_turn_variance": 0.0
+    },
+    {
+      "rank": 8,
+      "party": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "엘리시온"
+      ],
+      "best_ultimate_order": [
+        "루미나",
+        "에레보스",
+        "아르테미스",
+        "이브",
+        "엘리시온"
+      ],
+      "avg_turn": 39.1,
+      "avg_damage_taken": 2989.0,
+      "best_min_turn": 33,
+      "auto_avg_turn": 28.6,
+      "auto_avg_dmg": 297.0,
+      "order_turn_variance": 0.0
+    },
+    {
+      "rank": 9,
+      "party": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "이브",
+        "엘리시온"
+      ],
+      "best_ultimate_order": [
+        "루미나",
+        "에레보스",
+        "시트리",
+        "이브",
+        "엘리시온"
+      ],
+      "avg_turn": 39.2,
+      "avg_damage_taken": 2119.0,
+      "best_min_turn": 33,
+      "auto_avg_turn": 29.5,
+      "auto_avg_dmg": 545.0,
+      "order_turn_variance": 0.0
+    },
+    {
+      "rank": 10,
+      "party": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "이브",
+        "아우로라"
+      ],
+      "best_ultimate_order": [
+        "에레보스",
+        "시트리",
+        "아르테미스",
+        "이브",
+        "아우로라"
+      ],
+      "avg_turn": 39.5,
+      "avg_damage_taken": 5611.0,
+      "best_min_turn": 32,
+      "auto_avg_turn": 32.3,
+      "auto_avg_dmg": 5403.0,
+      "order_turn_variance": 0.0
+    }
+  ],
+  "analysis": {
+    "character_frequency": {
+      "에레보스": {
+        "appearances": 20,
+        "appearance_rate": 1.0,
+        "avg_turn_when_present": 29.754999999999995,
+        "avg_dmg_when_present": 1540.5600000000004
+      },
+      "이브": {
+        "appearances": 16,
+        "appearance_rate": 0.8,
+        "avg_turn_when_present": 29.24375,
+        "avg_dmg_when_present": 1711.9437500000001
+      },
+      "루미나": {
+        "appearances": 14,
+        "appearance_rate": 0.7,
+        "avg_turn_when_present": 29.05,
+        "avg_dmg_when_present": 572.8999999999999
+      },
+      "아르테미스": {
+        "appearances": 13,
+        "appearance_rate": 0.65,
+        "avg_turn_when_present": 29.707692307692312,
+        "avg_dmg_when_present": 1685.7307692307695
+      },
+      "쿠바바": {
+        "appearances": 11,
+        "appearance_rate": 0.55,
+        "avg_turn_when_present": 29.990909090909096,
+        "avg_dmg_when_present": 1884.8909090909094
+      },
+      "시트리": {
+        "appearances": 10,
+        "appearance_rate": 0.5,
+        "avg_turn_when_present": 29.380000000000003,
+        "avg_dmg_when_present": 1988.7800000000002
+      },
+      "아우로라": {
+        "appearances": 9,
+        "appearance_rate": 0.45,
+        "avg_turn_when_present": 30.811111111111106,
+        "avg_dmg_when_present": 2199.911111111111
+      },
+      "엘리시온": {
+        "appearances": 7,
+        "appearance_rate": 0.35,
+        "avg_turn_when_present": 31.22857142857143,
+        "avg_dmg_when_present": 785.3999999999999
+      }
+    },
+    "role_compositions": {
+      "ATK/ATK/ATK/SUP/SUP": {
+        "count": 7,
+        "avg_turn": 29.114285714285717
+      },
+      "ATK/ATK/ATK/ATK/SUP": {
+        "count": 3,
+        "avg_turn": 28.166666666666668
+      },
+      "ATK/ATK/ATK/DEF/SUP": {
+        "count": 5,
+        "avg_turn": 29.7
+      },
+      "ATK/ATK/SUP/SUP/SUP": {
+        "count": 1,
+        "avg_turn": 29.5
+      },
+      "ATK/ATK/DEF/SUP/SUP": {
+        "count": 3,
+        "avg_turn": 31.666666666666668
+      },
+      "ATK/ATK/ATK/ATK/DEF": {
+        "count": 1,
+        "avg_turn": 33.8
+      }
+    }
+  }
+}

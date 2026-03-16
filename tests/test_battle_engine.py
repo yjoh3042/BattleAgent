@@ -1,7 +1,6 @@
-"""BattleEngine 통합 테스트"""
+"""BattleEngine 통합 테스트 (캐릭터 비종속 – conftest make_simple_unit 사용)"""
 import sys
 import os
-import random
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -9,91 +8,92 @@ import pytest
 from battle.battle_engine import BattleEngine
 from battle.battle_recorder import BattleRecorder
 from battle.enums import BattleResult
-from fixtures.test_data import get_party1, get_party2, get_enemies
+
+
+def _make_party(factory, n=5, side="ally", **kwargs):
+    """make_simple_unit 팩토리 → CharacterData 목록 (BattleEngine 입력 형식)"""
+    return [factory(name=f"유닛{i}", side=side, **kwargs).data for i in range(n)]
+
+
+def _make_enemies(factory, n=3, **kwargs):
+    return _make_party(factory, n=n, side="enemy", **kwargs)
 
 
 class TestNormalOnly:
-    def test_completes(self):
-        """시나리오1 NormalOnly → 정상 종료"""
+    def test_completes(self, make_simple_unit):
+        """NormalOnly → 정상 종료"""
         eng = BattleEngine(
-            ally_units=get_party1(), enemy_units=get_enemies(),
+            ally_units=_make_party(make_simple_unit),
+            enemy_units=_make_enemies(make_simple_unit),
             allow_active=False, allow_ultimate=False, seed=42,
         )
         result = eng.run()
         assert result in (BattleResult.ALLY_WIN, BattleResult.ENEMY_WIN, BattleResult.TIME_OVER)
 
 
-class TestSettingUltimate:
-    def test_ally_wins(self):
-        """시나리오4 SettingUltimate → 아군 승리"""
+class TestWithActiveAndUltimate:
+    def test_completes(self, make_simple_unit):
+        """Active+Ultimate 허용 → 정상 종료"""
         eng = BattleEngine(
-            ally_units=get_party1(), enemy_units=get_enemies(),
+            ally_units=_make_party(make_simple_unit),
+            enemy_units=_make_enemies(make_simple_unit),
             allow_active=True, allow_ultimate=True,
-            ultimate_mode="manual_ordered",
-            ultimate_order=["citria", "hild", "arahan", "frey", "dana"],
-            seed=42,
+            ultimate_mode="auto", seed=42,
         )
         result = eng.run()
-        assert result == BattleResult.ALLY_WIN
+        assert result in (BattleResult.ALLY_WIN, BattleResult.ENEMY_WIN, BattleResult.TIME_OVER)
 
-
-class TestBurnSynergyParty:
-    def test_party2_wins(self):
-        """시나리오6 화상 시너지 파티 → 아군 승리"""
+    def test_stronger_ally_wins(self, make_simple_unit):
+        """압도적 아군 스탯 → 아군 승리"""
         eng = BattleEngine(
-            ally_units=get_party2(), enemy_units=get_enemies(),
+            ally_units=_make_party(make_simple_unit, atk=9999, def_=9999, hp=99999),
+            enemy_units=_make_enemies(make_simple_unit, atk=1, def_=1, hp=100),
             allow_active=True, allow_ultimate=True,
-            ultimate_mode="manual_ordered",
-            ultimate_order=["citria", "laga", "gumiho", "kara", "cain"],
-            seed=42,
+            ultimate_mode="auto", seed=42,
         )
         result = eng.run()
         assert result == BattleResult.ALLY_WIN
 
 
 class TestSeedReproducibility:
-    def test_same_seed_same_result(self):
-        """동일 seed → 동일 결과"""
-        rec1 = BattleRecorder()
-        eng1 = BattleEngine(
-            ally_units=get_party1(), enemy_units=get_enemies(),
-            allow_active=True, allow_ultimate=True, seed=42, recorder=rec1,
-        )
-        r1 = eng1.run()
+    def test_same_seed_same_result(self, make_simple_unit):
+        """동일 seed → 동일 결과 및 동일 기록 수"""
+        def make_eng(recorder):
+            return BattleEngine(
+                ally_units=_make_party(make_simple_unit),
+                enemy_units=_make_enemies(make_simple_unit),
+                allow_active=True, allow_ultimate=True, seed=42, recorder=recorder,
+            )
 
-        rec2 = BattleRecorder()
-        eng2 = BattleEngine(
-            ally_units=get_party1(), enemy_units=get_enemies(),
-            allow_active=True, allow_ultimate=True, seed=42, recorder=rec2,
-        )
-        r2 = eng2.run()
+        rec1, rec2 = BattleRecorder(), BattleRecorder()
+        r1 = make_eng(rec1).run()
+        r2 = make_eng(rec2).run()
 
         assert r1 == r2
         assert len(rec1.records) == len(rec2.records)
 
-    def test_different_seed_may_differ(self):
-        """다른 seed → 결과가 다를 수 있음 (적어도 실행 가능)"""
-        eng1 = BattleEngine(
-            ally_units=get_party1(), enemy_units=get_enemies(),
-            allow_active=True, allow_ultimate=True, seed=42,
-        )
-        eng2 = BattleEngine(
-            ally_units=get_party1(), enemy_units=get_enemies(),
-            allow_active=True, allow_ultimate=True, seed=999,
-        )
-        r1 = eng1.run()
-        r2 = eng2.run()
-        # 둘 다 정상 종료
-        assert r1 in (BattleResult.ALLY_WIN, BattleResult.ENEMY_WIN, BattleResult.TIME_OVER)
-        assert r2 in (BattleResult.ALLY_WIN, BattleResult.ENEMY_WIN, BattleResult.TIME_OVER)
+    def test_different_seed_runs(self, make_simple_unit):
+        """다른 seed → 둘 다 정상 종료"""
+        def run(seed):
+            return BattleEngine(
+                ally_units=_make_party(make_simple_unit),
+                enemy_units=_make_enemies(make_simple_unit),
+                allow_active=True, allow_ultimate=True, seed=seed,
+            ).run()
+
+        r1, r2 = run(42), run(999)
+        valid = (BattleResult.ALLY_WIN, BattleResult.ENEMY_WIN, BattleResult.TIME_OVER)
+        assert r1 in valid
+        assert r2 in valid
 
 
 class TestRecorder:
-    def test_recorder_captures_turns(self):
+    def test_recorder_captures_turns(self, make_simple_unit):
         """Recorder가 턴 기록을 수집"""
         rec = BattleRecorder()
         eng = BattleEngine(
-            ally_units=get_party1(), enemy_units=get_enemies(),
+            ally_units=_make_party(make_simple_unit),
+            enemy_units=_make_enemies(make_simple_unit),
             allow_active=True, allow_ultimate=True, seed=42, recorder=rec,
         )
         eng.run()

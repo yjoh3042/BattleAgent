@@ -1,7 +1,7 @@
 """SkillExecutor - 스킬 효과 실행 (LogicType별 분기 처리)"""
 from __future__ import annotations
 import random
-from typing import List, Dict, Any, TYPE_CHECKING
+from typing import List, Dict, Any, Optional, TYPE_CHECKING
 
 from battle.enums import LogicType, TargetType, CCType
 from battle.models import SkillData, SkillEffect, BuffData
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from battle.buff_manager import BuffManager
     from battle.sp_manager import SPManager
     from battle.turn_manager import TurnManager
+    from battle.trigger_system import TriggerSystem
 
 
 class EngineContext:
@@ -26,6 +27,7 @@ class EngineContext:
         sp_manager: SPManager,
         turn_manager: TurnManager,
         log: List[str],
+        trigger_system: Optional['TriggerSystem'] = None,
     ):
         self.all_units = all_units
         self.allies = allies
@@ -34,6 +36,7 @@ class EngineContext:
         self.sp_manager = sp_manager
         self.turn_manager = turn_manager
         self.log = log
+        self.trigger_system = trigger_system
 
     def get_enemies_of(self, unit: BattleUnit) -> List[BattleUnit]:
         """해당 유닛의 적군 목록"""
@@ -74,9 +77,9 @@ class SkillExecutor:
             if not self._check_condition(caster, effect.condition, ctx):
                 continue
 
-            # 타겟 선택
+            # 타겟 선택 (is_melee는 스킬 단위로 적용 — 전열 보호)
             targets = self._selector.select(
-                caster, effect.target_type, caster_allies, caster_enemies
+                caster, effect.target_type, caster_allies, caster_enemies,
             )
             if not targets and effect.target_type not in (TargetType.SELF,):
                 continue
@@ -107,6 +110,10 @@ class SkillExecutor:
             # SkillEffect에 burn_bonus_per_stack 속성이 있으면 사용
             if hasattr(effect, 'condition') and effect.condition:
                 burn_bonus = effect.condition.get('burn_bonus_per_stack', 0.0)
+                # 타겟 HP 조건 체크 (처형 보너스 등)
+                if 'target_hp_below' in effect.condition:
+                    if target.hp_ratio > effect.condition['target_hp_below']:
+                        return  # 타겟 HP 조건 미달 → 스킵
 
             dmg, is_crit, is_dodged = compute_damage(caster, target, effect.multiplier, burn_bonus)
             if is_dodged:
@@ -120,6 +127,9 @@ class SkillExecutor:
                 f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
                 f"(HP {target.current_hp:.0f}/{target.max_hp:.0f})"
             )
+            # ─── ON_HIT 트리거 (피격 패시브) ──────────────────────
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
             if not target.is_alive:
                 self._killed_this_skill.append(target)
                 ctx.log.append(f"    💀 {target.name} 사망!")

@@ -13,14 +13,23 @@ if TYPE_CHECKING:
     from battle.battle_unit import BattleUnit
 
 
-# ─── 속성 상성 테이블 ─────────────────────────────────────────────
+# ─── 속성 상성 테이블 (ElementUpper.xlsx 기준) ────────────────────
 # (공격 속성, 방어 속성) → 배율
+# Win(유리) = +20%, Lose(불리) = -20%
+# Light ↔ Dark: 서로에게 Win이면서 동시에 Lose → 양방향 +20%
 ELEMENT_TABLE: dict[tuple, float] = {
+    # Win (유리 상성): +20%
+    (Element.WATER,  Element.FIRE):   1.2,
     (Element.FIRE,   Element.FOREST): 1.2,
     (Element.FOREST, Element.WATER):  1.2,
-    (Element.WATER,  Element.FIRE):   1.2,
     (Element.LIGHT,  Element.DARK):   1.2,
     (Element.DARK,   Element.LIGHT):  1.2,
+    # Lose (불리 상성): -20%
+    (Element.FIRE,   Element.WATER):  0.8,
+    (Element.FOREST, Element.FIRE):   0.8,
+    (Element.WATER,  Element.FOREST): 0.8,
+    # Light ↔ Dark: 양쪽 모두 Win+Lose → 공격 시 1.2 (위에서 정의)
+    # 즉, Light→Dark = 1.2, Dark→Light = 1.2 (하이리스크·하이리턴)
 }
 
 
@@ -100,12 +109,17 @@ def calc_dot_damage(
     target_max_hp: float,
     dot_ratio: float,
     stack_count: int = 1,
+    target_def: float = 0.0,
 ) -> int:
     """
     DoT (화상, 독 등) 피해 계산.
-    damage = floor(target_max_hp × dot_ratio × stack_count)
+    DEF 경감 적용: mitigation = DEF / (DEF + 300)
+    DEF=187 → 38% 경감, DEF=234(탱커) → 44% 경감
+    damage = floor(max_hp × dot_ratio × stacks × (1 - mitigation))
     """
-    return max(1, math.floor(target_max_hp * dot_ratio * stack_count))
+    mitigation = target_def / (target_def + 300.0)
+    raw = target_max_hp * dot_ratio * stack_count * (1.0 - mitigation)
+    return max(1, math.floor(raw))
 
 
 # ─── 화상 보너스 배율 ─────────────────────────────────────────────

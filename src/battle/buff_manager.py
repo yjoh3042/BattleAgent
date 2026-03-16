@@ -105,7 +105,7 @@ class BuffManager:
         for ab in unit.active_buffs:
             bd = ab.buff_data
             if bd.logic_type == LogicType.DOT:
-                dmg = calc_dot_damage(unit.max_hp, bd.value, ab.stack_count)
+                dmg = calc_dot_damage(unit.max_hp, bd.value, ab.stack_count, unit.def_)
                 unit.take_damage(dmg)
                 self._log.append(
                     f"  → {unit.name} {bd.dot_type or 'DoT'} 피해 {dmg} "

@@ -54,11 +54,24 @@ class TestElementMultiplier:
     def test_light_vs_dark(self):
         assert get_element_mult(Element.LIGHT, Element.DARK) == 1.2
 
+    def test_disadvantage(self):
+        """Lose(불리) 상성: -20%"""
+        assert get_element_mult(Element.FIRE, Element.WATER) == 0.8
+        assert get_element_mult(Element.FOREST, Element.FIRE) == 0.8
+        assert get_element_mult(Element.WATER, Element.FOREST) == 0.8
+
     def test_no_advantage(self):
-        assert get_element_mult(Element.FIRE, Element.WATER) == 1.0
+        """상성 관계 없는 조합은 1.0"""
+        assert get_element_mult(Element.FIRE, Element.LIGHT) == 1.0
+        assert get_element_mult(Element.WATER, Element.DARK) == 1.0
 
     def test_same_element(self):
         assert get_element_mult(Element.FIRE, Element.FIRE) == 1.0
+
+    def test_light_dark_mutual(self):
+        """Light↔Dark: 양방향 유리 (하이리스크·하이리턴)"""
+        assert get_element_mult(Element.LIGHT, Element.DARK) == 1.2
+        assert get_element_mult(Element.DARK, Element.LIGHT) == 1.2
 
 
 class TestCritRoll:

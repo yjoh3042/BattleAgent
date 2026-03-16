@@ -1,5 +1,8 @@
-"""TurnManager - CTB (Conditional Turn-Based) 턴 관리 시스템
-행동 간격 = 300 / SPD, heapq 기반 우선순위 큐, Extra Turn 끼어들기 지원
+"""TurnManager - ATB/CTB 턴 관리 시스템
+
+ATB 기획(게이지 충전)을 CTB(heapq 행동 예약)로 동일하게 시뮬레이션.
+행동 간격 = BATTLE_LENGTH / SPD, heapq 기반 우선순위 큐, Extra Turn 끼어들기 지원.
+라운드 전환(ROUND_INTERVAL 단위)마다 전원 행동게이지를 현재 SPD 기준으로 재계산.
 """
 from __future__ import annotations
 import heapq
@@ -9,8 +12,10 @@ from typing import Dict, List, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from battle.battle_unit import BattleUnit
 
-TURN_LENGTH: float = 300.0     # 기본 행동 거리
-ROUND_INTERVAL: float = 10.0   # 배틀 라운드 전환 간격
+from battle.rules import BATTLE_LENGTH, MAX_TURN_TIME
+
+TURN_LENGTH: float = float(BATTLE_LENGTH)     # 기본 행동 거리 (= BattleLength)
+ROUND_INTERVAL: float = float(MAX_TURN_TIME)  # 배틀 라운드 전환 간격 (= Max Turn Time)
 MAX_EXTRA_TURNS: int = 100     # 엑스트라 턴 최대 횟수 (무한 루프 방지)
 EXTRA_TURN_EPSILON: float = 1e-6  # 끼어들기 시 현재 시간보다 약간 앞 배치
 
@@ -132,6 +137,20 @@ class TurnManager:
             self.battle_round = new_round
             return True
         return False
+
+    # ─── 라운드 전환 시 전원 행동큐 재계산 ─────────────────────────
+    def recalculate_all(self, units: list[BattleUnit]):
+        """
+        라운드 전환 시 전원 행동게이지를 현재 SPD 기준으로 재계산.
+        라운드 경계 시점(battle_round * ROUND_INTERVAL)으로부터
+        TURN_LENGTH / SPD 만큼 뒤에 행동 시간을 재배치한다.
+        기존 엔트리는 _unit_next_time 덮어쓰기로 자동 무효화.
+        """
+        round_boundary = self.battle_round * ROUND_INTERVAL
+        for unit in units:
+            if unit.is_alive:
+                next_time = round_boundary + TURN_LENGTH / unit.spd
+                self._push(next_time, unit.id, is_extra=False)
 
     # ─── 유닛 제거 (사망) ─────────────────────────────────────────
     def remove_unit(self, unit_id: str):

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Meta Tier Analyzer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#0f1117;color:#e4e6f0;padding:10px;font-size:13px}
+h1{font-size:17px;text-align:center;margin-bottom:3px}
+.sub{text-align:center;color:#8b8fa8;font-size:11px;margin-bottom:10px}
+.sel-bar{display:flex;gap:5px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.ss{height:30px;min-width:70px;padding:0 8px;border:1px dashed #2d3348;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#8b8fa8}
+.ss.f{border-style:solid;cursor:pointer;border-color:#8b8fa8}
+.go{height:30px;padding:0 16px;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer}
+.go:disabled{background:#242836;color:#8b8fa8;cursor:default}
+.go:not(:disabled){background:#ff4a6a;color:#fff}
+.flt{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px}
+.fb{padding:3px 8px;border:1px solid #2d3348;border-radius:10px;background:#1a1d27;color:#8b8fa8;cursor:pointer;font-size:10px}
+.fb.on{border-color:#e4e6f0;color:#e4e6f0;background:#242836}
+.qi{width:100%;padding:5px 8px;border:1px solid #2d3348;border-radius:5px;background:#1a1d27;color:#e4e6f0;font-size:11px;margin-bottom:6px;outline:none}
+.cl{max-height:200px;overflow-y:auto;border:1px solid #2d3348;border-radius:6px;background:#1a1d27}
+.cr{display:flex;align-items:center;padding:4px 8px;cursor:pointer;border-bottom:1px solid #2d3348}
+.cr:last-child{border-bottom:none}
+.cr:hover{background:#242836}
+.cr.on{background:rgba(255,74,106,.1)}
+.cr.off{opacity:.3;pointer-events:none}
+.cn{flex:1;font-weight:600;font-size:11px}
+.cm{color:#8b8fa8;font-size:9px;margin-left:6px}
+.ce{font-size:9px;font-weight:700;width:40px;text-align:right}
+.el-fire{color:#ff6b4a}.el-water{color:#4a9eff}.el-forest{color:#4aff8b}.el-light{color:#ffd84a}.el-dark{color:#b34aff}
+#rc{margin-top:10px;white-space:pre-wrap;font-family:'Consolas','Courier New',monospace;font-size:11px;background:#1a1d27;border:1px solid #2d3348;border-radius:6px;padding:10px;line-height:1.5;color:#4aff8b}
+</style>
+</head>
+<body>
+<h1>Meta Tier Analyzer</h1>
+<p class="sub">5명 선택 → 분석 버튼 클릭 → 12 메타 시뮬레이션</p>
+<div class="sel-bar" id="bar">
+<div class="ss" id="s0">1</div><div class="ss" id="s1">2</div><div class="ss" id="s2">3</div><div class="ss" id="s3">4</div><div class="ss" id="s4">5</div>
+<button class="go" id="go" disabled>분석</button>
+</div>
+<div class="flt" id="flt"></div>
+<input class="qi" id="q" placeholder="검색...">
+<div class="cl" id="cl"></div>
+<div id="rc"></div>
+<script>
+var C=[],sel=[],fE='all',fR='all';
+var RL={attacker:'딜러',magician:'마법사',defender:'탱커',supporter:'서포터',healer:'힐러'};
+(function(){
+  try{
+    var x=new XMLHttpRequest();
+    x.open('GET','/api/chars',false);
+    x.send();
+    C=JSON.parse(x.responseText);
+  }catch(e){C=[];}
+  var h='<span class="fb on" data-e="all">전체</span>';
+  var en={fire:'화',water:'수',forest:'목',light:'광',dark:'암'};
+  ['fire','water','forest','light','dark'].forEach(function(e){h+='<span class="fb" data-e="'+e+'">'+en[e]+'</span>';});
+  h+='<span style="width:1px;height:14px;background:#2d3348;margin:0 2px"></span><span class="fb on" data-r="all">전체</span>';
+  ['attacker','magician','defender','supporter','healer'].forEach(function(r){h+='<span class="fb" data-r="'+r+'">'+(RL[r])+'</span>';});
+  document.getElementById('flt').innerHTML=h;
+  draw();
+})();
+function draw(){
+  var qv=document.getElementById('q').value.toLowerCase();
+  var f=[];
+  for(var i=0;i<C.length;i++){
+    var c=C[i];
+    if(fE!=='all'&&c.element!==fE)continue;
+    if(fR!=='all'&&c.role!==fR)continue;
+    if(qv&&c.name.toLowerCase().indexOf(qv)<0&&c.key.toLowerCase().indexOf(qv)<0)continue;
+    f.push(c);
+  }
+  var h='';
+  for(var i=0;i<f.length;i++){
+    var c=f[i],on=sel.indexOf(c.key)>=0,off=sel.length>=5&&!on;
+    h+='<div class="cr'+(on?' on':'')+(off?' off':'')+'" onclick="tog(\''+c.key+'\')">';
+    h+='<span class="cn">'+c.name+'</span>';
+    h+='<span class="cm">'+(RL[c.role]||c.role)+' SPD'+c.spd+' SP'+c.sp+'</span>';
+    h+='<span class="ce el-'+c.element+'">'+c.element.toUpperCase()+'</span></div>';
+  }
+  document.getElementById('cl').innerHTML=h;
+  for(var i=0;i<5;i++){
+    var s=document.getElementById('s'+i);
+    if(sel[i]){
+      var c=null;for(var j=0;j<C.length;j++)if(C[j].key===sel[i]){c=C[j];break;}
+      s.className='ss f';s.innerHTML='<span class="el-'+c.element+'" style="font-weight:600;font-size:11px">'+c.name+'</span>';
+    }else{s.className='ss';s.innerHTML=''+(i+1);}
+  }
+  document.getElementById('go').disabled=sel.length!==5;
+}
+function tog(k){var i=sel.indexOf(k);if(i>=0)sel.splice(i,1);else if(sel.length<5)sel.push(k);draw();}
+document.getElementById('flt').onclick=function(e){
+  var b=e.target;if(!b.classList||!b.classList.contains('fb'))return;
+  if(b.dataset.e!==undefined){fE=b.dataset.e;var all=document.querySelectorAll('[data-e]');for(var i=0;i<all.length;i++)all[i].classList.remove('on');b.classList.add('on');}
+  if(b.dataset.r!==undefined){fR=b.dataset.r;var all=document.querySelectorAll('[data-r]');for(var i=0;i<all.length;i++)all[i].classList.remove('on');b.classList.add('on');}
+  draw();
+};
+document.getElementById('q').oninput=draw;
+document.getElementById('go').onclick=function(){
+  if(sel.length!==5)return;
+  document.getElementById('rc').textContent='분석 요청 중: '+sel.join(', ')+'\n서버에서 결과를 가져오는 중...';
+  window._analyzeChars=sel.join(',');
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Meta Tier Result</title>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #242836;
+    --border: #2d3348; --text: #e4e6f0; --text2: #8b8fa8;
+    --fire: #ff6b4a; --water: #4a9eff; --forest: #4aff8b;
+    --light: #ffd84a; --dark: #b34aff;
+    --tier-s: #ff4a6a; --tier-a: #ff8c4a; --tier-b: #ffd84a;
+    --tier-c: #4a9eff; --tier-d: #8b8fa8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+
+  .tier-badge { display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; border-radius: 14px; font-size: 32px; font-weight: 800; margin-right: 14px; }
+  .tier-S { background: rgba(255,74,106,.15); color: var(--tier-s); border: 2px solid var(--tier-s); }
+  .tier-A { background: rgba(255,140,74,.15); color: var(--tier-a); border: 2px solid var(--tier-a); }
+  .tier-B { background: rgba(255,216,74,.15); color: var(--tier-b); border: 2px solid var(--tier-b); }
+  .tier-C { background: rgba(74,158,255,.15); color: var(--tier-c); border: 2px solid var(--tier-c); }
+  .tier-D { background: rgba(139,143,168,.15); color: var(--tier-d); border: 2px solid var(--tier-d); }
+
+  .header { display: flex; align-items: center; margin-bottom: 16px; padding: 16px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .header h2 { font-size: 18px; }
+  .stat-row { display: flex; gap: 20px; margin-top: 6px; font-size: 12px; color: var(--text2); }
+  .stat-row span { font-weight: 600; color: var(--text); }
+
+  .comp { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .comp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 12px; text-align: center; min-width: 90px; }
+  .comp-card .name { font-weight: 700; font-size: 13px; }
+  .comp-card .info { font-size: 10px; color: var(--text2); margin-top: 2px; }
+  .el-fire { color: var(--fire); } .el-water { color: var(--water); }
+  .el-forest { color: var(--forest); } .el-light { color: var(--light); } .el-dark { color: var(--dark); }
+
+  table { width: 100%; border-collapse: collapse; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  th { text-align: left; padding: 8px 10px; font-size: 11px; color: var(--text2);
+    border-bottom: 1px solid var(--border); }
+  td { padding: 7px 10px; font-size: 12px; border-bottom: 1px solid var(--border); }
+  tr:hover { background: var(--surface2); }
+
+  .bar { width: 60px; height: 5px; background: var(--surface2); border-radius: 3px;
+    display: inline-block; vertical-align: middle; margin-right: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; }
+  .g { background: #4aff8b; } .y { background: #ffd84a; } .r { background: #ff4a6a; }
+
+  .loading { text-align: center; padding: 60px; color: var(--text2); font-size: 14px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border);
+    border-top-color: var(--tier-s); border-radius: 50%; animation: spin .8s linear infinite;
+    margin: 0 auto 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="loading"><div class="spinner"></div>분석 중...</div>
+</div>
+<script>
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const chars = params.get('chars') || 'kubaba,artemis,aurora,thisbe,frey';
+  const app = document.getElementById('app');
+
+  try {
+    const res = await fetch('/api/analyze?chars=' + chars);
+    const d = await res.json();
+    if (d.error) { app.innerHTML = `<p style="color:var(--tier-s)">${d.error}</p>`; return; }
+
+    let html = `
+    <div class="header">
+      <div class="tier-badge tier-${d.tier}">${d.tier}</div>
+      <div>
+        <h2>평균 승률 ${d.avg_winrate}%</h2>
+        <div class="stat-row">
+          <div>카운터: <span style="color:var(--forest)">${d.counters}개</span></div>
+          <div>취약점: <span style="color:var(--tier-s)">${d.weaknesses}개</span></div>
+          <div>SPD: <span>${d.avg_spd}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="comp">`;
+
+    d.composition.forEach(c => {
+      html += `<div class="comp-card">
+        <div class="name el-${c.element}">${c.name}</div>
+        <div class="info">${c.role} | SP${c.sp}</div>
+      </div>`;
+    });
+
+    html += `</div><table><thead><tr>
+      <th>메타</th><th>승률</th><th></th><th>W/L/T</th><th>턴</th><th>판정</th>
+    </tr></thead><tbody>`;
+
+    d.matchups.forEach(m => {
+      const wr = m.win_rate;
+      const cls = wr >= 60 ? 'g' : wr >= 40 ? 'y' : 'r';
+      const v = wr >= 70 ? '유리' : wr >= 55 ? '소폭유리' : wr >= 45 ? '호각' : wr >= 30 ? '소폭불리' : '불리';
+      const vc = wr >= 55 ? 'var(--forest)' : wr >= 45 ? 'var(--light)' : 'var(--tier-s)';
+      html += `<tr>
+        <td><strong>${m.meta_id}</strong> ${m.meta_name}</td>
+        <td style="font-weight:700;color:${wr>=50?'var(--forest)':'var(--tier-s)'}">${wr}%</td>
+        <td><div class="bar"><div class="bar-fill ${cls}" style="width:${wr}%"></div></div></td>
+        <td>${m.wins}/${m.losses}/${m.timeouts}</td>
+        <td>${m.avg_turns}</td>
+        <td style="color:${vc};font-weight:600">${v}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    app.innerHTML = html;
+  } catch(e) {
+    app.innerHTML = `<p style="color:var(--tier-s)">오류: ${e.message}</p>`;
+  }
+})();
+</script>
+</body>
+</html>

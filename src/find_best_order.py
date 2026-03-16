@@ -1,63 +1,49 @@
-"""find_best_order.py - 파티2 얼티밋 순서 전수 탐색 (5! = 120가지)
-데이터 변경 없이 순서만 바꿔 최단 턴 조합을 찾는다.
+"""find_best_order.py – 얼티밋 발동 순서 전수 탐색 (5! = 120가지)
+캐릭터 데이터를 fixtures/test_data.py 에 추가한 뒤 설정을 채우세요.
+실행: py -X utf8 src/find_best_order.py
 """
 import sys, os, itertools
 sys.path.insert(0, os.path.dirname(__file__))
 
 from battle.battle_engine import BattleEngine
-from battle.battle_recorder import BattleRecorder
-from fixtures.test_data import get_party2, get_enemies
+from battle.enums import BattleResult
 
-CHARS = ["gumiho", "cain", "citria", "kara", "laga"]
-ALL_ORDERS = list(itertools.permutations(CHARS))
+# ─── 설정 ────────────────────────────────────────────────────────
+# from fixtures.test_data import get_my_party, get_enemies
+# ALLY_FACTORY   = get_my_party
+# ENEMY_FACTORY  = get_enemies
 
-results = []
+ALLY_FACTORY  = None
+ENEMY_FACTORY = None
 
-for order in ALL_ORDERS:
-    rec = BattleRecorder()
-    eng = BattleEngine(
-        ally_units=get_party2(),
-        enemy_units=get_enemies(),
-        allow_active=True,
-        allow_ultimate=True,
-        ultimate_mode="manual_ordered",
-        ultimate_order=list(order),
-        recorder=rec,
-        seed=42,
-    )
-    res = eng.run()
-    turns = len(rec.records)
-    results.append((turns, list(order)))
 
-# 턴수 기준 정렬
-results.sort(key=lambda x: x[0])
+def main():
+    if not ALLY_FACTORY or not ENEMY_FACTORY:
+        print("ALLY_FACTORY / ENEMY_FACTORY 가 설정되지 않았습니다.")
+        return
 
-print("=" * 60)
-print(f"  🔍 파티2 얼티밋 순서 전수 탐색  (총 {len(results)}가지)")
-print("=" * 60)
+    ally_units = ALLY_FACTORY()
+    order_ids  = [u.id for u in ally_units]
+    best, best_turns = None, 10**9
 
-print("\n── TOP 10 최단 순서 ──────────────────────────────────────")
-for rank, (turns, order) in enumerate(results[:10], 1):
-    arrow = " → ".join(order)
-    print(f"  {rank:>2}위  {turns:>3}턴   {arrow}")
+    for perm in itertools.permutations(order_ids):
+        engine = BattleEngine(
+            ally_units=ALLY_FACTORY(),
+            enemy_units=ENEMY_FACTORY(),
+            allow_active=True, allow_ultimate=True,
+            ultimate_mode="setting", ultimate_order=list(perm),
+            seed=42,
+        )
+        result = engine.run()
+        if result == BattleResult.ALLY_WIN and engine.turn_count < best_turns:
+            best_turns = engine.turn_count
+            best = perm
 
-print("\n── BOTTOM 5 최장 순서 ────────────────────────────────────")
-for rank, (turns, order) in enumerate(results[-5:], 1):
-    arrow = " → ".join(order)
-    print(f"  {rank:>2}위  {turns:>3}턴   {arrow}")
+    if best:
+        print(f"최적 순서 ({best_turns}턴): {best}")
+    else:
+        print("승리 조합 없음.")
 
-best_turns, best_order = results[0]
-worst_turns, worst_order = results[-1]
-print(f"\n✅ 최단: {best_turns}턴  →  {' → '.join(best_order)}")
-print(f"❌ 최장: {worst_turns}턴  →  {' → '.join(worst_order)}")
-print(f"   차이: {worst_turns - best_turns}턴")
 
-# 현재 시나리오 6 순서 위치 확인
-sc6 = ["citria", "laga", "gumiho", "kara", "cain"]
-sc6_rank = next((i+1 for i, (_, o) in enumerate(results) if o == sc6), None)
-sc6_turns = next((t for t, o in results if o == sc6), None)
-sc7 = ["gumiho", "cain", "citria", "kara", "laga"]
-sc7_rank = next((i+1 for i, (_, o) in enumerate(results) if o == sc7), None)
-sc7_turns = next((t for t, o in results if o == sc7), None)
-print(f"\n   시나리오 6 순서: {sc6_turns}턴  (전체 {sc6_rank}위 / 120)")
-print(f"   시나리오 7 순서: {sc7_turns}턴  (전체 {sc7_rank}위 / 120)")
+if __name__ == "__main__":
+    main()
