@@ -23,6 +23,7 @@
 13. [조건부 스킬 효과](#13-조건부-스킬-효과)
 14. [반격 시스템](#14-반격-시스템)
 15. [속성 상성 테이블](#15-속성-상성-테이블)
+16. [원본 기획 로직 전체 명세 (Buff.xlsx + LogicFormula.xlsx + Notion)](#16-원본-기획-로직-전체-명세-buffxlsx--logicformulaxlsx--notion)
 
 ---
 
@@ -1653,3 +1654,415 @@ ELEMENT_TABLE: dict[tuple, float] = {
 - **기본공격 "다크 미스트"**: ENEMY_NEAR, DMG 3.60x
 - **액티브 "레인 드랍"**: ENEMY_LOWEST_HP, DMG 4.00x + DMG 3.00x (HP<25% 처형)
 - **얼티밋 "실낙원"**: ENEMY_LOWEST_HP, DMG 5.00x + DMG 2.00x (HP<25% 처형)
+
+---
+
+## 16. 원본 기획 로직 전체 명세 (Buff.xlsx + LogicFormula.xlsx + Notion)
+
+> **출처**: LogicFormula.xlsx (XML 공식), Buff.xlsx (버프/디버프 목록), Notion "로직" 페이지
+> **목적**: 원본 게임 기획 전체 로직을 문서화. 시뮬레이터 미구현 항목 포함.
+> **스케일 주의**: 원본 게임은 정수 기반 ×0.00001 스케일 사용. 시뮬레이터는 실수 기반.
+
+---
+
+### 16.1 데미지 계산 원본 공식 (LogicFormula.xlsx)
+
+#### LogicDamage (일반 대미지)
+
+```
+최종대미지 =
+  ATK
+  × (1 - max(DEF - Penetration, 0) / (ATK + max(DEF - Penetration, 0)))
+  × (LogicValue × 0.00001)
+  × DamageMultiplier
+  × BattleDmgRatio
+  × max(1 + SkillDmgRatio×0.00001   - SkillDmgReduceRatio×0.00001,   0)
+  × max(1 + BossDmgRatio×0.00001    - BossDmgReduceRatio×0.00001,    0)
+  × max(1 + MonsterDmgRatio×0.00001 - MonsterDmgReduceRatio×0.00001, 0)
+  × max(1 + PvPDmgRatio×0.00001     - PvPDmgReduceRatio×0.00001,     0)
+  × max(ElementUpper, 0) × 0.00001
+  × HittedDmgRatio
+```
+
+**DamageMultiplier 분기:**
+| 스킬 종류 | 적용 비율 |
+|-----------|-----------|
+| Normal (기본공격) | NormalDamageRatio |
+| Active (액티브) | ActiveDamageRatio |
+| Ultimate (얼티밋) | UltimateDamageRatio |
+
+- **CRI 체크**: O (크리티컬 발동 가능)
+- **회피 체크**: O
+- **무적 적용**: 무적 상태 대상은 HP 미감소, "무적" 표기
+
+---
+
+#### LogicDamagePenetration (방어 무시 대미지)
+
+```
+최종대미지 =
+  ATK
+  × (LogicValue × 0.00001)
+  × DamageMultiplier
+  × BattleDmgRatio
+  × max(1 + SkillDmgRatio×0.00001   - SkillDmgReduceRatio×0.00001,   0)
+  × max(1 + BossDmgRatio×0.00001    - BossDmgReduceRatio×0.00001,    0)
+  × max(1 + MonsterDmgRatio×0.00001 - MonsterDmgReduceRatio×0.00001, 0)
+  × max(1 + PvPDmgRatio×0.00001     - PvPDmgReduceRatio×0.00001,     0)
+  × max(ElementUpper, 0) × 0.00001
+  × HittedDmgRatio
+```
+
+- DEF 공식 항목 없음 (방어력 완전 무시)
+- **CRI 체크**: O
+- **회피 체크**: O
+
+---
+
+#### LogicDamageHpRatio (HP 비례 대미지)
+
+```
+최종대미지 =
+  Target.HP
+  × (LogicValue × 0.00001)
+  × DamageMultiplier
+  × BattleDmgRatio
+  × (동일 비율 스탯 체인 ...)
+  × HittedDmgRatio
+```
+
+- **CRI 체크**: X (크리티컬 발동 불가)
+- **회피 체크**: O
+- 현재 HP 기준 비율 적용
+
+---
+
+#### LogicCriDamage (강제 크리티컬 대미지)
+
+- LogicDamage 공식과 동일
+- 크리티컬 확률 계산 없이 **무조건 크리티컬** 적용
+- **CRI 체크**: 강제 (확률 무관)
+- **회피 체크**: O
+
+---
+
+#### LogicHeal (ATK 비례 회복)
+
+```
+회복량 =
+  Caster.ATK
+  × (LogicValue × 0.00001)
+  × (1 + HealingReceived × 0.00001)
+  × (1 + HealingDoneRatio × 0.00001)
+```
+
+- **CRI 체크**: O (크리티컬 힐 가능)
+- 보호막(Barrier)은 회복되지 않음
+- HealingReceived: 대상의 받는 힐량 증가 스탯
+- HealingDoneRatio: 시전자의 주는 힐량 증가 스탯
+
+---
+
+#### LogicHealRatio (HP 비례 회복)
+
+```
+회복량 =
+  Target.HP
+  × (LogicValue × 0.00001)
+  × (1 + HealingReceived × 0.00001)
+  × (1 + HealingDoneRatio × 0.00001)
+```
+
+- 대상의 현재 HP 기준 비율 회복
+- **CRI 체크**: O
+
+---
+
+#### LogicBarrier (ATK 비례 보호막)
+
+```
+보호막량 = Caster.ATK × (LogicValue × 0.00001)
+```
+
+---
+
+#### LogicBarrierRatio (HP 비례 보호막)
+
+```
+보호막량 = Target.HP × (LogicValue × 0.00001)
+```
+
+---
+
+#### LogicRevive (부활)
+
+```
+부활 HP = Target.MaxHP × (LogicValue × 0.00001)
+```
+
+- 배치 시작 위치에 부활
+- 해당 위치가 빈칸이 아닐 경우 부활 취소
+
+---
+
+#### LogicDot (지속 효과)
+
+```
+매 배틀턴 종료 시 발동량 = Caster.ATK × (LogicValue × 0.00001)
+```
+
+- Tag: `Dmg` (지속 대미지) / `Heal` (지속 회복) 구분
+
+---
+
+#### LogicStatChange (스탯 증감)
+
+```
+적용 수치 = LogicValue0 (직접 수치)
+대상 스탯 = LogicValue1 (스탯 Enum ID)
+```
+
+- ×0.00001 스케일링 없음. 직접 수치 적용.
+
+---
+
+### 16.2 전체 로직 타입 명세 (Notion 기준)
+
+#### 즉시 발동형
+
+| 로직 타입 | 설명 | CRI | 회피 | 비고 |
+|-----------|------|-----|------|------|
+| **LogicDamage** | 대상에게 대미지 | O | O | 무적 시 "무적" 표기 |
+| **LogicDamageHpRatio** | 대상 현재 HP 비례 대미지 | X | O | |
+| **LogicDamagePenetration** | 방어력 무시 대미지 | O | O | DEF 계산 스킵 |
+| **LogicCriDamage** | 무조건 크리티컬 대미지 | 강제 | O | 크리 확률 무관 |
+| **LogicHeal** | 시전자 ATK 비례 회복 | O | - | 보호막 미회복 |
+| **LogicHealRatio** | 대상 HP 비례 회복 | O | - | |
+| **LogicRemoveBuffCount** | 버프/디버프 제거 | - | - | LogicValue개만큼 최근 순서대로 제거 |
+| **LogicRevive** | 부활 | - | - | 배치 시작 위치, 빈칸 아닐 시 취소 |
+| **UseSkill** | 스킬 발동 | - | - | LogicValue=스킬 ID |
+| **LogicDamageBuffScale** | 시전자 보유 버프 수 비례 대미지 | O | O | Limit 값 존재 |
+| **LogicDamageBuffScaleTarget** | 타겟 보유 버프 수 비례 대미지 | O | O | |
+| **LogicDamageDebuffScaleTarget** | 타겟 보유 디버프 수 비례 대미지 | O | O | |
+| **LogicSpSteal** | SP 강탈 | - | - | 타겟 SP 감소 → 시전자 SP 증가. 부족 시 현재값만 |
+| **LogicSpIncrease** | SP 즉시 충전 | - | - | 최대값 초과 불가 |
+| **LogicBuffTurnIncrease** | 현재 버프 Max턴 증가 | - | - | |
+| **LogicDeBuffTurnIncrease** | 현재 디버프 Max턴 증가 | - | - | |
+| **LogicHealLossScaleHp** | 잃은 HP의 Value% 회복 | - | - | (MaxHP - CurHP) × Value% |
+| **LogicAllyScaleHeal** | 배치 아군 직업/속성 수 비례 회복 | - | - | 아군 구성에 따라 회복량 변동 |
+
+---
+
+#### 상태 변경형 (버프/디버프)
+
+| 로직 타입 | 설명 | 분류 | 비고 |
+|-----------|------|------|------|
+| **LogicStatChange** | 스탯 증감 | 버프/디버프 | LogicValue0=수치, LogicValue1=스탯 Enum |
+| **LogicBarrier** | ATK 비례 보호막 부여 | 버프 | 초과 대미지 → HP 감소, 중첩 규칙 있음 |
+| **LogicBarrierRatio** | HP 비례 보호막 부여 | 버프 | LogicBarrier와 동일 중첩 규칙 |
+| **LogicDot** | 지속 효과 | 버프/디버프 | 배틀턴 종료마다 발동. Tag: Dmg/Heal |
+
+---
+
+#### CC (행동 불가) 상태이상
+
+| 로직 타입 | 설명 | 해제 조건 | 비고 |
+|-----------|------|-----------|------|
+| **LogicStun** | 행동불가 | 턴 만료 | 전용 애니메이션/VFX |
+| **LogicSleep** | 행동불가 | 턴 만료 또는 피격 | 피격 시 즉시 해제 |
+| **LogicFreeze** | 행동불가 + 정지 | 피격 시 Value% 확률 해제 | 모션 정지 포함 |
+| **LogicStone** | 행동불가 + 정지 | 피격 시 Value% 확률 해제 | 모션 정지 포함 |
+| **LogicElectricshock** | 30% 확률 스킬 취소 | 턴 만료 | 스킬 시전 시 확률 체크 |
+| **LogicPanic** | 30% 확률 스킬 취소 | 턴 만료 | LogicElectricshock과 동일 작동 |
+| **LogicAbnormalSkill** | 스킬 사용 불가 | 턴 만료 | Normal 포함 전체 스킬 봉인 |
+| **LogicConfused** | 혼란 | 턴 만료 | Normal 타겟 무작위, Active 사용 불가, Ultimate 정상 |
+| **LogicBlind** | 실명 | 턴 만료 | 적중 0 고정, 적중 스탯 변화 무시 |
+| **LogicSilence** | 침묵 | 턴 만료 | Normal 스킬만 사용 가능 |
+
+---
+
+#### 특수 효과
+
+| 로직 타입 | 설명 | 비고 |
+|-----------|------|------|
+| **LogicTaunt** | 도발 - 타겟 강제 변경 | 이후 도발이 덮어쓰기 |
+| **LogicSpLock** | SP 충전량 0 고정 | |
+| **LogicInvincibility** | 무적 - HP 미감소 | "무적" 표기 출력 |
+| **LogicUndying** | 불사 - HP 1 미만 불가 | |
+| **LogicDebuffImmune** | 디버프 면역 | 추가 디버프 무시, 기존 유지, 버프 제거 효과도 무시 |
+| **LogicCounterUnavailable** | 반격 확률 0 고정 | |
+| **LogicCriUnavailable** | 크리 확률 0 고정 | |
+| **LogicStop** | 정지 - 애니메이션 정지 | 해제 시 idle 상태로 복귀 |
+
+---
+
+#### 반격 무시 효과
+
+| 로직 타입 | 설명 |
+|-----------|------|
+| **LogicNormalIgnoreCounter** | Normal 공격 시 반격 확률 0 |
+| **LogicActiveIgnoreCounter** | Active 공격 시 반격 확률 0 |
+| **LogicUltimateIgnoreCounter** | Ultimate 공격 시 반격 확률 0 |
+
+---
+
+#### 고급 스탯 / 조건부 효과
+
+| 로직 타입 | 설명 | 비고 |
+|-----------|------|------|
+| **LogicAllyScaleStatusChange** | 아군 직업/속성 수 비례 스탯 변화 | 파티 구성에 따라 증폭 |
+| **LogicStatusChangeApplyAnotherStatusRate** | 다른 스탯의 N% 만큼 스탯 증가 | 예: 방어력의 10% 만큼 공격력 증가 |
+| **LogicActiveSkillTurnChangeOnce** | 액티브 쿨타임 즉시 변경 | 1회성 |
+| **LogicSpdTwist** | 전체 캐릭터 속도 반전 | 빠른 캐릭터가 느려지고 느린 캐릭터가 빨라짐 |
+| **LogicDamageCriApplyDebuff** | 특정 Tag 보유 대상에게 무조건 크리 | Tag 조건 충족 시에만 강제 크리 |
+| **LogicStatusChangeEveryTurn** | 매 턴 종료 시 Tag 수 기준 스탯 변경 | |
+| **LogicStatusChangeElementCount** | 아군 속성 종류 수 비례 스탯 변경 | 속성 다양성에 따라 증폭 |
+| **LogicStatusChangeRemainingHpPercent** | HP 비율 높을수록 스탯 증가 | 풀피에 가까울수록 강함 |
+| **LogicStatusChangeMissingHpPercent** | HP 비율 낮을수록 스탯 증가 | 빈사에 가까울수록 강함 |
+| **LogicHealTargetCount** | 적중 대상 수 비례 회복 | 다수 타겟일수록 힐량 증가 |
+| **LogicIgnoreElementUpper** | 속성 상성 무시 | ElementUpper 100000(=1.0) 고정 |
+
+---
+
+#### 삭제 / 미사용 로직 타입
+
+> 원본 기획에서 취소선(~~삭제~~) 처리된 항목. 게임에 미구현 또는 제거됨.
+
+| 로직 타입 | 비고 |
+|-----------|------|
+| ~~LogicWeather~~ | 삭제/미사용 |
+| ~~LogicIgnoreDmg~~ | 삭제/미사용 |
+| ~~LogicAbnormalMove~~ | 삭제/미사용 |
+| ~~LogicPause~~ | 삭제/미사용 |
+| ~~LogicSpawn~~ | 삭제/미사용 |
+| ~~LogicSkillGaugeChargeRatio~~ | 삭제/미사용 |
+| ~~LogicHpDrain~~ | 삭제/미사용 |
+| ~~LogicStatSteal~~ | 삭제/미사용 |
+| ~~LogicKnockback~~ | 삭제/미사용 |
+| ~~LogicWarp~~ | 삭제/미사용 |
+| ~~LogicJump~~ | 삭제/미사용 |
+| ~~LogicDash1~~ | 삭제/미사용 |
+| ~~LogicDash2~~ | 삭제/미사용 |
+| ~~LogicSwap~~ | 삭제/미사용 |
+| ~~LogicExecution~~ | 삭제/미사용 |
+| ~~LogicDamageDelay~~ | 삭제/미사용 |
+| ~~LogicDamageGating~~ | 삭제/미사용 |
+| ~~LogicBarrierScaleDamage~~ | 삭제/미사용 |
+| ~~LogicSpSwap~~ | 삭제/미사용 |
+
+---
+
+### 16.3 시뮬레이터 구현 GAP 분석
+
+| 원본 로직 타입 | 시뮬레이터 구현 | 상태 | 비고 |
+|----------------|----------------|------|------|
+| LogicDamage | `apply_damage()` | **완전 구현** | DEF 감소 공식, 속성 상성 포함 |
+| LogicDamagePenetration | `apply_damage(penetration=True)` | **완전 구현** | DEF 스킵 처리 |
+| LogicDamageHpRatio | `apply_damage_hp_ratio()` | **완전 구현** | 현재 HP 비율 적용 |
+| LogicCriDamage | `apply_damage(force_crit=True)` | **완전 구현** | 강제 크리 플래그 |
+| LogicHeal | `apply_heal()` | **완전 구현** | ATK 비례, 크리 힐 포함 |
+| LogicHealRatio | `apply_heal_ratio()` | **완전 구현** | HP 비례 힐 |
+| LogicStatChange | `apply_stat_change()` | **완전 구현** | ATK/DEF/HP/SPD 모두 |
+| LogicBarrier | `apply_barrier()` | **완전 구현** | 중첩 규칙 포함 |
+| LogicDot | `apply_dot()` | **완전 구현** | Dmg/Heal Tag 구분 |
+| LogicStun | `apply_cc(STUN)` | **완전 구현** | |
+| LogicSleep | `apply_cc(SLEEP)` | **완전 구현** | 피격 해제 포함 |
+| LogicFreeze | `apply_cc(FREEZE)` | **완전 구현** | 확률 해제 포함 |
+| LogicInvincibility | `apply_buff(INVINCIBLE)` | **완전 구현** | |
+| LogicUndying | `apply_buff(UNDYING)` | **완전 구현** | |
+| LogicTaunt | `apply_taunt()` | **완전 구현** | |
+| LogicRevive | `apply_revive()` | **부분 구현** | 빈칸 체크 미구현 |
+| LogicBarrierRatio | - | **미구현** | HP 비례 보호막 |
+| LogicRemoveBuffCount | - | **미구현** | 버프/디버프 수량 제거 |
+| UseSkill | - | **미구현** | 스킬 체인 발동 |
+| LogicDamageBuffScale | - | **미구현** | 버프 수 비례 대미지 |
+| LogicDamageBuffScaleTarget | - | **미구현** | 타겟 버프 수 비례 대미지 |
+| LogicDamageDebuffScaleTarget | - | **미구현** | 타겟 디버프 수 비례 대미지 |
+| LogicSpSteal | - | **미구현** | SP 강탈 |
+| LogicSpIncrease | - | **미구현** | SP 즉시 충전 |
+| LogicBuffTurnIncrease | - | **미구현** | 버프 턴 연장 |
+| LogicDeBuffTurnIncrease | - | **미구현** | 디버프 턴 연장 |
+| LogicHealLossScaleHp | - | **미구현** | 잃은 HP 비례 힐 |
+| LogicAllyScaleHeal | - | **미구현** | 파티 구성 비례 힐 |
+| LogicStone | - | **미구현** | Freeze와 유사 |
+| LogicElectricshock | - | **미구현** | 30% 스킬 취소 |
+| LogicPanic | - | **미구현** | 30% 스킬 취소 |
+| LogicAbnormalSkill | - | **미구현** | 전체 스킬 봉인 |
+| LogicConfused | - | **미구현** | 혼란 상태 |
+| LogicBlind | - | **미구현** | 실명 (적중 0) |
+| LogicSilence | - | **미구현** | Normal 스킬만 허용 |
+| LogicSpLock | - | **미구현** | SP 충전 봉인 |
+| LogicDebuffImmune | - | **미구현** | 디버프 면역 |
+| LogicCounterUnavailable | - | **미구현** | 반격 확률 0 고정 |
+| LogicCriUnavailable | - | **미구현** | 크리 확률 0 고정 |
+| LogicStop | - | **미구현** | 애니 정지 |
+| LogicNormalIgnoreCounter | - | **미구현** | Normal 반격 무시 |
+| LogicActiveIgnoreCounter | - | **미구현** | Active 반격 무시 |
+| LogicUltimateIgnoreCounter | - | **미구현** | Ultimate 반격 무시 |
+| LogicAllyScaleStatusChange | - | **미구현** | 파티 비례 스탯 |
+| LogicStatusChangeApplyAnotherStatusRate | - | **미구현** | 타 스탯 비율 적용 |
+| LogicActiveSkillTurnChangeOnce | - | **미구현** | 쿨타임 즉시 변경 |
+| LogicSpdTwist | - | **미구현** | 전체 속도 반전 |
+| LogicDamageCriApplyDebuff | - | **미구현** | Tag 조건 강제 크리 |
+| LogicStatusChangeEveryTurn | - | **미구현** | 매 턴 스탯 변경 |
+| LogicStatusChangeElementCount | - | **미구현** | 속성 수 비례 스탯 |
+| LogicStatusChangeRemainingHpPercent | - | **미구현** | HP 높을수록 강화 |
+| LogicStatusChangeMissingHpPercent | - | **미구현** | HP 낮을수록 강화 |
+| LogicHealTargetCount | - | **미구현** | 타겟 수 비례 힐 |
+| LogicIgnoreElementUpper | - | **미구현** | 속성 상성 무시 |
+
+> **요약**: 완전 구현 15종 / 부분 구현 1종 / 미구현 40종
+
+---
+
+### 16.4 보호막 중첩 규칙 (원본)
+
+원본 Notion 페이지 기준 보호막 동작 명세:
+
+**기본 규칙:**
+- 보호막이 존재할 때 대미지를 받으면 보호막이 먼저 흡수
+- 보호막을 초과하는 대미지는 HP에 적용
+  - 예: 보호막 3000, 대미지 5000 → 보호막 소멸, HP 2000 감소
+
+**중첩 규칙 (보호막 2개 이상 보유 시):**
+- 각 보호막은 독립적으로 존재하며 앞선(먼저 부여된) 보호막부터 소모
+- 앞 보호막 만료 시: 남은 보호막 = min(총 보호막 합산, 현재 남은 뒤 보호막)
+  - 예: 앞 3000 / 뒤 2000 → 총합 4000 → 앞 보호막 만료 시 뒤 보호막 2000으로 유지
+
+**현재 시뮬레이터 구현 상태:**
+- `apply_barrier()`: 단일 보호막 흡수 및 초과 대미지 처리 구현됨
+- 다중 보호막 스택 처리: 부분 구현 (선입선출 방식)
+
+---
+
+### 16.5 LogicValue 스케일링 비교
+
+원본 게임과 시뮬레이터 간 스케일링 방식 차이:
+
+| LogicValue (원본) | 의미 | 시뮬레이터 multiplier |
+|-------------------|------|-----------------------|
+| 100000 | 1.0× (100%) | 1.0 |
+| 150000 | 1.5× (150%) | 1.5 |
+| 200000 | 2.0× (200%) | 2.0 |
+| 300000 | 3.0× (300%) | 3.0 |
+| 50000  | 0.5× (50%)  | 0.5 |
+| 20000  | 0.2× (20%)  | 0.2 |
+
+**원본 게임 방식:**
+- 모든 수치는 정수로 저장
+- 공식 적용 시 `× 0.00001` 변환으로 실수 비율 획득
+- 예: `LogicValue=300000` → `300000 × 0.00001 = 3.0`
+
+**시뮬레이터 방식:**
+- 직접 실수 비율 사용 (multiplier=3.0)
+- 기획 데이터를 파싱할 때 `÷ 100000` 변환 필요
+- `src/fixtures/test_data.py` 내 스킬 데이터는 이미 변환된 실수값 사용
+
+**변환 공식:**
+```python
+# 원본 LogicValue → 시뮬레이터 multiplier
+multiplier = logic_value / 100000
+
+# 시뮬레이터 multiplier → 원본 LogicValue
+logic_value = int(multiplier * 100000)
+```
