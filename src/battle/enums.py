@@ -45,6 +45,27 @@ class LogicType(Enum):
     REMOVE_DEBUFF = "remove_debuff"            # 디버프 제거
     COUNTER = "counter"                        # 반격 준비 상태
     ABSORB = "absorb"                          # 피해 흡수
+    # ── 추가 로직 타입 ──────────────────────────────────────────────
+    DAMAGE_PENETRATION = "damage_penetration"  # DEF 무시 대미지
+    DAMAGE_HP_RATIO = "damage_hp_ratio"        # 대상 HP% 대미지
+    DAMAGE_CRI = "damage_cri"                  # 무조건 크리 대미지
+    DAMAGE_BUFF_SCALE = "damage_buff_scale"    # 시전자 버프 수 비례 대미지
+    DAMAGE_BUFF_SCALE_TARGET = "damage_buff_scale_target"    # 타겟 버프 수 비례 대미지
+    DAMAGE_DEBUFF_SCALE_TARGET = "damage_debuff_scale_target"  # 타겟 디버프 수 비례 대미지
+    HEAL_LOSS_SCALE = "heal_loss_scale"        # 잃은 HP 비례 회복
+    BARRIER_RATIO = "barrier_ratio"            # 대상 HP% 보호막
+    INVINCIBILITY = "invincibility"            # 무적
+    UNDYING = "undying"                        # 불사 (HP 1 미만 불가)
+    DEBUFF_IMMUNE = "debuff_immune"            # 디버프 면역
+    SP_STEAL = "sp_steal"                      # SP 강탈
+    SP_LOCK = "sp_lock"                        # SP 충전 잠금
+    BUFF_TURN_INCREASE = "buff_turn_increase"  # 버프 턴 증가
+    DEBUFF_TURN_INCREASE = "debuff_turn_increase"  # 디버프 턴 증가
+    CRI_UNAVAILABLE = "cri_unavailable"        # 크리 불가
+    COUNTER_UNAVAILABLE = "counter_unavailable"  # 반격 불가
+    USE_SKILL = "use_skill"                    # 스킬 발동
+    IGNORE_ELEMENT = "ignore_element"          # 속성 상성 무시
+    ACTIVE_CD_CHANGE = "active_cd_change"      # 액티브 쿨타임 변경
 
 
 class CCType(Enum):
@@ -63,6 +84,7 @@ class CCType(Enum):
     BURN = "burn"
     BLIND = "blind"
     SILENCE = "silence"
+    CONFUSED = "confused"              # 혼란 (노멀 타겟 랜덤, 액티브 사용 불가)
 
 
 class TargetType(Enum):

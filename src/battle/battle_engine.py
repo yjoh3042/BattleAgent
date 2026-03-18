@@ -139,7 +139,11 @@ class BattleEngine:
 
             # ─── 엑스트라 턴은 SP 충전 없음 ──────────────────────
             if not entry.is_extra:
-                self.sp_manager.charge_on_turn_start()
+                # SP 잠금 체크: 해당 유닛 진영이 SP 잠금 상태면 충전 스킵
+                if getattr(unit, 'is_sp_locked', False):
+                    self._log.append(f"  🔒 {unit.name}: SP 충전 잠금!")
+                else:
+                    self.sp_manager.charge_on_turn_start()
 
             ctx = self._make_ctx()
 
@@ -308,7 +312,11 @@ class BattleEngine:
 
     # ─── 스킬 결정 ────────────────────────────────────────────────
     def _decide_skill(self, unit: BattleUnit):
-        """Active 우선, 쿨타임 있으면 Normal. allow_active=False면 항상 Normal."""
+        """Active 우선, 쿨타임 있으면 Normal. allow_active=False면 항상 Normal.
+        혼란/침묵 시 액티브 사용 불가 → 노멀만 사용."""
+        # 혼란(CONFUSED) / 침묵(SILENCE): 액티브 사용 불가
+        if getattr(unit, 'is_confused', False) or getattr(unit, 'is_silenced', False):
+            return unit.data.normal_skill
         if self.allow_active and unit.can_use_active():
             return unit.data.active_skill
         return unit.data.normal_skill

@@ -133,6 +133,74 @@ def get_burn_bonus_mult(burn_stack: int, bonus_per_stack: float = 0.5) -> float:
     return 1.0 + bonus_per_stack * burn_stack
 
 
+# ─── DEF 무시 대미지 (관통 대미지) ──────────────────────────────────
+def compute_damage_penetration(
+    attacker: "BattleUnit",
+    defender: "BattleUnit",
+    skill_mult: float,
+) -> tuple[int, bool, bool]:
+    """DEF 무시 대미지: ATK × multiplier (DEF 계산 없음)"""
+    if roll_dodge(defender.dodge, attacker.acc):
+        return 0, False, True
+    base = attacker.atk  # DEF 무시
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    return final, is_crit, False
+
+
+# ─── HP% 대미지 ─────────────────────────────────────────────────────
+def compute_damage_hp_ratio(
+    target: "BattleUnit",
+    ratio: float,
+) -> int:
+    """대상 최대 HP 비례 대미지 (DEF 무시)"""
+    return max(1, math.floor(target.max_hp * ratio))
+
+
+# ─── 무조건 크리 대미지 ─────────────────────────────────────────────
+def compute_damage_guaranteed_crit(
+    attacker: "BattleUnit",
+    defender: "BattleUnit",
+    skill_mult: float,
+) -> tuple[int, bool, bool]:
+    """무조건 크리 대미지: compute_damage와 동일하지만 crit=True 강제"""
+    if roll_dodge(defender.dodge, attacker.acc):
+        return 0, True, True
+    base = calc_base_damage(attacker.atk, defender.def_, attacker.penetration)
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio, True)  # 무조건 크리
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    return final, True, False
+
+
+# ─── 버프 수 비례 대미지 ────────────────────────────────────────────
+def compute_damage_buff_scale(
+    attacker: "BattleUnit",
+    defender: "BattleUnit",
+    skill_mult: float,
+    buff_count: int,
+    scale_per_buff: float = 0.1,
+) -> tuple[int, bool, bool]:
+    """버프 수 비례 대미지: 기본 대미지 × (1 + buff_count × scale_per_buff)"""
+    if roll_dodge(defender.dodge, attacker.acc):
+        return 0, False, True
+    base = calc_base_damage(attacker.atk, defender.def_, attacker.penetration)
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
+    buff_bonus = 1.0 + buff_count * scale_per_buff
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, buff_bonus)
+    return final, is_crit, False
+
+
 # ─── 전체 데미지 파이프라인 ───────────────────────────────────────
 def compute_damage(
     attacker: "BattleUnit",
@@ -150,7 +218,14 @@ def compute_damage(
 
     base = calc_base_damage(attacker.atk, defender.def_, attacker.penetration)
     elem_mult = get_element_mult(attacker.data.element, defender.data.element)
-    is_crit = roll_crit(attacker.cri_ratio, defender.cri_resist)
+    # 속성 상성 무시 체크
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    # 크리 불가 체크
+    if getattr(attacker, 'is_cri_unavailable', False):
+        is_crit = False
+    else:
+        is_crit = roll_crit(attacker.cri_ratio, defender.cri_resist)
     crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
 
     burn_stack = defender.get_tag_count("burn") if burn_bonus_per_stack > 0 else 0

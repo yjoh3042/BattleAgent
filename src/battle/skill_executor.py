@@ -5,7 +5,11 @@ from typing import List, Dict, Any, Optional, TYPE_CHECKING
 
 from battle.enums import LogicType, TargetType, CCType
 from battle.models import SkillData, SkillEffect, BuffData
-from battle.damage_calc import compute_damage, calc_heal
+from battle.damage_calc import (
+    compute_damage, calc_heal,
+    compute_damage_penetration, compute_damage_hp_ratio,
+    compute_damage_guaranteed_crit, compute_damage_buff_scale,
+)
 from battle.target_selector import TargetSelector
 
 if TYPE_CHECKING:
@@ -78,8 +82,18 @@ class SkillExecutor:
                 continue
 
             # 타겟 선택 (is_melee는 스킬 단위로 적용 — 전열 보호)
+            # 혼란 상태: 적군 타겟을 랜덤으로 변경
+            effective_target_type = effect.target_type
+            if getattr(caster, 'is_confused', False) and effect.target_type not in (
+                TargetType.SELF, TargetType.ALL_ALLY, TargetType.ALLY_LOWEST_HP,
+                TargetType.ALLY_HIGHEST_ATK, TargetType.ALLY_DEAD_RANDOM,
+                TargetType.ALLY_LOWEST_HP_2, TargetType.ALLY_ROLE_ATTACKER,
+                TargetType.ALLY_ROLE_DEFENDER, TargetType.ALLY_SAME_ROW,
+                TargetType.ALLY_BEHIND,
+            ):
+                effective_target_type = TargetType.ENEMY_RANDOM
             targets = self._selector.select(
-                caster, effect.target_type, caster_allies, caster_enemies,
+                caster, effective_target_type, caster_allies, caster_enemies,
             )
             if not targets and effect.target_type not in (TargetType.SELF,):
                 continue
@@ -133,8 +147,11 @@ class SkillExecutor:
             if not target.is_alive:
                 self._killed_this_skill.append(target)
                 ctx.log.append(f"    💀 {target.name} 사망!")
+            # ─── 무적 로그 ────────────────────────────────────────
+            if target.is_alive and getattr(target, 'is_invincible', False) and actual == 0:
+                ctx.log.append(f"    {target.name}: 무적으로 피해 무효!")
             # ─── 화상반격 체크 ──────────────────────────────────
-            elif target.is_alive and any(
+            elif target.is_alive and not getattr(target, 'is_counter_unavailable', False) and any(
                 ab.buff_data.id == "counter_burn_active" for ab in target.active_buffs
             ):
                 counter_burn = BuffData(
@@ -265,6 +282,333 @@ class SkillExecutor:
         elif logic == LogicType.REMOVE_DEBUFF:
             ctx.buff_manager.remove_debuffs(target)
             ctx.log.append(f"    {caster.name} → {target.name}: 디버프 제거")
+
+        # ─── DEF 무시 대미지 ─────────────────────────────────────────
+        elif logic == LogicType.DAMAGE_PENETRATION:
+            dmg, is_crit, is_dodged = compute_damage_penetration(caster, target, effect.multiplier)
+            if is_dodged:
+                ctx.log.append(f"    {caster.name} → {target.name}: {skill.name} 회피!")
+                return
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 관통피해{crit_str} "
+                f"(HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── HP% 대미지 ─────────────────────────────────────────────
+        elif logic == LogicType.DAMAGE_HP_RATIO:
+            dmg = compute_damage_hp_ratio(target, effect.value)
+            actual = target.take_damage(dmg)
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} HP {effect.value*100:.0f}% 피해 {actual:.0f} "
+                f"(HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── 무조건 크리 대미지 ──────────────────────────────────────
+        elif logic == LogicType.DAMAGE_CRI:
+            dmg, is_crit, is_dodged = compute_damage_guaranteed_crit(caster, target, effect.multiplier)
+            if is_dodged:
+                ctx.log.append(f"    {caster.name} → {target.name}: {skill.name} 회피!")
+                return
+            actual = target.take_damage(dmg)
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해 [확정 크리티컬!] "
+                f"(HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── 시전자 버프 수 비례 대미지 ──────────────────────────────
+        elif logic == LogicType.DAMAGE_BUFF_SCALE:
+            buff_count = len([ab for ab in caster.active_buffs if not ab.buff_data.is_debuff])
+            scale = effect.value if effect.value else 0.1
+            dmg, is_crit, is_dodged = compute_damage_buff_scale(
+                caster, target, effect.multiplier, buff_count, scale
+            )
+            if is_dodged:
+                ctx.log.append(f"    {caster.name} → {target.name}: {skill.name} 회피!")
+                return
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
+                f"(버프 {buff_count}개 비례, HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── 타겟 버프 수 비례 대미지 ────────────────────────────────
+        elif logic == LogicType.DAMAGE_BUFF_SCALE_TARGET:
+            buff_count = len([ab for ab in target.active_buffs if not ab.buff_data.is_debuff])
+            scale = effect.value if effect.value else 0.1
+            dmg, is_crit, is_dodged = compute_damage_buff_scale(
+                caster, target, effect.multiplier, buff_count, scale
+            )
+            if is_dodged:
+                ctx.log.append(f"    {caster.name} → {target.name}: {skill.name} 회피!")
+                return
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
+                f"(타겟 버프 {buff_count}개 비례, HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── 타겟 디버프 수 비례 대미지 ──────────────────────────────
+        elif logic == LogicType.DAMAGE_DEBUFF_SCALE_TARGET:
+            debuff_count = len([ab for ab in target.active_buffs if ab.buff_data.is_debuff])
+            scale = effect.value if effect.value else 0.1
+            dmg, is_crit, is_dodged = compute_damage_buff_scale(
+                caster, target, effect.multiplier, debuff_count, scale
+            )
+            if is_dodged:
+                ctx.log.append(f"    {caster.name} → {target.name}: {skill.name} 회피!")
+                return
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
+                f"(타겟 디버프 {debuff_count}개 비례, HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── 잃은 HP 비례 회복 ───────────────────────────────────────
+        elif logic == LogicType.HEAL_LOSS_SCALE:
+            lost_hp = target.max_hp - target.current_hp
+            amount = lost_hp * effect.value
+            actual = target.heal(amount)
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} 잃은HP {effect.value*100:.0f}% 회복 "
+                f"({actual:.0f}, HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+
+        # ─── 대상 HP% 보호막 ────────────────────────────────────────
+        elif logic == LogicType.BARRIER_RATIO:
+            barrier_amount = target.max_hp * effect.value
+            target.add_barrier(barrier_amount)
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: HP {effect.value*100:.0f}% 보호막 {barrier_amount:.0f}"
+            )
+
+        # ─── 무적 ───────────────────────────────────────────────────
+        elif logic == LogicType.INVINCIBILITY:
+            duration = int(effect.value) if effect.value else 1
+            marker = BuffData(
+                id="invincibility_marker",
+                name="무적",
+                source_skill_id=skill.id,
+                logic_type=LogicType.STAT_CHANGE,
+                stat="def_",
+                value=0,
+                duration=duration,
+                is_debuff=False,
+                tags=["invincibility"],
+            )
+            ctx.buff_manager.apply_buff(target, marker, caster.id)
+            target.is_invincible = True
+            ctx.log.append(f"    {caster.name} → {target.name}: 무적 부여 ({duration}턴)")
+
+        # ─── 불사 ───────────────────────────────────────────────────
+        elif logic == LogicType.UNDYING:
+            duration = int(effect.value) if effect.value else 1
+            marker = BuffData(
+                id="undying_marker",
+                name="불사",
+                source_skill_id=skill.id,
+                logic_type=LogicType.STAT_CHANGE,
+                stat="def_",
+                value=0,
+                duration=duration,
+                is_debuff=False,
+                tags=["undying"],
+            )
+            ctx.buff_manager.apply_buff(target, marker, caster.id)
+            target.is_undying = True
+            ctx.log.append(f"    {caster.name} → {target.name}: 불사 부여 ({duration}턴)")
+
+        # ─── 디버프 면역 ─────────────────────────────────────────────
+        elif logic == LogicType.DEBUFF_IMMUNE:
+            duration = int(effect.value) if effect.value else 2
+            marker = BuffData(
+                id="debuff_immune_marker",
+                name="디버프 면역",
+                source_skill_id=skill.id,
+                logic_type=LogicType.STAT_CHANGE,
+                stat="def_",
+                value=0,
+                duration=duration,
+                is_debuff=False,
+                tags=["debuff_immune"],
+            )
+            ctx.buff_manager.apply_buff(target, marker, caster.id)
+            target.is_debuff_immune = True
+            ctx.log.append(f"    {caster.name} → {target.name}: 디버프 면역 부여 ({duration}턴)")
+
+        # ─── SP 강탈 ─────────────────────────────────────────────────
+        elif logic == LogicType.SP_STEAL:
+            amount = int(effect.value)
+            target_side = target.side
+            caster_side = caster.side
+            # 타겟 진영에서 SP 차감
+            current_target_sp = ctx.sp_manager.get_sp(target_side)
+            stolen = min(amount, current_target_sp)
+            ctx.sp_manager.add_sp(target_side, -stolen)
+            ctx.sp_manager.add_sp(caster_side, stolen)
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: SP {stolen} 강탈! "
+                f"(아군 SP {ctx.sp_manager.get_sp(caster_side)}, 적 SP {ctx.sp_manager.get_sp(target_side)})"
+            )
+
+        # ─── SP 충전 잠금 ────────────────────────────────────────────
+        elif logic == LogicType.SP_LOCK:
+            duration = int(effect.value) if effect.value else 2
+            marker = BuffData(
+                id="sp_lock_marker",
+                name="SP 잠금",
+                source_skill_id=skill.id,
+                logic_type=LogicType.STAT_CHANGE,
+                stat="def_",
+                value=0,
+                duration=duration,
+                is_debuff=True,
+                tags=["sp_lock"],
+            )
+            ctx.buff_manager.apply_buff(target, marker, caster.id)
+            target.is_sp_locked = True
+            ctx.log.append(f"    {caster.name} → {target.name}: SP 충전 잠금 ({duration}턴)")
+
+        # ─── 버프 턴 증가 ────────────────────────────────────────────
+        elif logic == LogicType.BUFF_TURN_INCREASE:
+            amount = int(effect.value) if effect.value else 1
+            count = 0
+            for ab in target.active_buffs:
+                if not ab.buff_data.is_debuff:
+                    ab.remaining_turns += amount
+                    count += 1
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: 버프 {count}개 턴 +{amount}"
+            )
+
+        # ─── 디버프 턴 증가 ──────────────────────────────────────────
+        elif logic == LogicType.DEBUFF_TURN_INCREASE:
+            amount = int(effect.value) if effect.value else 1
+            count = 0
+            for ab in target.active_buffs:
+                if ab.buff_data.is_debuff:
+                    ab.remaining_turns += amount
+                    count += 1
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: 디버프 {count}개 턴 +{amount}"
+            )
+
+        # ─── 크리 불가 ───────────────────────────────────────────────
+        elif logic == LogicType.CRI_UNAVAILABLE:
+            duration = int(effect.value) if effect.value else 2
+            marker = BuffData(
+                id="cri_unavailable_marker",
+                name="크리 불가",
+                source_skill_id=skill.id,
+                logic_type=LogicType.STAT_CHANGE,
+                stat="cri_ratio",
+                value=0,
+                duration=duration,
+                is_debuff=True,
+                tags=["cri_unavailable"],
+            )
+            ctx.buff_manager.apply_buff(target, marker, caster.id)
+            target.is_cri_unavailable = True
+            ctx.log.append(f"    {caster.name} → {target.name}: 크리 불가 ({duration}턴)")
+
+        # ─── 반격 불가 ───────────────────────────────────────────────
+        elif logic == LogicType.COUNTER_UNAVAILABLE:
+            duration = int(effect.value) if effect.value else 2
+            marker = BuffData(
+                id="counter_unavailable_marker",
+                name="반격 불가",
+                source_skill_id=skill.id,
+                logic_type=LogicType.STAT_CHANGE,
+                stat="def_",
+                value=0,
+                duration=duration,
+                is_debuff=True,
+                tags=["counter_unavailable"],
+            )
+            ctx.buff_manager.apply_buff(target, marker, caster.id)
+            target.is_counter_unavailable = True
+            ctx.log.append(f"    {caster.name} → {target.name}: 반격 불가 ({duration}턴)")
+
+        # ─── 스킬 발동 ───────────────────────────────────────────────
+        elif logic == LogicType.USE_SKILL:
+            # effect.condition에서 skill_id 참조
+            skill_id = None
+            if effect.condition and 'skill_id' in effect.condition:
+                skill_id = effect.condition['skill_id']
+            if skill_id:
+                # 시전자의 스킬에서 해당 ID 찾기
+                target_skill = None
+                for sk in [caster.data.normal_skill, caster.data.active_skill, caster.data.ultimate_skill]:
+                    if sk.id == skill_id:
+                        target_skill = sk
+                        break
+                if target_skill:
+                    ctx.log.append(f"    {caster.name}: 스킬 발동 → {target_skill.name}")
+                    sub_killed = self.execute(caster, target_skill, ctx)
+                    self._killed_this_skill.extend(sub_killed)
+                else:
+                    ctx.log.append(f"    {caster.name}: 스킬 ID {skill_id} 미발견")
+
+        # ─── 속성 상성 무시 ──────────────────────────────────────────
+        elif logic == LogicType.IGNORE_ELEMENT:
+            duration = int(effect.value) if effect.value else 2
+            marker = BuffData(
+                id="ignore_element_marker",
+                name="속성 무시",
+                source_skill_id=skill.id,
+                logic_type=LogicType.STAT_CHANGE,
+                stat="def_",
+                value=0,
+                duration=duration,
+                is_debuff=False,
+                tags=["ignore_element"],
+            )
+            ctx.buff_manager.apply_buff(target, marker, caster.id)
+            target.ignore_element = True
+            ctx.log.append(f"    {caster.name} → {target.name}: 속성 상성 무시 ({duration}턴)")
+
+        # ─── 액티브 쿨타임 변경 ──────────────────────────────────────
+        elif logic == LogicType.ACTIVE_CD_CHANGE:
+            change = int(effect.value)
+            old_cd = target.active_skill_cooldown
+            target.active_skill_cooldown = max(0, target.active_skill_cooldown + change)
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: 액티브 쿨타임 {old_cd} → {target.active_skill_cooldown} ({change:+d})"
+            )
 
     # ─── 조건 체크 ────────────────────────────────────────────────
     def _check_condition(

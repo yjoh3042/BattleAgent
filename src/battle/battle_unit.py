@@ -62,6 +62,17 @@ class BattleUnit:
         self.taunted_by: Optional[str] = None
         self.taunted_turns: int = 0
 
+        # ── 상태 플래그 (마커 버프로 관리) ──────────────────────────
+        self.is_invincible: bool = False       # 무적
+        self.is_undying: bool = False          # 불사 (HP 1 미만 불가)
+        self.is_debuff_immune: bool = False    # 디버프 면역
+        self.is_sp_locked: bool = False        # SP 충전 잠금
+        self.is_cri_unavailable: bool = False  # 크리 불가
+        self.is_counter_unavailable: bool = False  # 반격 불가
+        self.is_confused: bool = False         # 혼란
+        self.is_silenced: bool = False         # 침묵
+        self.ignore_element: bool = False      # 속성 상성 무시
+
         # 전투당 트리거 발동 기록
         self._triggered_once: set = set()
 
@@ -141,8 +152,11 @@ class BattleUnit:
 
     # ─── HP 조작 ──────────────────────────────────────────────────
     def take_damage(self, amount: float) -> float:
-        """피해 적용. 보호막 우선 흡수. 실제 HP 감소량 반환."""
+        """피해 적용. 무적/불사/보호막 우선 처리. 실제 HP 감소량 반환."""
         if amount <= 0:
+            return 0.0
+        # 무적: 모든 피해 무효
+        if self.is_invincible:
             return 0.0
         actual = amount
         if self.barrier_hp > 0:
@@ -150,6 +164,9 @@ class BattleUnit:
             self.barrier_hp -= absorbed
             actual = amount - absorbed
         self.current_hp = max(0.0, self.current_hp - actual)
+        # 불사: HP 1 미만 불가
+        if self.is_undying and self.current_hp < 1.0 and actual > 0:
+            self.current_hp = 1.0
         return actual
 
     def heal(self, amount: float) -> float:
@@ -243,6 +260,11 @@ class BattleUnit:
         else:
             self.soft_cc = cc_type
             self.soft_cc_duration = max(self.soft_cc_duration, duration)
+        # 상태 플래그 설정
+        if cc_type == CCType.CONFUSED:
+            self.is_confused = True
+        elif cc_type == CCType.SILENCE:
+            self.is_silenced = True
 
     def tick_cc(self):
         """CC 지속 턴 감소"""
@@ -253,6 +275,11 @@ class BattleUnit:
         if self.soft_cc_duration > 0:
             self.soft_cc_duration -= 1
             if self.soft_cc_duration <= 0:
+                # 소프트 CC 만료 시 상태 플래그 해제
+                if self.soft_cc == CCType.CONFUSED:
+                    self.is_confused = False
+                elif self.soft_cc == CCType.SILENCE:
+                    self.is_silenced = False
                 self.soft_cc = None
 
     # ─── 스킬 쿨타임 ──────────────────────────────────────────────
@@ -301,6 +328,9 @@ class BattleUnit:
             else:
                 new_buffs.append(ab)
         self.active_buffs = new_buffs
+        # 마커 버프 만료 시 상태 플래그 동기화
+        if expired:
+            self.sync_marker_flags()
         return expired
 
     def on_turn_end(self) -> List[dict]:
@@ -324,12 +354,32 @@ class BattleUnit:
             else:
                 new_buffs.append(ab)
         self.active_buffs = new_buffs
+        # 마커 버프 만료 시 상태 플래그 동기화
+        if expired:
+            self.sync_marker_flags()
 
         self.tick_cc()
         self.tick_cooldown()
         self.tick_taunt()
 
         return expired
+
+    # ─── 마커 버프 → 상태 플래그 동기화 ────────────────────────
+    def sync_marker_flags(self):
+        """마커 버프 존재 여부에 따라 상태 플래그 동기화.
+        버프 만료 후 호출하여 플래그를 정리한다."""
+        buff_ids = {ab.buff_data.id for ab in self.active_buffs}
+        buff_tags = set()
+        for ab in self.active_buffs:
+            buff_tags.update(ab.buff_data.tags)
+
+        self.is_invincible = "invincibility_marker" in buff_ids or "invincibility" in buff_tags
+        self.is_undying = "undying_marker" in buff_ids or "undying" in buff_tags
+        self.is_debuff_immune = "debuff_immune_marker" in buff_ids or "debuff_immune" in buff_tags
+        self.is_sp_locked = "sp_lock_marker" in buff_ids or "sp_lock" in buff_tags
+        self.is_cri_unavailable = "cri_unavailable_marker" in buff_ids or "cri_unavailable" in buff_tags
+        self.is_counter_unavailable = "counter_unavailable_marker" in buff_ids or "counter_unavailable" in buff_tags
+        self.ignore_element = "ignore_element_marker" in buff_ids or "ignore_element" in buff_tags
 
     # ─── 트리거 중복 방지 ─────────────────────────────────────────
     def mark_triggered(self, trigger_id: str):

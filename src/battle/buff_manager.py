@@ -34,6 +34,11 @@ class BuffManager:
         버프 적용 후 SPD 변화 감지 시 TurnManager에 알림.
         반환: True=새로 추가, False=갱신
         """
+        # 디버프 면역 체크: 대상이 디버프 면역 상태이고 디버프인 경우 차단
+        if buff_data.is_debuff and getattr(unit, 'is_debuff_immune', False):
+            self._log.append(f"  → {unit.name} 디버프 면역! {buff_data.name or buff_data.id} 차단")
+            return False
+
         # SPD 변화 감지를 위해 이전 SPD 기록
         old_spd = unit.spd if buff_data.stat == "spd" else None
 
