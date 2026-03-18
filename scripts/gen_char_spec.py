@@ -1,312 +1,202 @@
-#!/usr/bin/env python3
-"""캐릭터 상세 명세서 생성 스크립트
-데이터 소스: _all_chars.json, Character.xlsx
-"""
-import json, os, sys
-import openpyxl
+"""캐릭터 스탯 & 스킬 상세 명세서 생성 (문장형 설명)"""
+import sys, inspect
+sys.path.insert(0, 'src')
+sys.stdout.reconfigure(encoding='utf-8')
+import fixtures.test_data as td
 
-BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA = os.path.join(BASE, "data")
-DOCS = os.path.join(BASE, "docs")
-
-# ── 1. Load _all_chars.json ──
-with open(os.path.join(DATA, "_all_chars.json"), encoding="utf-8") as f:
-    all_chars = json.load(f)
-
-# ── 2. Parse Character.xlsx for StarGrade by char_id ──
-wb_char = openpyxl.load_workbook(os.path.join(DATA, "Character.xlsx"), data_only=True)
-ws_detail = wb_char["Detail<Child>"]
-
-# col 4 = D = char_id (e.g. 'c035'), col 12 = L = StarGrade
-star_by_id = {}
-for r in range(4, ws_detail.max_row + 1):
-    cid = ws_detail.cell(r, 4).value   # D: char_id directly as string 'c035'
-    star = ws_detail.cell(r, 12).value  # L: StarGrade 1/2/3
-    if cid and star is not None:
-        # Normalise: strip whitespace, ensure lowercase 'c###' format
-        cid_str = str(cid).strip()
-        # If cid came back as a formula result or number, derive from col C
-        if not cid_str.startswith("c"):
-            col_c = ws_detail.cell(r, 3).value
-            if col_c:
-                cid_str = "c" + str(int(col_c))[1:4]
-            else:
-                continue
-        star_by_id[cid_str] = int(star)
-
-# ── 3. Translation Maps ──
-elem_kr = {"FIRE": "화(火)", "WATER": "수(水)", "FOREST": "목(木)", "LIGHT": "광(光)", "DARK": "암(暗)"}
-elem_order = ["FIRE", "WATER", "FOREST", "LIGHT", "DARK"]
-elem_icon = {"FIRE": "🔥", "WATER": "💧", "FOREST": "🌿", "LIGHT": "✨", "DARK": "🌑"}
-role_kr = {
-    "ATTACKER": "공격자(ATK)", "DEFENDER": "방어자(DEF)",
-    "HEALER": "힐러(HLR)", "SUPPORTER": "서포터(SUP)", "MAGICIAN": "마법사(MAG)",
+EL_KR = {'FIRE':'화','WATER':'수','FOREST':'목','LIGHT':'광','DARK':'암'}
+ROLE_KR = {'ATTACKER':'딜러','MAGICIAN':'마법사','DEFENDER':'탱커','HEALER':'힐러','SUPPORTER':'서포터'}
+TGT_KR = {
+    'ENEMY_NEAR':'가장 가까운 적 1명','ENEMY_NEAR_ROW':'가장 가까운 적 + 동일 행',
+    'ENEMY_NEAR_CROSS':'가장 가까운 적 + 십자 범위','ALL_ENEMY':'적 전체',
+    'ENEMY_RANDOM':'적 랜덤 1명','ENEMY_RANDOM_2':'적 랜덤 2명','ENEMY_RANDOM_3':'적 랜덤 3명',
+    'ENEMY_LOWEST_HP':'HP가 가장 낮은 적','ENEMY_HIGHEST_HP':'HP가 가장 높은 적',
+    'ENEMY_HIGHEST_SPD':'SPD가 가장 높은 적','ENEMY_BACK_ROW':'적 최후열 전체',
+    'ENEMY_FRONT_ROW':'적 최전열 전체','ENEMY_SAME_COL':'시전자와 동일 열의 적(관통)',
+    'ENEMY_LAST_COL':'적 최우열 전체','ENEMY_ADJACENT':'인접 타일의 적',
+    'SELF':'자신','ALL_ALLY':'아군 전체','ALLY_LOWEST_HP':'HP가 가장 낮은 아군',
+    'ALLY_LOWEST_HP_2':'HP가 낮은 아군 2명','ALLY_HIGHEST_ATK':'ATK가 가장 높은 아군',
+    'ALLY_SAME_ROW':'동일 행 아군','ALLY_BEHIND':'뒤쪽 아군 1명',
+    'ALLY_DEAD_RANDOM':'사망한 아군 1명','ALLY_ROLE_ATTACKER':'공격형 아군 전체',
+    'ALLY_ROLE_DEFENDER':'방어형 아군 전체',
 }
-role_short = {
-    "ATTACKER": "ATT", "MAGICIAN": "MAG", "DEFENDER": "DEF",
-    "HEALER": "HEA", "SUPPORTER": "SUP",
-}
-role_icon = {
-    "ATTACKER": "⚔️", "DEFENDER": "🛡️", "HEALER": "💚",
-    "SUPPORTER": "📣", "MAGICIAN": "🔮",
-}
-target_kr = {
-    "ENEMY_NEAR": "근접 적 1기",
-    "ENEMY_RANDOM": "랜덤 적",
-    "ENEMY_RANDOM_2": "랜덤 적 2기",
-    "ENEMY_RANDOM_3": "랜덤 적 3기",
-    "ENEMY_LOWEST_HP": "최저HP 적 1기",
-    "ENEMY_NEAR_ROW": "근접 열 적",
-    "ENEMY_BACK_ROW": "후열 적",
-    "ENEMY_SAME_COL": "같은 열 적",
-    "ALL_ENEMY": "적 전체",
-    "ALL_ALLY": "아군 전체",
-    "ALLY_LOWEST_HP": "최저HP 아군 1기",
-    "ALLY_LOWEST_HP_2": "최저HP 아군 2기",
-    "ALLY_HIGHEST_ATK": "최고ATK 아군 1기",
-    "SELF": "자신",
+STAT_KR = {'atk':'공격력','def_':'방어력','spd':'속도','hp':'체력',
+           'cri_ratio':'크리티컬 확률','cri_dmg_ratio':'크리티컬 피해','acc':'명중률',
+           'cri_resist':'크리 저항'}
+DOT_KR = {'burn':'화상','poison':'중독','bleed':'출혈'}
+CC_KR = {'stun':'기절','sleep':'수면','freeze':'빙결','stone':'석화',
+         'panic':'공포','silence':'침묵','blind':'실명','electric_shock':'감전'}
+TRIGGER_KR = {
+    'on_kill':'적 처치 시','on_hit':'피격 시','on_battle_start':'전투 시작 시',
+    'on_round_start':'라운드 시작 시','on_turn_end':'턴 종료 시',
 }
 
-def star_str(cid):
-    g = star_by_id.get(cid)
-    if g is None:
-        return "?"
-    return "★" * g
 
-# ── 4. Group and sort chars ──
-chars_by_elem = {}
-for c in all_chars:
-    chars_by_elem.setdefault(c["element"], []).append(c)
+def grade_from(role, atk):
+    t = {
+        'ATTACKER': {920: 3.5, 800: 3, 640: 2, 480: 1},
+        'MAGICIAN': {690: 3.5, 600: 3, 480: 2, 360: 1},
+        'DEFENDER': {574: 3.5, 500: 3, 400: 2, 300: 1},
+        'HEALER':   {460: 3.5, 400: 3, 320: 2, 240: 1},
+        'SUPPORTER': {574: 3.5, 500: 3, 400: 2, 300: 1},
+    }
+    for v, g in sorted(t.get(role, {}).items(), reverse=True):
+        if atk >= v:
+            return g
+    return 1
 
-role_sort = {"ATTACKER": 0, "MAGICIAN": 1, "DEFENDER": 2, "HEALER": 3, "SUPPORTER": 4}
-for elem in chars_by_elem:
-    chars_by_elem[elem].sort(key=lambda c: (role_sort.get(c["role"], 9), c["name"]))
 
-# Grade counts for header
-grade_counts = {1: 0, 2: 0, 3: 0}
-for c in all_chars:
-    g = star_by_id.get(c["id"])
-    if g in grade_counts:
-        grade_counts[g] += 1
+def desc_effect(e):
+    lt = e.logic_type.name
+    tgt = TGT_KR.get(e.target_type.name, e.target_type.name)
+    cond = e.condition or {}
+    hc = getattr(e, 'hit_count', 1) or 1
 
-# ── 5. Generate Markdown ──
-L = []
-
-L.append("# 📋 BattleAgent 캐릭터 상세 명세서")
-L.append("")
-L.append("**생성일**: 2026-03-16")
-L.append("**데이터 소스**: Character.xlsx, Skill.xlsx, _all_chars.json")
-L.append(f"**총 캐릭터 수**: {len(all_chars)}명 "
-         f"(1성 {grade_counts[1]} / 2성 {grade_counts[2]} / 3성 {grade_counts[3]})")
-L.append("**밸런스 룰**: CRI 15% / PEN 0% 통일")
-L.append("")
-
-# ── Table of Contents ──
-L.append("## 📑 목차")
-L.append("")
-for elem in elem_order:
-    if elem not in chars_by_elem:
-        continue
-    ic = elem_icon[elem]
-    kr = elem_kr[elem]
-    chars = chars_by_elem[elem]
-    names = ", ".join(c["name"] for c in chars)
-    L.append(f"- {ic} **{kr}** ({len(chars)}명): {names}")
-L.append("")
-
-# ── Global Summary Table ──
-L.append("## 📊 전체 캐릭터 요약")
-L.append("")
-L.append("| 속성 | 이름 | ID | 역할 | 성급(★) | ATK | DEF | HP | SPD | SP | CRI | PEN |")
-L.append("|:---:|------|:---:|:---:|:-------:|----:|----:|-----:|----:|:---:|:---:|:---:|")
-for elem in elem_order:
-    if elem not in chars_by_elem:
-        continue
-    for c in chars_by_elem[elem]:
-        ss = star_str(c["id"])
-        cri_pct = f"{int(c['cri']*100)}%"
-        pen_pct = f"{int(c['pen']*100)}%"
-        e_ic = elem_icon[c["element"]]
-        r_ic = role_icon[c["role"]]
-        rs = role_short[c["role"]]
-        L.append(
-            f"| {e_ic} | **{c['name']}** | {c['id']} | {r_ic} {rs} | "
-            f"{ss} | {c['atk']} | {c['def']} | {c['hp']} | {c['spd']} | "
-            f"{c['sp']} | {cri_pct} | {pen_pct} |"
-        )
-L.append("")
-
-# ── Stats Rankings ──
-L.append("## 🏆 스탯 랭킹")
-L.append("")
-
-sorted_atk = sorted(all_chars, key=lambda c: c["atk"], reverse=True)
-sorted_hp  = sorted(all_chars, key=lambda c: c["hp"],  reverse=True)
-sorted_def = sorted(all_chars, key=lambda c: c["def"], reverse=True)
-
-L.append("### ATK TOP 10")
-L.append("| 순위 | 이름 | 역할 | 속성 | ATK |")
-L.append("|:---:|------|:---:|:---:|----:|")
-for i, c in enumerate(sorted_atk[:10], 1):
-    L.append(f"| {i} | {c['name']} | {role_short[c['role']]} | {elem_icon[c['element']]} | **{c['atk']}** |")
-L.append("")
-
-L.append("### HP TOP 10")
-L.append("| 순위 | 이름 | 역할 | 속성 | HP |")
-L.append("|:---:|------|:---:|:---:|-----:|")
-for i, c in enumerate(sorted_hp[:10], 1):
-    L.append(f"| {i} | {c['name']} | {role_short[c['role']]} | {elem_icon[c['element']]} | **{c['hp']}** |")
-L.append("")
-
-L.append("### DEF TOP 10")
-L.append("| 순위 | 이름 | 역할 | 속성 | DEF |")
-L.append("|:---:|------|:---:|:---:|----:|")
-for i, c in enumerate(sorted_def[:10], 1):
-    L.append(f"| {i} | {c['name']} | {role_short[c['role']]} | {elem_icon[c['element']]} | **{c['def']}** |")
-L.append("")
-
-L.append("### SPD 분포")
-L.append("| SPD | 역할군 | 캐릭터 |")
-L.append("|:---:|:------:|--------|")
-spd_groups = {}
-for c in all_chars:
-    spd_groups.setdefault(c["spd"], []).append(c)
-for spd in sorted(spd_groups.keys(), reverse=True):
-    chars_in = spd_groups[spd]
-    roles = sorted(set(role_short[c["role"]] for c in chars_in))
-    names = ", ".join(c["name"] for c in chars_in)
-    L.append(f"| **{spd}** | {'/'.join(roles)} | {names} |")
-L.append("")
-
-# ── Per-element Per-character Detail ──
-for elem in elem_order:
-    if elem not in chars_by_elem:
-        continue
-    e_ic = elem_icon[elem]
-    e_kr = elem_kr[elem]
-    L.append("---")
-    L.append(f"## {e_ic} {e_kr} 속성 캐릭터")
-    L.append("")
-
-    for c in chars_by_elem[elem]:
-        ss = star_str(c["id"])
-        r_ic = role_icon[c["role"]]
-        r_kr = role_kr[c["role"]]
-
-        L.append(f"### {r_ic} {c['name']} ({c['id']})")
-        L.append("")
-        L.append(f"> **{e_ic} {e_kr}** | **{r_kr}** | **등급: {ss}** | **SP 코스트: {c['sp']}**")
-        L.append("")
-
-        # Stats table
-        L.append("#### 기본 스탯")
-        L.append("")
-        L.append("| ATK | DEF | HP | SPD | CRI | CRI_DMG | PEN |")
-        L.append("|----:|----:|-----:|----:|:---:|:-------:|:---:|")
-        cri_pct = f"{int(c['cri']*100)}%"
-        pen_pct = f"{int(c['pen']*100)}%"
-        L.append(f"| {c['atk']} | {c['def']} | {c['hp']} | {c['spd']} | {cri_pct} | 150% | {pen_pct} |")
-        L.append("")
-
-        # SP system
-        L.append(f"**SP 시스템**: MaxSP={c['sp']} / UseSP={c['sp']} / TurnSP=+1")
-        L.append("")
-
-        # Skills
-        L.append("#### 스킬 상세")
-        L.append("")
-
-        has_skills = c.get("normal") and c.get("active") and c.get("ultimate")
-
-        if has_skills:
-            n = c["normal"]
-            t_kr = target_kr.get(n["target"], n["target"])
-            L.append(f"**🟢 노멀 — {n['name']}**")
-            L.append(f"- 타겟: {t_kr}")
-            L.append(f"- 효과: {n['effects']}")
-            L.append("")
-
-            a = c["active"]
-            t_kr = target_kr.get(a["target"], a["target"])
-            L.append(f"**🔵 액티브 — {a['name']}**")
-            L.append(f"- 타겟: {t_kr}")
-            L.append(f"- 효과: {a['effects']}")
-            L.append("")
-
-            u = c["ultimate"]
-            t_kr = target_kr.get(u["target"], u["target"])
-            L.append(f"**🟣 얼티밋 — {u['name']}** (SP {c['sp']})")
-            L.append(f"- 타겟: {t_kr}")
-            L.append(f"- 효과: {u['effects']}")
-            L.append("")
+    if lt == 'DAMAGE':
+        base = f"ATK의 {e.multiplier:.2f}배"
+        if hc > 1:
+            total = e.multiplier * hc
+            base = f"ATK의 {e.multiplier:.2f}배로 {hc}회 연속 타격하여 총 {total:.2f}배"
+        s = f"{tgt}에게 {base} 피해를 입힌다."
+        if cond.get('target_hp_below'):
+            pct = cond['target_hp_below']
+            s = f"{tgt}의 HP가 {pct:.0%} 이하일 때, {base} 추가 피해를 입힌다. (처형 효과)"
+        if cond.get('burn_bonus_per_stack'):
+            bn = cond['burn_bonus_per_stack']
+            s += f" 대상에게 적용된 화상 스택 1개당 +{bn:.2f}배의 추가 피해가 가산된다."
+        return s
+    elif lt == 'HEAL_HP_RATIO':
+        return f"{tgt}의 최대 HP의 {e.value:.0%}만큼 즉시 회복시킨다."
+    elif lt == 'STAT_CHANGE':
+        bd = e.buff_data
+        if not bd:
+            return '스탯 변경 효과를 부여한다.'
+        stat = STAT_KR.get(bd.stat, bd.stat)
+        if bd.is_ratio:
+            vstr = f"{abs(bd.value):.0%}"
         else:
-            L.append("**스킬 데이터 미등록**")
-            L.append("")
+            vstr = f"{abs(bd.value):.0f}"
+        if bd.is_debuff:
+            return f"{tgt}의 {stat}을(를) {bd.duration}턴간 {vstr} 감소시킨다."
+        else:
+            return f"{tgt}의 {stat}을(를) {bd.duration}턴간 {vstr} 증가시킨다."
+    elif lt == 'DOT':
+        bd = e.buff_data
+        dt = DOT_KR.get(bd.dot_type, bd.dot_type)
+        return (f"{tgt}에게 {dt} 상태를 부여한다. "
+                f"매 턴 시작 시 최대 HP의 {bd.value:.0%} 피해를 {bd.duration}턴간 받는다. "
+                f"(최대 {bd.max_stacks}스택까지 중첩 가능)")
+    elif lt == 'CC':
+        bd = e.buff_data
+        cc = CC_KR.get(bd.cc_type.value, bd.cc_type.value)
+        hard = bd.cc_type.value in ('stun', 'sleep', 'freeze', 'stone')
+        cc_desc = "행동이 완전히 봉쇄된다." if hard else "30% 확률로 행동에 실패한다."
+        return f"{tgt}에게 {cc} 상태이상을 {bd.duration}턴간 부여한다. {cc_desc}"
+    elif lt == 'BARRIER':
+        return (f"{tgt}에게 최대 HP의 {e.value:.0%}에 해당하는 보호막을 부여한다. "
+                "보호막이 유지되는 동안 HP 대신 보호막이 먼저 소모된다.")
+    elif lt == 'TAUNT':
+        return f"적 전체를 {int(e.value)}턴간 도발하여 모든 공격을 자신에게 집중시킨다."
+    elif lt == 'REVIVE':
+        return f"{tgt}을(를) HP {e.value:.0%} 상태로 전투에 복귀시킨다. (부활)"
+    elif lt == 'SP_INCREASE':
+        return f"{tgt}의 SP를 {int(e.value)} 증가시킨다."
+    elif lt == 'REMOVE_DEBUFF':
+        return f"{tgt}에게 적용된 모든 디버프(화상, 독, 감속 등)를 즉시 제거한다."
+    elif lt == 'REMOVE_BUFF':
+        return f"{tgt}에게 적용된 모든 버프(공격력 증가, 보호막, 속도 증가 등)를 즉시 제거한다."
+    elif lt == 'COUNTER':
+        return (f"{tgt}에게 {int(e.value)}턴간 반격 준비 상태를 부여한다. "
+                "피격 시 공격한 적에게 자동으로 반격한다.")
+    else:
+        return f"{lt} 효과를 발동한다. (값: {e.value})"
 
-# ── Role Distribution ──
-L.append("---")
-L.append("## 📈 역할별 분포 분석")
-L.append("")
 
-role_counts = {}
-for c in all_chars:
-    role_counts.setdefault(c["role"], {"count": 0, "chars": []})
-    role_counts[c["role"]]["count"] += 1
-    role_counts[c["role"]]["chars"].append(c["name"])
-
-L.append("| 역할 | 수 | 캐릭터 |")
-L.append("|:---:|:---:|--------|")
-for role in ["ATTACKER", "MAGICIAN", "DEFENDER", "HEALER", "SUPPORTER"]:
-    if role in role_counts:
-        info = role_counts[role]
-        L.append(f"| {role_icon[role]} {role_kr[role]} | {info['count']} | {', '.join(info['chars'])} |")
-L.append("")
-
-# ── Element x Role Distribution ──
-L.append("## 🌈 속성별 역할 분포")
-L.append("")
-L.append("| 속성 | 총 수 | ⚔️ATT | 🔮MAG | 🛡️DEF | 💚HEA | 📣SUP |")
-L.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|")
-for elem in elem_order:
-    if elem not in chars_by_elem:
+# Collect characters
+chars = []
+for name, func in sorted(inspect.getmembers(td, inspect.isfunction)):
+    if not name.startswith('make_') or name.startswith('make_teddy'):
         continue
-    chars = chars_by_elem[elem]
-    rd = {}
-    for ch in chars:
-        rd[ch["role"]] = rd.get(ch["role"], 0) + 1
-    L.append(
-        f"| {elem_icon[elem]} {elem_kr[elem]} | {len(chars)} | "
-        f"{rd.get('ATTACKER',0)} | {rd.get('MAGICIAN',0)} | "
-        f"{rd.get('DEFENDER',0)} | {rd.get('HEALER',0)} | "
-        f"{rd.get('SUPPORTER',0)} |"
-    )
-L.append("")
+    try:
+        chars.append(func())
+    except Exception:
+        pass
 
-# ── Avg Stats by Role ──
-L.append("## 📉 역할별 평균 스탯 비교")
-L.append("")
-L.append("| 역할 | 수 | 평균ATK | 평균DEF | 평균HP | 평균SPD |")
-L.append("|:---:|:---:|------:|------:|------:|------:|")
-for role in ["ATTACKER", "MAGICIAN", "DEFENDER", "HEALER", "SUPPORTER"]:
-    chars_r = [c for c in all_chars if c["role"] == role]
-    if not chars_r:
-        continue
-    n = len(chars_r)
-    avg_atk = sum(c["atk"] for c in chars_r) / n
-    avg_def = sum(c["def"] for c in chars_r) / n
-    avg_hp  = sum(c["hp"]  for c in chars_r) / n
-    avg_spd = sum(c["spd"] for c in chars_r) / n
-    L.append(f"| {role_icon[role]} {role_kr[role]} | {n} | {avg_atk:.0f} | {avg_def:.0f} | {avg_hp:.0f} | {avg_spd:.0f} |")
-L.append("")
+eo = {'FIRE': 0, 'WATER': 1, 'FOREST': 2, 'LIGHT': 3, 'DARK': 4}
+ro = {'ATTACKER': 0, 'MAGICIAN': 1, 'DEFENDER': 2, 'HEALER': 3, 'SUPPORTER': 4}
+chars.sort(key=lambda c: (eo.get(c.element.name, 9), ro.get(c.role.name, 9), c.id))
 
-# ── Write output ──
-output = "\n".join(L)
-os.makedirs(DOCS, exist_ok=True)
-out_path = os.path.join(DOCS, "캐릭터_상세_명세서.md")
-with open(out_path, "w", encoding="utf-8") as f:
-    f.write(output)
+lines = []
+lines.append('# 캐릭터 스탯 & 스킬 상세 명세서')
+lines.append('')
+lines.append(f'> 총 {len(chars)}캐릭터 | ATK/DEF x2 + 스킬배율 x2 적용 (v7.0)')
+lines.append('> 자동 생성: test_data.py 기준')
+lines.append('')
+lines.append('---')
 
-print(f"완료: {out_path}")
-print(f"총 {len(all_chars)}명 캐릭터, {len(L)}줄")
-print(f"StarGrade 매핑: {len(star_by_id)}개 ID")
-print(f"1성 {grade_counts[1]} / 2성 {grade_counts[2]} / 3성 {grade_counts[3]}")
+current_el = None
+for c in chars:
+    st = c.stats
+    el = c.element.name
+    role = c.role.name
+    grade = grade_from(role, st.atk)
+
+    if el != current_el:
+        current_el = el
+        emoji = {'FIRE': '🔥', 'WATER': '💧', 'FOREST': '🌿', 'LIGHT': '☀️', 'DARK': '🌙'}[el]
+        lines.append('')
+        lines.append(f'## {emoji} {EL_KR[el]}속성')
+        lines.append('')
+
+    grade_str = f'{grade}★' if grade != 3.5 else '3.5★'
+    lines.append(f'### {c.name} ({c.id}) — {EL_KR[el]}/{ROLE_KR[role]} {grade_str}')
+    lines.append('')
+    lines.append('| 스탯 | ATK | DEF | HP | SPD | CRI | PEN | SP비용 |')
+    lines.append('|:----:|:---:|:---:|:--:|:---:|:---:|:---:|:-----:|')
+    lines.append(f'| 값 | {st.atk:.0f} | {st.def_:.0f} | {st.hp:.0f} | {st.spd:.0f} '
+                 f'| {st.cri_ratio:.0%} | {st.penetration:.0%} | {c.ultimate_skill.sp_cost} |')
+    lines.append('')
+
+    skill_labels = [
+        (c.normal_skill, '일반 공격 (Normal)',
+         '쿨타임 없이 매 턴 사용할 수 있는 기본 공격이다.'),
+        (c.active_skill, '액티브 스킬 (Active)',
+         '사용 후 일정 턴의 쿨타임이 필요한 강화 스킬이다.'),
+        (c.ultimate_skill, '궁극기 (Ultimate)',
+         '공유 SP를 소모하여 엑스트라 턴으로 발동하는 필살기이다.'),
+    ]
+    for skill, label, intro in skill_labels:
+        cd_str = f' 쿨타임 {skill.cooldown_turns}턴.' if skill.cooldown_turns > 0 else ''
+        sp_str = f' SP {skill.sp_cost} 소모.' if skill.sp_cost > 0 else ''
+        lines.append(f'**{label}** — 「{skill.name}」')
+        lines.append('')
+        lines.append(f'> {intro}{cd_str}{sp_str}')
+        lines.append('')
+        for i, e in enumerate(skill.effects, 1):
+            desc = desc_effect(e)
+            lines.append(f'{i}. {desc}')
+        lines.append('')
+
+    if c.triggers:
+        lines.append('**패시브 트리거:**')
+        lines.append('')
+        for t in c.triggers:
+            once = ' 이 효과는 전투당 1회만 발동한다.' if t.once_per_battle else ''
+            ev = TRIGGER_KR.get(t.event.value, t.event.value)
+            skill_desc = ''
+            if t.skill_id:
+                for sk in [c.normal_skill, c.active_skill, c.ultimate_skill]:
+                    if sk.id == t.skill_id:
+                        sk_label = {'normal': '일반 공격', 'active': '액티브 스킬',
+                                    'ultimate': '궁극기'}[sk.skill_type.value]
+                        skill_desc = (f" {sk_label} 「{sk.name}」이(가) "
+                                      "쿨타임과 무관하게 즉시 자동 발동된다.")
+            lines.append(f'- **{ev}**:{skill_desc}{once}')
+        lines.append('')
+
+    lines.append('---')
+
+doc = '\n'.join(lines)
+with open('docs/CHARACTER_SPEC.md', 'w', encoding='utf-8') as f:
+    f.write(doc)
+print(f'Generated: {len(chars)} characters, {len(lines)} lines')
