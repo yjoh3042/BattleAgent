@@ -243,33 +243,33 @@ class MultRange:
 SKILL_MULTIPLIER_RANGE: dict[Role, dict[str, MultRange]] = {
     # ── 딜러: 높은 단일 타겟 배율, 궁극기 최대 폭딜 ──
     Role.ATTACKER: {
-        "normal":   MultRange(1.00, 2.50),   # 기본공격: 안정적 딜
-        "active":   MultRange(1.20, 2.80),   # 액티브: 메인 딜 스킬
-        "ultimate": MultRange(2.00, 4.00),   # 궁극기: 최대 단일 폭딜
+        "normal":   MultRange(2.00, 5.00),   # 기본공격: 안정적 딜
+        "active":   MultRange(2.40, 5.60),   # 액티브: 메인 딜 스킬
+        "ultimate": MultRange(4.00, 8.00),   # 궁극기: 최대 단일 폭딜
     },
     # ── 마법사: AoE 특화, 개별 배율은 낮지만 총합 높음 ──
     Role.MAGICIAN: {
-        "normal":   MultRange(0.80, 2.20),   # 기본: 단일 or 소범위
-        "active":   MultRange(0.40, 1.80),   # 액티브: AoE 주력
-        "ultimate": MultRange(0.80, 2.50),   # 궁극기: AoE 광역
+        "normal":   MultRange(1.60, 4.40),   # 기본: 단일 or 소범위
+        "active":   MultRange(0.80, 3.60),   # 액티브: AoE 주력
+        "ultimate": MultRange(1.60, 5.00),   # 궁극기: AoE 광역
     },
     # ── 탱커: 낮은 배율, 자힐/도발에 가치 집중 ──
     Role.DEFENDER: {
-        "normal":   MultRange(0.30, 1.00),
-        "active":   MultRange(0.20, 0.80),   # AoE + 자힐/도발
-        "ultimate": MultRange(0.00, 0.50),   # 데미지 미미, 전체힐/보호막
+        "normal":   MultRange(0.60, 2.00),
+        "active":   MultRange(0.40, 1.60),   # AoE + 자힐/도발
+        "ultimate": MultRange(0.00, 1.00),   # 데미지 미미, 전체힐/보호막
     },
     # ── 힐러: 힐 배율(ATK×계수), 궁극기는 %HP 힐 ──
     Role.HEALER: {
-        "normal":   MultRange(0.20, 0.80),   # 미미한 공격
-        "active":   MultRange(0.80, 2.00),   # 힐 계수 (ATK×value×0.40)
-        "ultimate": MultRange(0.20, 0.40),   # %maxHP 전체힐 비율
+        "normal":   MultRange(0.40, 1.60),   # 미미한 공격
+        "active":   MultRange(1.60, 4.00),   # 힐 계수 (ATK×value×0.40)
+        "ultimate": MultRange(0.40, 0.80),   # %maxHP 전체힐 비율
     },
     # ── 서포터: 중간 배율 + 버프 부여가 핵심 ──
     Role.SUPPORTER: {
-        "normal":   MultRange(0.40, 1.20),
-        "active":   MultRange(0.50, 1.50),   # 데미지 + 버프
-        "ultimate": MultRange(0.60, 1.80),   # 데미지 + 강화 버프
+        "normal":   MultRange(0.80, 2.40),
+        "active":   MultRange(1.00, 3.00),   # 데미지 + 버프
+        "ultimate": MultRange(1.20, 3.60),   # 데미지 + 강화 버프
     },
 }
 

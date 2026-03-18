@@ -4,9 +4,9 @@
   "name": "네이드",
   "element": "FIRE",
   "role": "ATTACKER",
-  "grade": 1,
-  "atk": 240,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 480,
+  "def": 240,
   "hp": 2400,
   "spd": 80,
   "cri": 0.15,
@@ -15,17 +15,17 @@
   "normal": {
    "name": "파이어 스트라이크",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   },
   "active": {
    "name": "플레임 버스트",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.10x | burn 15%(2T)"
+   "effects": "DMG 2.20x | burn 15%(2T)"
   },
   "ultimate": {
    "name": "인페르노",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 3.20x"
+   "effects": "DMG 6.40x"
   }
  },
  {
@@ -33,9 +33,9 @@
   "name": "카인",
   "element": "FIRE",
   "role": "ATTACKER",
-  "grade": 2,
-  "atk": 320,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 640,
+  "def": 320,
   "hp": 3200,
   "spd": 80,
   "cri": 0.15,
@@ -44,7 +44,7 @@
   "normal": {
    "name": "암흑 참격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 4.43x"
+   "effects": "DMG 4.00x"
   },
   "active": {
    "name": "광기의 힘",
@@ -54,7 +54,7 @@
   "ultimate": {
    "name": "어둠의 폭풍",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.30x"
+   "effects": "DMG 2.60x"
   }
  },
  {
@@ -62,9 +62,9 @@
   "name": "카라라트리",
   "element": "FIRE",
   "role": "ATTACKER",
-  "grade": 3,
-  "atk": 400,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 800,
+  "def": 400,
   "hp": 4000,
   "spd": 80,
   "cri": 0.15,
@@ -73,17 +73,17 @@
   "normal": {
    "name": "무기법",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x +burn40%/stk"
+   "effects": "DMG 3.00x +burn30%/stk"
   },
   "active": {
    "name": "무루의 고통",
    "target": "ENEMY_NEAR_ROW",
-   "effects": "DMG 1.80x | burn 15%(2T)"
+   "effects": "DMG 3.60x | burn 15%(2T)"
   },
   "ultimate": {
    "name": "출세간의 선법",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.30x | def_-20%(2T)"
+   "effects": "DMG 2.60x | def_-20%(2T)"
   }
  },
  {
@@ -92,8 +92,8 @@
   "element": "FIRE",
   "role": "ATTACKER",
   "grade": 3.5,
-  "atk": 460,
-  "def": 230,
+  "atk": 920,
+  "def": 460,
   "hp": 4600,
   "spd": 80,
   "cri": 0.15,
@@ -102,17 +102,17 @@
   "normal": {
    "name": "지장",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.00x | def_+15%(2T)"
+   "effects": "DMG 4.00x | def_+15%(2T)"
   },
   "active": {
    "name": "관음",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x | def_+25%(2T)"
+   "effects": "DMG 3.00x | def_+25%(2T)"
   },
   "ultimate": {
    "name": "맹화",
    "target": "ALL_ENEMY",
-   "effects": "DMG 2.20x"
+   "effects": "DMG 4.40x"
   }
  },
  {
@@ -120,9 +120,9 @@
   "name": "다비",
   "element": "FIRE",
   "role": "MAGICIAN",
-  "grade": 2,
-  "atk": 240,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 480,
+  "def": 320,
   "hp": 4000,
   "spd": 100,
   "cri": 0.15,
@@ -131,7 +131,7 @@
   "normal": {
    "name": "다비의 불꽃",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "화상 촉진",
@@ -141,7 +141,7 @@
   "ultimate": {
    "name": "업화",
    "target": "ENEMY_NEAR_CROSS",
-   "effects": "DMG 1.40x | burn 20%(3T)"
+   "effects": "DMG 2.80x | burn 20%(3T)"
   }
  },
  {
@@ -149,9 +149,9 @@
   "name": "모건",
   "element": "FIRE",
   "role": "MAGICIAN",
-  "grade": 3,
-  "atk": 300,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 600,
+  "def": 400,
   "hp": 5000,
   "spd": 100,
   "cri": 0.15,
@@ -160,7 +160,7 @@
   "normal": {
    "name": "철화의 검",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 0.90x x2hit"
+   "effects": "DMG 1.80x x2hit"
   },
   "active": {
    "name": "홍염의 비도",
@@ -170,7 +170,7 @@
   "ultimate": {
    "name": "화도난무",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.60x | bleed 15%(2T)"
+   "effects": "DMG 3.20x | bleed 15%(2T)"
   }
  },
  {
@@ -178,9 +178,9 @@
   "name": "다비",
   "element": "FIRE",
   "role": "MAGICIAN",
-  "grade": 3,
-  "atk": 300,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 600,
+  "def": 400,
   "hp": 5000,
   "spd": 100,
   "cri": 0.15,
@@ -189,17 +189,17 @@
   "normal": {
    "name": "파이어리 서펀트",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.00x"
+   "effects": "DMG 4.00x"
   },
   "active": {
    "name": "화차",
    "target": "ENEMY_RANDOM",
-   "effects": "DMG 1.70x | burn 15%(2T)"
+   "effects": "DMG 3.40x | burn 15%(2T)"
   },
   "ultimate": {
    "name": "나비효과",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.40x | burn 15%(2T)"
+   "effects": "DMG 2.80x | burn 15%(2T)"
   }
  },
  {
@@ -207,9 +207,9 @@
   "name": "구미호",
   "element": "FIRE",
   "role": "MAGICIAN",
-  "grade": 3,
-  "atk": 300,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 600,
+  "def": 400,
   "hp": 5000,
   "spd": 100,
   "cri": 0.15,
@@ -218,17 +218,17 @@
   "normal": {
    "name": "꼬리의 매질",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x"
+   "effects": "DMG 3.00x"
   },
   "active": {
    "name": "원혼의 아홉 꼬리",
    "target": "ENEMY_RANDOM",
-   "effects": "DMG 2.00x | CC:PANIC(1T) | def_-15%(2T)"
+   "effects": "DMG 4.00x | CC:PANIC(1T) | def_-15%(2T)"
   },
   "ultimate": {
    "name": "붉은 원망의 폭풍",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.50x | CC:PANIC(1T)"
+   "effects": "DMG 5.00x | CC:PANIC(1T)"
   }
  },
  {
@@ -236,9 +236,9 @@
   "name": "베르들레",
   "element": "FIRE",
   "role": "HEALER",
-  "grade": 1,
-  "atk": 120,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 240,
+  "def": 240,
   "hp": 2400,
   "spd": 90,
   "cri": 0.15,
@@ -247,17 +247,17 @@
   "normal": {
    "name": "생명의 불길",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "화염 치유",
    "target": "ALL_ALLY",
-   "effects": "HEAL 20%"
+   "effects": "HEAL 45%"
   },
   "ultimate": {
    "name": "불사조의 축복",
    "target": "ALL_ALLY",
-   "effects": "HEAL 35% | CLEANSE"
+   "effects": "HEAL 55% | CLEANSE"
   }
  },
  {
@@ -265,9 +265,9 @@
   "name": "지바",
   "element": "FIRE",
   "role": "HEALER",
-  "grade": 3,
-  "atk": 200,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 400,
+  "def": 400,
   "hp": 4000,
   "spd": 90,
   "cri": 0.15,
@@ -276,7 +276,7 @@
   "normal": {
    "name": "물의 촉수",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "생명수",
@@ -294,9 +294,9 @@
   "name": "유다",
   "element": "FIRE",
   "role": "DEFENDER",
-  "grade": 1,
-  "atk": 150,
-  "def": 180,
+  "grade": 3.5,
+  "atk": 300,
+  "def": 360,
   "hp": 3600,
   "spd": 110,
   "cri": 0.15,
@@ -305,7 +305,7 @@
   "normal": {
    "name": "마탄",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "악마의 방패",
@@ -315,7 +315,7 @@
   "ultimate": {
    "name": "심판",
    "target": "ALL_ENEMY",
-   "effects": "DMG 0.90x | atk-15%(2T)"
+   "effects": "DMG 1.80x | atk-15%(2T)"
   }
  },
  {
@@ -323,9 +323,9 @@
   "name": "데레사",
   "element": "FIRE",
   "role": "DEFENDER",
-  "grade": 3,
-  "atk": 250,
-  "def": 300,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 600,
   "hp": 6000,
   "spd": 110,
   "cri": 0.15,
@@ -334,17 +334,17 @@
   "normal": {
    "name": "스틸 웨일링",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x"
+   "effects": "DMG 3.00x"
   },
   "active": {
    "name": "데털민트 소드",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x | def_+30%(2T) | COUNTER"
+   "effects": "DMG 3.60x | def_+30%(2T) | COUNTER"
   },
   "ultimate": {
    "name": "새크리파이스",
    "target": "ENEMY_NEAR_ROW",
-   "effects": "DMG 2.50x | TAUNT(?T)"
+   "effects": "DMG 5.00x | TAUNT(?T)"
   }
  },
  {
@@ -352,9 +352,9 @@
   "name": "드미테르",
   "element": "FIRE",
   "role": "SUPPORTER",
-  "grade": 2,
-  "atk": 200,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 400,
+  "def": 320,
   "hp": 4000,
   "spd": 120,
   "cri": 0.15,
@@ -363,17 +363,17 @@
   "normal": {
    "name": "프릭킹 니들",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   },
   "active": {
    "name": "사이드 이펙트",
    "target": "ALL_ENEMY",
-   "effects": "DMG 0.50x +burn20%/stk | burn 20%(2T) | spd-15%(2T)"
+   "effects": "DMG 1.00x +burn20%/stk | burn 20%(2T) | spd-15%(2T)"
   },
   "ultimate": {
    "name": "극약처방",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.20x | def_-20%(2T)"
+   "effects": "DMG 4.40x | def_-20%(2T)"
   }
  },
  {
@@ -381,9 +381,9 @@
   "name": "살마키스",
   "element": "FIRE",
   "role": "SUPPORTER",
-  "grade": 3,
-  "atk": 250,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 400,
   "hp": 5000,
   "spd": 120,
   "cri": 0.15,
@@ -392,7 +392,7 @@
   "normal": {
    "name": "물의 손길",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "축복",
@@ -402,7 +402,7 @@
   "ultimate": {
    "name": "대축복",
    "target": "ALL_ENEMY",
-   "effects": "DMG 0.80x | def_-20%(2T) | atk+20%(2T)"
+   "effects": "DMG 1.60x | def_-20%(2T) | atk+20%(2T)"
   }
  },
  {
@@ -410,9 +410,9 @@
   "name": "리자",
   "element": "WATER",
   "role": "ATTACKER",
-  "grade": 2,
-  "atk": 320,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 640,
+  "def": 320,
   "hp": 3200,
   "spd": 80,
   "cri": 0.15,
@@ -421,17 +421,17 @@
   "normal": {
    "name": "수정 화살",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 0.60x"
+   "effects": "DMG 1.20x"
   },
   "active": {
    "name": "얼음 창",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.35x"
+   "effects": "DMG 2.70x"
   },
   "ultimate": {
    "name": "빙하 세례",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 0.30x | atk+15%(2T)"
+   "effects": "DMG 0.60x | atk+15%(2T)"
   }
  },
  {
@@ -439,9 +439,9 @@
   "name": "이브",
   "element": "WATER",
   "role": "ATTACKER",
-  "grade": 3,
-  "atk": 400,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 800,
+  "def": 400,
   "hp": 4000,
   "spd": 80,
   "cri": 0.15,
@@ -450,17 +450,17 @@
   "normal": {
    "name": "다크 미스트",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   },
   "active": {
    "name": "레인 드랍",
    "target": "ENEMY_LOWEST_HP",
-   "effects": "DMG 2.00x | DMG 1.50x (HP<25%)"
+   "effects": "DMG 4.00x | DMG 3.00x (HP<25%)"
   },
   "ultimate": {
    "name": "실낙원",
    "target": "ENEMY_LOWEST_HP",
-   "effects": "DMG 2.50x | DMG 1.00x (HP<25%)"
+   "effects": "DMG 5.00x | DMG 2.00x (HP<25%)"
   }
  },
  {
@@ -468,9 +468,9 @@
   "name": "비루파",
   "element": "WATER",
   "role": "ATTACKER",
-  "grade": 2,
-  "atk": 320,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 640,
+  "def": 320,
   "hp": 3200,
   "spd": 80,
   "cri": 0.15,
@@ -479,17 +479,17 @@
   "normal": {
    "name": "퇴마의 일격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   },
   "active": {
    "name": "집중 강화",
    "target": "SELF",
-   "effects": "atk+25%(2T) | DMG 1.50x"
+   "effects": "atk+25%(2T) | DMG 3.00x"
   },
   "ultimate": {
    "name": "파마의 일격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 3.50x | atk+20%(2T)"
+   "effects": "DMG 7.00x | atk+20%(2T)"
   }
  },
  {
@@ -497,9 +497,9 @@
   "name": "니르티",
   "element": "WATER",
   "role": "ATTACKER",
-  "grade": 3,
-  "atk": 400,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 800,
+  "def": 400,
   "hp": 4000,
   "spd": 80,
   "cri": 0.15,
@@ -508,17 +508,17 @@
   "normal": {
    "name": "암류의 일격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.50x"
+   "effects": "DMG 5.00x"
   },
   "active": {
    "name": "심연의 창",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 4.50x | def_+15%(2T)"
+   "effects": "DMG 9.00x | def_+15%(2T)"
   },
   "ultimate": {
    "name": "파도의 심판",
    "target": "ENEMY_NEAR_CROSS",
-   "effects": "DMG 2.50x | HEAL 20%"
+   "effects": "DMG 5.00x | HEAL 20%"
   }
  },
  {
@@ -526,9 +526,9 @@
   "name": "마야우엘",
   "element": "WATER",
   "role": "MAGICIAN",
-  "grade": 1,
-  "atk": 180,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 360,
+  "def": 240,
   "hp": 3000,
   "spd": 120,
   "cri": 0.15,
@@ -537,17 +537,17 @@
   "normal": {
    "name": "물의 채찍",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "빙결의 손길",
    "target": "ENEMY_NEAR",
-   "effects": "CC:FREEZE(1T) | DMG 1.00x | def_-20%(2T)"
+   "effects": "CC:FREEZE(1T) | DMG 2.00x | def_-20%(2T)"
   },
   "ultimate": {
    "name": "얼어붙은 세계",
    "target": "ALL_ENEMY",
-   "effects": "DMG 2.50x | CC:FREEZE(2T) | poison 15%(2T) | spd-30%(2T) | def_-20%(2T)"
+   "effects": "DMG 5.00x | CC:FREEZE(2T) | poison 15%(2T) | spd-30%(2T) | def_-20%(2T)"
   }
  },
  {
@@ -555,9 +555,9 @@
   "name": "바리",
   "element": "WATER",
   "role": "MAGICIAN",
-  "grade": 3,
-  "atk": 300,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 600,
+  "def": 400,
   "hp": 5000,
   "spd": 100,
   "cri": 0.15,
@@ -566,17 +566,17 @@
   "normal": {
    "name": "삼재",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 0.75x x2hit | poison 20%(2T)"
+   "effects": "DMG 1.50x x2hit | poison 20%(2T)"
   },
   "active": {
    "name": "천라홍수",
    "target": "ENEMY_RANDOM_3",
-   "effects": "DMG 1.20x | poison 20%(2T)"
+   "effects": "DMG 2.40x | poison 20%(2T)"
   },
   "ultimate": {
    "name": "은하수 곡성",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.00x | poison 20%(2T)"
+   "effects": "DMG 2.00x | poison 20%(2T)"
   }
  },
  {
@@ -584,9 +584,9 @@
   "name": "도계화",
   "element": "WATER",
   "role": "MAGICIAN",
-  "grade": 3,
-  "atk": 300,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 600,
+  "def": 400,
   "hp": 5000,
   "spd": 100,
   "cri": 0.15,
@@ -595,17 +595,17 @@
   "normal": {
    "name": "원거만리",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.00x"
+   "effects": "DMG 4.00x"
   },
   "active": {
    "name": "신행귀신 속거천리",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x | poison 20%(2T) | CC:STUN(1T) | def_-15%(2T)"
+   "effects": "DMG 3.60x | poison 20%(2T) | CC:STUN(1T) | def_-15%(2T)"
   },
   "ultimate": {
    "name": "급급여율령",
    "target": "ENEMY_BACK_ROW",
-   "effects": "DMG 1.50x | poison 20%(3T)"
+   "effects": "DMG 3.00x | poison 20%(3T)"
   }
  },
  {
@@ -613,9 +613,9 @@
   "name": "티스베",
   "element": "WATER",
   "role": "HEALER",
-  "grade": 3,
-  "atk": 200,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 400,
+  "def": 400,
   "hp": 4000,
   "spd": 90,
   "cri": 0.15,
@@ -624,7 +624,7 @@
   "normal": {
    "name": "오아시스",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "하늘의 창문",
@@ -642,9 +642,9 @@
   "name": "에우로스",
   "element": "WATER",
   "role": "HEALER",
-  "grade": 2,
-  "atk": 160,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 320,
+  "def": 320,
   "hp": 3200,
   "spd": 90,
   "cri": 0.15,
@@ -653,7 +653,7 @@
   "normal": {
    "name": "바람의 속삭임",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "회복의 바람",
@@ -663,7 +663,7 @@
   "ultimate": {
    "name": "대기의 은혜",
    "target": "ALL_ALLY",
-   "effects": "HEAL 35% | CLEANSE"
+   "effects": "HEAL 55% | CLEANSE"
   }
  },
  {
@@ -671,9 +671,9 @@
   "name": "데이노",
   "element": "WATER",
   "role": "DEFENDER",
-  "grade": 1,
-  "atk": 150,
-  "def": 180,
+  "grade": 3.5,
+  "atk": 300,
+  "def": 360,
   "hp": 3600,
   "spd": 110,
   "cri": 0.15,
@@ -682,7 +682,7 @@
   "normal": {
    "name": "수류 강타",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "철벽 방어",
@@ -700,9 +700,9 @@
   "name": "엘리시온",
   "element": "WATER",
   "role": "DEFENDER",
-  "grade": 3,
-  "atk": 250,
-  "def": 300,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 600,
   "hp": 6000,
   "spd": 110,
   "cri": 0.15,
@@ -711,17 +711,17 @@
   "normal": {
    "name": "정화의 물",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "생명수",
    "target": "ALLY_LOWEST_HP",
-   "effects": "HEAL 60% | BARRIER | TAUNT(?T) | CLEANSE"
+   "effects": "HEAL 80% | BARRIER | TAUNT(?T) | CLEANSE | def_+40%(3T)"
   },
   "ultimate": {
    "name": "성역",
    "target": "ALL_ALLY",
-   "effects": "HEAL 55% | def_+20%(2T) | SP_INCREASE"
+   "effects": "HEAL 75% | def_+20%(2T) | SP_INCREASE"
   }
  },
  {
@@ -729,9 +729,9 @@
   "name": "상아",
   "element": "WATER",
   "role": "SUPPORTER",
-  "grade": 3,
-  "atk": 250,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 400,
   "hp": 5000,
   "spd": 120,
   "cri": 0.15,
@@ -740,12 +740,12 @@
   "normal": {
    "name": "수류",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "수렁",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.50x | spd-20(2T) | def_-15%(2T) | REMOVE_BUFF"
+   "effects": "DMG 3.00x | spd-20(2T) | def_-15%(2T) | REMOVE_BUFF"
   },
   "ultimate": {
    "name": "대조수",
@@ -758,9 +758,9 @@
   "name": "레오",
   "element": "WATER",
   "role": "SUPPORTER",
-  "grade": 1,
-  "atk": 150,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 300,
+  "def": 240,
   "hp": 3000,
   "spd": 120,
   "cri": 0.15,
@@ -769,7 +769,7 @@
   "normal": {
    "name": "물결 타격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "수류 가호",
@@ -788,8 +788,8 @@
   "element": "WATER",
   "role": "SUPPORTER",
   "grade": 3.5,
-  "atk": 287,
-  "def": 230,
+  "atk": 574,
+  "def": 460,
   "hp": 5750,
   "spd": 120,
   "cri": 0.15,
@@ -798,17 +798,17 @@
   "normal": {
    "name": "장풍",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 4.28x"
+   "effects": "DMG 8.56x"
   },
   "active": {
    "name": "진천뢰",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 3.30x"
+   "effects": "DMG 6.60x"
   },
   "ultimate": {
    "name": "파천일격",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.10x | def_-20%(2T)"
+   "effects": "DMG 2.20x | def_-20%(2T)"
   }
  },
  {
@@ -816,9 +816,9 @@
   "name": "에우로페",
   "element": "FOREST",
   "role": "ATTACKER",
-  "grade": 1,
-  "atk": 240,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 480,
+  "def": 240,
   "hp": 2400,
   "spd": 80,
   "cri": 0.15,
@@ -827,17 +827,17 @@
   "normal": {
    "name": "넝쿨 타격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   },
   "active": {
    "name": "자연의 분노",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.10x | poison 15%(2T)"
+   "effects": "DMG 2.20x | poison 15%(2T)"
   },
   "ultimate": {
    "name": "가이아의 심판",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 3.20x"
+   "effects": "DMG 6.40x"
   }
  },
  {
@@ -845,9 +845,9 @@
   "name": "미다스",
   "element": "FOREST",
   "role": "ATTACKER",
-  "grade": 2,
-  "atk": 320,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 640,
+  "def": 320,
   "hp": 3200,
   "spd": 80,
   "cri": 0.15,
@@ -856,17 +856,17 @@
   "normal": {
    "name": "황금 주먹",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   },
   "active": {
    "name": "황금의 손길",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.00x | def_-20%(2T)"
+   "effects": "DMG 4.00x | def_-20%(2T)"
   },
   "ultimate": {
    "name": "황금폭풍",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.80x | def_-15%(2T)"
+   "effects": "DMG 3.60x | def_-15%(2T)"
   }
  },
  {
@@ -874,9 +874,9 @@
   "name": "미리암",
   "element": "FOREST",
   "role": "ATTACKER",
-  "grade": 3,
-  "atk": 400,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 800,
+  "def": 400,
   "hp": 4000,
   "spd": 80,
   "cri": 0.15,
@@ -885,7 +885,7 @@
   "normal": {
    "name": "웨이팅 포 딜",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.70x +burn20%/stk"
+   "effects": "DMG 3.40x +burn20%/stk"
   },
   "active": {
    "name": "크로스 더 루비콘",
@@ -895,7 +895,7 @@
   "ultimate": {
    "name": "퓨리오스",
    "target": "ALL_ENEMY",
-   "effects": "DMG 2.80x | CC:PANIC(2T)"
+   "effects": "DMG 7.50x | CC:PANIC(2T)"
   }
  },
  {
@@ -903,9 +903,9 @@
   "name": "다누",
   "element": "FOREST",
   "role": "ATTACKER",
-  "grade": 3,
-  "atk": 400,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 800,
+  "def": 400,
   "hp": 4000,
   "spd": 80,
   "cri": 0.15,
@@ -914,17 +914,17 @@
   "normal": {
    "name": "생명의 손길",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.00x | poison 15%(2T)"
+   "effects": "DMG 8.00x | poison 15%(2T)"
   },
   "active": {
    "name": "대지의 치유",
-   "target": "ALL_ALLY",
-   "effects": "HEAL 25% | CLEANSE"
+   "target": "ENEMY_NEAR",
+   "effects": "DMG 4.00x | HEAL 30% | CLEANSE"
   },
   "ultimate": {
    "name": "부활의 땅",
-   "target": "ALL_ALLY",
-   "effects": "HEAL 40% | REVIVE 50%"
+   "target": "ALL_ENEMY",
+   "effects": "DMG 3.00x | HEAL 40% | REVIVE 50%"
   }
  },
  {
@@ -932,9 +932,9 @@
   "name": "다이아나",
   "element": "FOREST",
   "role": "MAGICIAN",
-  "grade": 1,
-  "atk": 180,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 360,
+  "def": 240,
   "hp": 3000,
   "spd": 120,
   "cri": 0.15,
@@ -943,17 +943,17 @@
   "normal": {
    "name": "달빛 화살",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "숲의 속박",
    "target": "ENEMY_NEAR",
-   "effects": "CC:STUN(1T) | DMG 1.00x"
+   "effects": "CC:STUN(1T) | DMG 2.00x"
   },
   "ultimate": {
    "name": "달빛 심판",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.00x | CC:SLEEP(2T) | spd-20%(2T)"
+   "effects": "DMG 2.00x | CC:SLEEP(2T) | spd-20%(2T)"
   }
  },
  {
@@ -961,9 +961,9 @@
   "name": "판",
   "element": "FOREST",
   "role": "MAGICIAN",
-  "grade": 3,
-  "atk": 300,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 600,
+  "def": 400,
   "hp": 5000,
   "spd": 100,
   "cri": 0.15,
@@ -972,17 +972,17 @@
   "normal": {
    "name": "목동의 휘파람",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x"
+   "effects": "DMG 3.00x"
   },
   "active": {
    "name": "작은 양을 위한 굴레",
    "target": "ENEMY_RANDOM",
-   "effects": "DMG 2.00x | CC:SLEEP(1T)"
+   "effects": "DMG 4.00x | CC:SLEEP(1T)"
   },
   "ultimate": {
    "name": "고요한 봄의 들판",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.50x | CC:SLEEP(1T)"
+   "effects": "DMG 3.00x | CC:SLEEP(1T)"
   }
  },
  {
@@ -991,8 +991,8 @@
   "element": "FOREST",
   "role": "MAGICIAN",
   "grade": 3.5,
-  "atk": 345,
-  "def": 230,
+  "atk": 690,
+  "def": 460,
   "hp": 5750,
   "spd": 100,
   "cri": 0.15,
@@ -1001,17 +1001,17 @@
   "normal": {
    "name": "심연의 쌍격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.00x x2hit"
+   "effects": "DMG 4.00x x2hit"
   },
   "active": {
    "name": "종결자의 일격",
    "target": "ENEMY_LOWEST_HP",
-   "effects": "DMG 2.50x | DMG 1.20x (HP<50%) | def_-25%(2T)"
+   "effects": "DMG 5.00x | DMG 2.40x (HP<50%) | def_-25%(2T)"
   },
   "ultimate": {
    "name": "심판의 심연",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.70x | def_-15%(2T) | bleed 20%(3T)"
+   "effects": "DMG 3.40x | def_-15%(2T) | bleed 20%(3T)"
   }
  },
  {
@@ -1019,9 +1019,9 @@
   "name": "프레이야",
   "element": "FOREST",
   "role": "HEALER",
-  "grade": 1,
-  "atk": 120,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 240,
+  "def": 240,
   "hp": 2400,
   "spd": 90,
   "cri": 0.15,
@@ -1030,7 +1030,7 @@
   "normal": {
    "name": "자연의 가시",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "생명의 꽃",
@@ -1048,9 +1048,9 @@
   "name": "브라우니",
   "element": "FOREST",
   "role": "HEALER",
-  "grade": 3,
-  "atk": 200,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 400,
+  "def": 400,
   "hp": 4000,
   "spd": 90,
   "cri": 0.15,
@@ -1059,7 +1059,7 @@
   "normal": {
    "name": "고급정보입니다!",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "특급정보입니다!",
@@ -1077,9 +1077,9 @@
   "name": "맘몬",
   "element": "FOREST",
   "role": "DEFENDER",
-  "grade": 2,
-  "atk": 200,
-  "def": 240,
+  "grade": 3.5,
+  "atk": 400,
+  "def": 480,
   "hp": 4800,
   "spd": 110,
   "cri": 0.15,
@@ -1088,17 +1088,17 @@
   "normal": {
    "name": "대지의 주먹",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   },
   "active": {
    "name": "지진 강타",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.35x | CC:STUN(1T)"
+   "effects": "DMG 2.70x | CC:STUN(1T)"
   },
   "ultimate": {
    "name": "대지 분쇄",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.60x"
+   "effects": "DMG 3.20x"
   }
  },
  {
@@ -1106,9 +1106,9 @@
   "name": "메티스",
   "element": "FOREST",
   "role": "DEFENDER",
-  "grade": 3,
-  "atk": 250,
-  "def": 300,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 600,
   "hp": 6000,
   "spd": 110,
   "cri": 0.15,
@@ -1117,12 +1117,12 @@
   "normal": {
    "name": "지혜의 일격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "철벽 수호",
    "target": "ALL_ENEMY",
-   "effects": "DMG 0.80x | def_+25%(2T) | REMOVE_BUFF"
+   "effects": "DMG 1.60x | def_+25%(2T) | REMOVE_BUFF"
   },
   "ultimate": {
    "name": "지혜의 방패",
@@ -1135,9 +1135,9 @@
   "name": "자청비",
   "element": "FOREST",
   "role": "SUPPORTER",
-  "grade": 2,
-  "atk": 200,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 400,
+  "def": 320,
   "hp": 4000,
   "spd": 120,
   "cri": 0.15,
@@ -1146,7 +1146,7 @@
   "normal": {
    "name": "바람의 일격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "숲의 가호",
@@ -1164,9 +1164,9 @@
   "name": "아우로라",
   "element": "FOREST",
   "role": "SUPPORTER",
-  "grade": 3,
-  "atk": 250,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 400,
   "hp": 5000,
   "spd": 120,
   "cri": 0.15,
@@ -1175,7 +1175,7 @@
   "normal": {
    "name": "기다림의 끝",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "지켜주는 나무",
@@ -1193,9 +1193,9 @@
   "name": "그릴라",
   "element": "FOREST",
   "role": "SUPPORTER",
-  "grade": 3,
-  "atk": 250,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 400,
   "hp": 5000,
   "spd": 120,
   "cri": 0.15,
@@ -1204,7 +1204,7 @@
   "normal": {
    "name": "악마의 야망",
    "target": "ENEMY_RANDOM",
-   "effects": "DMG 2.00x"
+   "effects": "DMG 4.00x"
   },
   "active": {
    "name": "발푸르기스의 밤",
@@ -1222,9 +1222,9 @@
   "name": "아슈토레스",
   "element": "LIGHT",
   "role": "ATTACKER",
-  "grade": 3,
-  "atk": 400,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 800,
+  "def": 400,
   "hp": 4000,
   "spd": 80,
   "cri": 0.15,
@@ -1233,17 +1233,17 @@
   "normal": {
    "name": "밤의 속삭임",
    "target": "ENEMY_RANDOM_2",
-   "effects": "DMG 2.00x"
+   "effects": "DMG 4.00x"
   },
   "active": {
    "name": "심연의 덫",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 3.00x"
+   "effects": "DMG 4.50x"
   },
   "ultimate": {
    "name": "가시 무도회",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 3.80x"
+   "effects": "DMG 4.00x"
   }
  },
  {
@@ -1251,9 +1251,9 @@
   "name": "야나",
   "element": "LIGHT",
   "role": "ATTACKER",
-  "grade": 1,
-  "atk": 240,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 480,
+  "def": 240,
   "hp": 2400,
   "spd": 80,
   "cri": 0.15,
@@ -1262,17 +1262,17 @@
   "normal": {
    "name": "광선 타격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   },
   "active": {
    "name": "섬광 일격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.20x | def_-15%(2T)"
+   "effects": "DMG 4.40x | def_-15%(2T)"
   },
   "ultimate": {
    "name": "광폭발",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   }
  },
  {
@@ -1280,9 +1280,9 @@
   "name": "힐드",
   "element": "LIGHT",
   "role": "ATTACKER",
-  "grade": 2,
-  "atk": 320,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 640,
+  "def": 320,
   "hp": 3200,
   "spd": 80,
   "cri": 0.15,
@@ -1291,17 +1291,17 @@
   "normal": {
    "name": "빛의 검",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.25x"
+   "effects": "DMG 4.50x"
   },
   "active": {
    "name": "섬광 베기",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 0.40x | acc-20(2T)"
+   "effects": "DMG 0.80x | acc-20(2T)"
   },
   "ultimate": {
    "name": "발키리의 심판",
    "target": "ENEMY_NEAR_ROW",
-   "effects": "DMG 3.20x | SP_INCREASE"
+   "effects": "DMG 6.40x | SP_INCREASE"
   }
  },
  {
@@ -1309,9 +1309,9 @@
   "name": "마프데트",
   "element": "LIGHT",
   "role": "MAGICIAN",
-  "grade": 2,
-  "atk": 240,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 480,
+  "def": 320,
   "hp": 4000,
   "spd": 120,
   "cri": 0.15,
@@ -1320,7 +1320,7 @@
   "normal": {
    "name": "빛의 발톱",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "심판의 사슬",
@@ -1330,7 +1330,7 @@
   "ultimate": {
    "name": "정의의 심판",
    "target": "ALL_ENEMY",
-   "effects": "DMG 2.80x | CC:STUN(2T) | atk-20%(2T)"
+   "effects": "DMG 7.50x | CC:STUN(2T) | atk-20%(2T)"
   }
  },
  {
@@ -1338,9 +1338,9 @@
   "name": "세멜레",
   "element": "LIGHT",
   "role": "MAGICIAN",
-  "grade": 3,
-  "atk": 300,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 600,
+  "def": 400,
   "hp": 5000,
   "spd": 100,
   "cri": 0.15,
@@ -1349,7 +1349,7 @@
   "normal": {
    "name": "신성 강타",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x x2hit"
+   "effects": "DMG 2.00x x2hit"
   },
   "active": {
    "name": "제우스의 불꽃",
@@ -1359,7 +1359,7 @@
   "ultimate": {
    "name": "신의 번개",
    "target": "ALL_ENEMY",
-   "effects": "DMG 2.00x | burn 15%(2T)"
+   "effects": "DMG 6.00x | burn 15%(2T)"
   }
  },
  {
@@ -1368,8 +1368,8 @@
   "element": "LIGHT",
   "role": "MAGICIAN",
   "grade": 3.5,
-  "atk": 345,
-  "def": 230,
+  "atk": 690,
+  "def": 460,
   "hp": 5750,
   "spd": 100,
   "cri": 0.15,
@@ -1378,7 +1378,7 @@
   "normal": {
    "name": "성광의 채찍",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "빛의 축복",
@@ -1396,9 +1396,9 @@
   "name": "다나",
   "element": "LIGHT",
   "role": "HEALER",
-  "grade": 2,
-  "atk": 160,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 320,
+  "def": 320,
   "hp": 3200,
   "spd": 90,
   "cri": 0.15,
@@ -1407,7 +1407,7 @@
   "normal": {
    "name": "빛의 화살",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 4.28x"
+   "effects": "DMG 8.56x"
   },
   "active": {
    "name": "성스러운 기도",
@@ -1425,9 +1425,9 @@
   "name": "티와즈",
   "element": "LIGHT",
   "role": "HEALER",
-  "grade": 3,
-  "atk": 200,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 400,
+  "def": 400,
   "hp": 4000,
   "spd": 90,
   "cri": 0.15,
@@ -1436,17 +1436,17 @@
   "normal": {
    "name": "전쟁신의 검",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.00x"
+   "effects": "DMG 4.00x"
   },
   "active": {
    "name": "관통 공격",
    "target": "ENEMY_SAME_COL",
-   "effects": "DMG 2.50x"
+   "effects": "DMG 5.00x"
   },
   "ultimate": {
    "name": "신의 선언",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.50x | def_-25%(2T)"
+   "effects": "DMG 3.00x | def_-25%(2T)"
   }
  },
  {
@@ -1454,9 +1454,9 @@
   "name": "샤를",
   "element": "LIGHT",
   "role": "DEFENDER",
-  "grade": 1,
-  "atk": 150,
-  "def": 180,
+  "grade": 3.5,
+  "atk": 300,
+  "def": 360,
   "hp": 3600,
   "spd": 110,
   "cri": 0.15,
@@ -1465,7 +1465,7 @@
   "normal": {
    "name": "빛의 방패",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "성벽",
@@ -1475,7 +1475,7 @@
   "ultimate": {
    "name": "수호의 빛",
    "target": "ENEMY_NEAR_ROW",
-   "effects": "DMG 2.00x | HEAL 20% | BARRIER"
+   "effects": "DMG 4.00x | HEAL 50% | BARRIER"
   }
  },
  {
@@ -1483,9 +1483,9 @@
   "name": "모나",
   "element": "LIGHT",
   "role": "DEFENDER",
-  "grade": 3,
-  "atk": 250,
-  "def": 300,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 600,
   "hp": 6000,
   "spd": 100,
   "cri": 0.15,
@@ -1494,7 +1494,7 @@
   "normal": {
    "name": "이클립스",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "트릭스타",
@@ -1512,9 +1512,9 @@
   "name": "티타니아",
   "element": "LIGHT",
   "role": "DEFENDER",
-  "grade": 3,
-  "atk": 250,
-  "def": 300,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 600,
   "hp": 6000,
   "spd": 110,
   "cri": 0.15,
@@ -1523,7 +1523,7 @@
   "normal": {
    "name": "요정의 손길",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "요정의 축복",
@@ -1541,9 +1541,9 @@
   "name": "레다",
   "element": "LIGHT",
   "role": "SUPPORTER",
-  "grade": 1,
-  "atk": 150,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 300,
+  "def": 240,
   "hp": 3000,
   "spd": 120,
   "cri": 0.15,
@@ -1552,17 +1552,17 @@
   "normal": {
    "name": "빛의 화살",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "성광의 가호",
    "target": "ALL_ALLY",
-   "effects": "atk+15%(2T) | HEAL 20%"
+   "effects": "atk+15%(2T) | HEAL 40%"
   },
   "ultimate": {
    "name": "빛의 은혜",
    "target": "ALL_ENEMY",
-   "effects": "DMG 0.80x | atk+15%(2T) | def_+20%(2T)"
+   "effects": "DMG 3.50x | atk+15%(2T) | def_+20%(2T)"
   }
  },
  {
@@ -1570,9 +1570,9 @@
   "name": "시트리",
   "element": "LIGHT",
   "role": "SUPPORTER",
-  "grade": 3,
-  "atk": 250,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 400,
   "hp": 5000,
   "spd": 120,
   "cri": 0.15,
@@ -1581,7 +1581,7 @@
   "normal": {
    "name": "폴 인 러브",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "크런치 캔디",
@@ -1591,7 +1591,7 @@
   "ultimate": {
    "name": "라 돌체 비타",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.15x | atk+25%(3T) | cri_dmg_ratio+0(3T)"
+   "effects": "DMG 2.30x | atk+25%(3T) | cri_dmg_ratio+0(3T)"
   }
  },
  {
@@ -1599,9 +1599,9 @@
   "name": "오네이로이",
   "element": "LIGHT",
   "role": "SUPPORTER",
-  "grade": 3,
-  "atk": 250,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 400,
   "hp": 5000,
   "spd": 120,
   "cri": 0.15,
@@ -1610,17 +1610,17 @@
   "normal": {
    "name": "꿈의 속삭임",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x"
+   "effects": "DMG 3.00x"
   },
   "active": {
    "name": "잠의 손길",
    "target": "ENEMY_RANDOM",
-   "effects": "DMG 2.50x | CC:SLEEP(1T) | def_-15%(2T)"
+   "effects": "DMG 5.00x | CC:SLEEP(1T) | def_-15%(2T)"
   },
   "ultimate": {
    "name": "영원한 꿈",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.50x | CC:SLEEP(2T)"
+   "effects": "DMG 3.00x | CC:SLEEP(2T)"
   }
  },
  {
@@ -1628,9 +1628,9 @@
   "name": "메두사",
   "element": "DARK",
   "role": "ATTACKER",
-  "grade": 1,
-  "atk": 240,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 480,
+  "def": 240,
   "hp": 2400,
   "spd": 80,
   "cri": 0.15,
@@ -1639,17 +1639,17 @@
   "normal": {
    "name": "석화의 눈",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   },
   "active": {
    "name": "독사의 일격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.00x | CC:STONE(1T)"
+   "effects": "DMG 4.00x | CC:STONE(1T)"
   },
   "ultimate": {
    "name": "석화의 시선",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.60x | CC:STONE(1T)"
+   "effects": "DMG 3.20x | CC:STONE(1T)"
   }
  },
  {
@@ -1657,9 +1657,9 @@
   "name": "에르제베트",
   "element": "DARK",
   "role": "ATTACKER",
-  "grade": 2,
-  "atk": 320,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 640,
+  "def": 320,
   "hp": 3200,
   "spd": 80,
   "cri": 0.15,
@@ -1668,17 +1668,17 @@
   "normal": {
    "name": "피의 채찍",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 3.75x x2hit"
+   "effects": "DMG 7.50x x2hit"
   },
   "active": {
    "name": "선혈의 창",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 4.00x | acc+15(2T) | atk+30%(2T)"
+   "effects": "DMG 8.00x | acc+15(2T) | atk+30%(2T)"
   },
   "ultimate": {
    "name": "핏빛 향연",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.00x | poison 30%(2T)"
+   "effects": "DMG 2.00x | poison 30%(2T)"
   }
  },
  {
@@ -1686,9 +1686,9 @@
   "name": "쿠바바",
   "element": "DARK",
   "role": "ATTACKER",
-  "grade": 3,
-  "atk": 400,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 800,
+  "def": 400,
   "hp": 4000,
   "spd": 80,
   "cri": 0.15,
@@ -1697,17 +1697,17 @@
   "normal": {
    "name": "와일드 로드",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.90x"
+   "effects": "DMG 3.80x"
   },
   "active": {
    "name": "오버 더 리밋",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.80x | def_-20%(2T)"
+   "effects": "DMG 3.60x | def_-20%(2T)"
   },
   "ultimate": {
    "name": "데스 스키드 마크",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 3.50x"
+   "effects": "DMG 7.00x"
   }
  },
  {
@@ -1716,8 +1716,8 @@
   "element": "DARK",
   "role": "ATTACKER",
   "grade": 3.5,
-  "atk": 460,
-  "def": 230,
+  "atk": 920,
+  "def": 460,
   "hp": 4600,
   "spd": 80,
   "cri": 0.15,
@@ -1726,17 +1726,17 @@
   "normal": {
    "name": "사자의 인도",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.70x"
+   "effects": "DMG 3.40x"
   },
   "active": {
    "name": "직선 심판",
    "target": "ENEMY_SAME_COL",
-   "effects": "DMG 2.00x x3hit"
+   "effects": "DMG 4.00x x3hit"
   },
   "ultimate": {
    "name": "심판의 저울",
    "target": "ENEMY_LOWEST_HP",
-   "effects": "DMG 3.00x"
+   "effects": "DMG 6.00x"
   }
  },
  {
@@ -1744,9 +1744,9 @@
   "name": "반시",
   "element": "DARK",
   "role": "MAGICIAN",
-  "grade": 3,
-  "atk": 300,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 600,
+  "def": 400,
   "hp": 5000,
   "spd": 100,
   "cri": 0.15,
@@ -1755,7 +1755,7 @@
   "normal": {
    "name": "4연격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x x4hit"
+   "effects": "DMG 2.00x x4hit"
   },
   "active": {
    "name": "전투 기도",
@@ -1765,7 +1765,7 @@
   "ultimate": {
    "name": "뱅시의 절규",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.50x"
+   "effects": "DMG 3.00x"
   }
  },
  {
@@ -1773,9 +1773,9 @@
   "name": "아르테미스",
   "element": "DARK",
   "role": "MAGICIAN",
-  "grade": 3,
-  "atk": 300,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 600,
+  "def": 400,
   "hp": 5000,
   "spd": 100,
   "cri": 0.15,
@@ -1784,17 +1784,17 @@
   "normal": {
    "name": "나이트메어 이블",
    "target": "ENEMY_RANDOM",
-   "effects": "DMG 2.00x x4hit"
+   "effects": "DMG 4.00x x4hit"
   },
   "active": {
    "name": "광포한 분노",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x | def_-25%(2T) | REMOVE_BUFF"
+   "effects": "DMG 3.00x | def_-25%(2T) | REMOVE_BUFF"
   },
   "ultimate": {
    "name": "침식하는 어둠",
    "target": "ALL_ENEMY",
-   "effects": "DMG 2.50x | def_-20%(2T)"
+   "effects": "DMG 5.00x | def_-20%(2T)"
   }
  },
  {
@@ -1802,9 +1802,9 @@
   "name": "두엣샤",
   "element": "DARK",
   "role": "MAGICIAN",
-  "grade": 2,
-  "atk": 240,
-  "def": 160,
+  "grade": 3.5,
+  "atk": 480,
+  "def": 320,
   "hp": 4000,
   "spd": 100,
   "cri": 0.15,
@@ -1813,17 +1813,17 @@
   "normal": {
    "name": "그림자 베기",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.25x"
+   "effects": "DMG 4.50x"
   },
   "active": {
    "name": "이중 참격",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.20x | def_-10%(1T)"
+   "effects": "DMG 2.40x | def_-10%(1T)"
   },
   "ultimate": {
    "name": "심연의 무도",
    "target": "ENEMY_NEAR_ROW",
-   "effects": "DMG 2.50x"
+   "effects": "DMG 5.00x"
   }
  },
  {
@@ -1831,9 +1831,9 @@
   "name": "네반",
   "element": "DARK",
   "role": "HEALER",
-  "grade": 1,
-  "atk": 120,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 240,
+  "def": 240,
   "hp": 2400,
   "spd": 90,
   "cri": 0.15,
@@ -1842,17 +1842,17 @@
   "normal": {
    "name": "어둠의 손길",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "암흑 치유",
    "target": "ALLY_LOWEST_HP",
-   "effects": "HEAL 40% | CLEANSE | BARRIER"
+   "effects": "HEAL 65% | CLEANSE | BARRIER"
   },
   "ultimate": {
    "name": "명계의 은혜",
    "target": "ALL_ALLY",
-   "effects": "HEAL 50% | BARRIER"
+   "effects": "HEAL 75% | BARRIER"
   }
  },
  {
@@ -1860,9 +1860,9 @@
   "name": "미르칼라",
   "element": "DARK",
   "role": "HEALER",
-  "grade": 3,
-  "atk": 200,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 400,
+  "def": 400,
   "hp": 4000,
   "spd": 90,
   "cri": 0.15,
@@ -1871,17 +1871,17 @@
   "normal": {
    "name": "흡혈",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 3.60x"
   },
   "active": {
    "name": "핏빛 저주",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.00x | bleed 15%(3T) | atk-20%(2T)"
+   "effects": "DMG 4.00x | bleed 15%(3T) | atk-20%(2T)"
   },
   "ultimate": {
    "name": "뱀파이어 폭풍",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.80x | bleed 15%(2T)"
+   "effects": "DMG 3.60x | bleed 15%(2T)"
   }
  },
  {
@@ -1889,9 +1889,9 @@
   "name": "모나",
   "element": "DARK",
   "role": "DEFENDER",
-  "grade": 2,
-  "atk": 200,
-  "def": 240,
+  "grade": 3.5,
+  "atk": 400,
+  "def": 480,
   "hp": 4800,
   "spd": 110,
   "cri": 0.15,
@@ -1900,7 +1900,7 @@
   "normal": {
    "name": "암흑 타격",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "암흑 장벽",
@@ -1918,9 +1918,9 @@
   "name": "프레이",
   "element": "DARK",
   "role": "DEFENDER",
-  "grade": 3,
-  "atk": 250,
-  "def": 300,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 600,
   "hp": 6000,
   "spd": 110,
   "cri": 0.15,
@@ -1929,7 +1929,7 @@
   "normal": {
    "name": "그림 리퍼",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x"
+   "effects": "DMG 3.00x"
   },
   "active": {
    "name": "사신의 잔상",
@@ -1939,7 +1939,7 @@
   "ultimate": {
    "name": "트릭스터",
    "target": "ENEMY_NEAR_ROW",
-   "effects": "DMG 2.00x | def_-25%(2T)"
+   "effects": "DMG 4.00x | def_-25%(2T)"
   }
  },
  {
@@ -1947,9 +1947,9 @@
   "name": "페르세포네",
   "element": "DARK",
   "role": "SUPPORTER",
-  "grade": 1,
-  "atk": 150,
-  "def": 120,
+  "grade": 3.5,
+  "atk": 300,
+  "def": 240,
   "hp": 3000,
   "spd": 120,
   "cri": 0.15,
@@ -1958,7 +1958,7 @@
   "normal": {
    "name": "암흑의 가시",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.20x"
+   "effects": "DMG 2.40x"
   },
   "active": {
    "name": "명계의 축복",
@@ -1976,9 +1976,9 @@
   "name": "바토리",
   "element": "DARK",
   "role": "SUPPORTER",
-  "grade": 3,
-  "atk": 250,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 400,
   "hp": 5000,
   "spd": 120,
   "cri": 0.15,
@@ -1987,17 +1987,17 @@
   "normal": {
    "name": "동반자 예우",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.20x"
+   "effects": "DMG 4.40x"
   },
   "active": {
    "name": "피의 맹세",
    "target": "ENEMY_NEAR_ROW",
-   "effects": "DMG 2.25x | bleed 15%(2T)"
+   "effects": "DMG 4.50x | bleed 15%(2T)"
   },
   "ultimate": {
    "name": "에스코트",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 3.50x"
+   "effects": "DMG 7.00x"
   }
  },
  {
@@ -2005,9 +2005,9 @@
   "name": "유나",
   "element": "DARK",
   "role": "SUPPORTER",
-  "grade": 3,
-  "atk": 250,
-  "def": 200,
+  "grade": 3.5,
+  "atk": 500,
+  "def": 400,
   "hp": 5000,
   "spd": 120,
   "cri": 0.15,
@@ -2016,7 +2016,7 @@
   "normal": {
    "name": "달그림자",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x"
   },
   "active": {
    "name": "어둠의 가호",
