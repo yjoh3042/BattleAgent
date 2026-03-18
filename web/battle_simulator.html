@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Battle Scenario Simulator</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#0a0c14;--sf:#12151f;--sf2:#1a1e2c;--sf3:#222738;--bd:#2a3048;--tx:#e8eaf4;--tx2:#7b82a0;--tx3:#525878;
+--fire:#ff6b4a;--water:#4a9eff;--forest:#4aff8b;--light:#ffd84a;--dark:#b34aff;
+--ts:#ff4a6a;--ta:#ff8c4a;--tb:#ffd84a;--tc:#4a9eff;--td:#8b8fa8;
+--accent:#6c5ce7;--grad1:linear-gradient(135deg,#ff4a6a,#b34aff)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+
+/* Layout */
+.top-bar{background:var(--sf);border-bottom:1px solid var(--bd);padding:10px 20px;text-align:center;position:sticky;top:0;z-index:10}
+.top-bar h1{font-size:18px;background:var(--grad1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:inline}
+.top-bar .sub{color:var(--tx2);font-size:11px;margin-top:2px}
+.layout{display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 56px)}
+
+/* Left Panel */
+.left{width:400px;min-width:400px;border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;max-height:calc(100vh - 56px);position:sticky;top:56px}
+
+/* Deck Tabs */
+.deck-tabs{display:flex;border-bottom:1px solid var(--bd)}
+.deck-tab{flex:1;padding:10px 8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--tx2);background:var(--sf);border-bottom:2px solid transparent;transition:all .2s}
+.deck-tab.active{color:var(--tx);border-bottom-color:var(--accent);background:var(--sf2)}
+.deck-tab:hover:not(.active){background:var(--sf3);color:var(--tx)}
+
+/* Selected Deck Display */
+.deck-area{padding:10px 12px;border-bottom:1px solid var(--bd)}
+.deck-slots{display:flex;gap:6px;flex-wrap:wrap;min-height:54px}
+.deck-slot{background:var(--sf3);border:1px dashed var(--bd);border-radius:8px;width:66px;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;color:var(--tx3);cursor:default;position:relative;overflow:hidden;flex-shrink:0}
+.deck-slot.filled{border-style:solid;border-color:var(--bd);background:var(--sf2);cursor:pointer}
+.deck-slot.filled:hover{border-color:var(--ts)}
+.deck-slot .el-dot{width:6px;height:6px;border-radius:50%;margin-bottom:3px}
+.deck-slot .slot-name{font-size:9px;font-weight:600;color:var(--tx);text-align:center;line-height:1.2;max-width:60px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.deck-slot .slot-role{font-size:8px;color:var(--tx2)}
+.deck-slot .slot-x{position:absolute;top:2px;right:3px;font-size:9px;color:var(--tx3);line-height:1}
+.deck-slot.filled:hover .slot-x{color:var(--ts)}
+
+/* Battle Button */
+.battle-section{padding:10px 12px;border-bottom:1px solid var(--bd)}
+.btn-battle{width:100%;padding:11px;border-radius:8px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:var(--grad1);color:#fff;transition:opacity .2s;letter-spacing:0.5px}
+.btn-battle:disabled{opacity:0.35;cursor:not-allowed}
+.btn-battle:not(:disabled):hover{opacity:0.85}
+
+/* Settings */
+.settings-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.settings-label{font-size:11px;color:var(--tx2);white-space:nowrap}
+.seed-input{background:var(--sf3);border:1px solid var(--bd);border-radius:6px;color:var(--tx);padding:5px 8px;font-size:11px;width:90px;outline:none}
+.seed-input:focus{border-color:var(--accent)}
+.radio-group{display:flex;gap:4px}
+.radio-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--bd);background:var(--sf3);color:var(--tx2);font-size:10px;cursor:pointer;transition:all .15s}
+.radio-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* Filters */
+.filter-area{padding:8px 12px;border-bottom:1px solid var(--bd);display:flex;flex-direction:column;gap:6px}
+.filter-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.filter-label{font-size:10px;color:var(--tx3);width:28px;flex-shrink:0}
+.fbtn{padding:3px 8px;border-radius:5px;border:1px solid var(--bd);background:var(--sf3);color:var(--tx2);font-size:10px;cursor:pointer;transition:all .15s}
+.fbtn.active{border-color:currentColor}
+.fbtn.f-fire{color:var(--fire)}.fbtn.f-fire.active{background:rgba(255,107,74,.15)}
+.fbtn.f-water{color:var(--water)}.fbtn.f-water.active{background:rgba(74,158,255,.15)}
+.fbtn.f-forest{color:var(--forest)}.fbtn.f-forest.active{background:rgba(74,255,139,.15)}
+.fbtn.f-light{color:var(--light)}.fbtn.f-light.active{background:rgba(255,216,74,.15)}
+.fbtn.f-dark{color:var(--dark)}.fbtn.f-dark.active{background:rgba(179,74,255,.15)}
+.fbtn.f-role.active{background:rgba(108,92,231,.2);border-color:var(--accent);color:var(--tx)}
+.search-input{flex:1;background:var(--sf3);border:1px solid var(--bd);border-radius:6px;color:var(--tx);padding:4px 8px;font-size:11px;outline:none;min-width:0}
+.search-input:focus{border-color:var(--accent)}
+
+/* Character List */
+.char-list{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.char-card{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;user-select:none}
+.char-card:hover{background:var(--sf3);border-color:var(--accent)}
+.char-card.in-active{border-color:var(--accent);background:rgba(108,92,231,.15)}
+.char-card.in-active:hover{border-color:var(--ts);background:rgba(255,74,106,.1)}
+.char-card.in-other{position:relative}
+.char-card.in-other::after{content:'';position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--tx3)}
+.char-el{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.char-el.fire{background:rgba(255,107,74,.2)}
+.char-el.water{background:rgba(74,158,255,.2)}
+.char-el.forest{background:rgba(74,255,139,.2)}
+.char-el.light{background:rgba(255,216,74,.2)}
+.char-el.dark{background:rgba(179,74,255,.2)}
+.char-info{flex:1;min-width:0}
+.char-name{font-size:12px;font-weight:600;color:var(--tx);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.char-meta{font-size:10px;color:var(--tx2);display:flex;gap:6px;margin-top:1px}
+.char-atk{font-size:11px;color:var(--tx2);font-weight:500;flex-shrink:0}
+.grade-stars{font-size:9px;color:var(--tb);letter-spacing:-1px}
+
+/* Right Panel */
+.right{flex:1;padding:16px 20px;overflow-y:auto;min-width:0}
+.placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:16px;opacity:.4}
+.placeholder .ph-icon{font-size:64px}
+.placeholder p{color:var(--tx2);font-size:14px}
+
+/* Results */
+.result-summary{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:16px 20px;margin-bottom:16px}
+.result-winner{font-size:22px;font-weight:800;margin-bottom:6px}
+.result-winner.ally-win{color:var(--tc)}
+.result-winner.enemy-win{color:var(--ts)}
+.result-meta{display:flex;gap:16px;flex-wrap:wrap}
+.result-meta-item{font-size:12px;color:var(--tx2)}
+.result-meta-item span{color:var(--tx);font-weight:600}
+
+/* Team HP bars */
+.hp-section{margin-bottom:16px}
+.section-title{font-size:13px;font-weight:700;color:var(--tx2);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.section-title::before{content:'';display:inline-block;width:3px;height:14px;border-radius:2px;background:var(--accent)}
+.hp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hp-team{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
+.hp-team-title{font-size:11px;font-weight:700;margin-bottom:8px;color:var(--tx2)}
+.hp-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.hp-name{font-size:11px;font-weight:600;width:70px;flex-shrink:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.hp-bar-wrap{flex:1;background:var(--sf3);border-radius:3px;height:8px;overflow:hidden;position:relative}
+.hp-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+.hp-pct{font-size:10px;color:var(--tx2);width:36px;text-align:right;flex-shrink:0}
+.hp-dead{font-size:12px;width:36px;text-align:right;flex-shrink:0}
+
+/* Damage Meter */
+.dmg-section{margin-bottom:16px}
+.dmg-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.dmg-name{font-size:11px;font-weight:600;width:80px;flex-shrink:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.dmg-bar-wrap{flex:1;background:var(--sf3);border-radius:3px;height:10px;overflow:hidden}
+.dmg-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--ts))}
+.dmg-pct{font-size:10px;color:var(--tx2);width:42px;text-align:right;flex-shrink:0}
+
+/* Battle Log */
+.log-section{margin-bottom:16px}
+.log-container{background:var(--sf);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.log-scroll{max-height:520px;overflow-y:auto;padding:8px}
+.log-entry{padding:5px 8px;border-radius:5px;margin-bottom:2px;font-size:11px;line-height:1.5}
+.log-ally{background:rgba(108,92,231,.12);border-left:2px solid var(--accent)}
+.log-enemy{background:rgba(255,140,74,.1);border-left:2px solid var(--ta)}
+.log-ult{background:rgba(74,255,139,.1);border-left:2px solid #4aff8b}
+.log-kill{background:rgba(255,74,106,.15);border-left:2px solid var(--ts)}
+.log-round{background:rgba(255,216,74,.08);border-left:2px solid var(--tb);color:var(--tb);font-weight:600;text-align:center}
+.log-time{color:var(--tx3);margin-right:4px;font-family:monospace}
+.log-char{font-weight:700}
+.log-skill{color:var(--tx2)}
+.log-dmg{font-weight:600}
+.log-dmg.crit{color:var(--ts)}
+.log-hp{color:var(--tx3);font-size:10px}
+.log-sp{color:var(--tb);font-size:10px}
+.el-fire{color:var(--fire)}
+.el-water{color:var(--water)}
+.el-forest{color:var(--forest)}
+.el-light{color:var(--light)}
+.el-dark{color:var(--dark)}
+
+/* Responsive */
+@media(max-width:900px){
+  .layout{flex-direction:column}
+  .left{width:100%;min-width:0;max-height:none;position:static}
+  .hp-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <h1>⚔️ 전투 시나리오 시뮬레이터</h1>
+  <div class="sub">5 vs 5 CTB 전투 시뮬레이션 — 오프라인 동작</div>
+</div>
+<div class="layout">
+  <!-- LEFT PANEL -->
+  <div class="left">
+    <!-- Deck Tabs -->
+    <div class="deck-tabs">
+      <div class="deck-tab active" id="tab-ally" onclick="switchTab('ally')">⚔️ 공격덱 (<span id="cnt-ally">0</span>/5)</div>
+      <div class="deck-tab" id="tab-enemy" onclick="switchTab('enemy')">🛡️ 방어덱 (<span id="cnt-enemy">0</span>/5)</div>
+    </div>
+
+    <!-- Active Deck Display -->
+    <div class="deck-area">
+      <div class="deck-slots" id="deck-slots"></div>
+    </div>
+
+    <!-- Battle Button + Settings -->
+    <div class="battle-section">
+      <button class="btn-battle" id="btn-battle" onclick="startBattle()" disabled>⚔️ 전투 시작</button>
+      <div style="margin-top:10px" class="settings-row">
+        <span class="settings-label">시드:</span>
+        <input class="seed-input" type="number" id="seed-input" placeholder="랜덤" min="1" max="999999">
+        <span class="settings-label">덱 타입:</span>
+        <div class="radio-group">
+          <div class="radio-btn active" id="dtype-offense" onclick="setDeckType('offense')">공격</div>
+          <div class="radio-btn" id="dtype-defense" onclick="setDeckType('defense')">방어</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-area">
+      <div class="filter-row">
+        <span class="filter-label">속성</span>
+        <button class="fbtn f-fire active" data-el="fire" onclick="toggleElFilter('fire')">🔥화</button>
+        <button class="fbtn f-water active" data-el="water" onclick="toggleElFilter('water')">💧수</button>
+        <button class="fbtn f-forest active" data-el="forest" onclick="toggleElFilter('forest')">🌿목</button>
+        <button class="fbtn f-light active" data-el="light" onclick="toggleElFilter('light')">☀️광</button>
+        <button class="fbtn f-dark active" data-el="dark" onclick="toggleElFilter('dark')">🌙암</button>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">역할</span>
+        <button class="fbtn f-role active" data-role="attacker" onclick="toggleRoleFilter('attacker')">딜러</button>
+        <button class="fbtn f-role active" data-role="magician" onclick="toggleRoleFilter('magician')">마법</button>
+        <button class="fbtn f-role active" data-role="defender" onclick="toggleRoleFilter('defender')">탱커</button>
+        <button class="fbtn f-role active" data-role="healer" onclick="toggleRoleFilter('healer')">힐러</button>
+        <button class="fbtn f-role active" data-role="supporter" onclick="toggleRoleFilter('supporter')">서폿</button>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">검색</span>
+        <input class="search-input" type="text" id="search-input" placeholder="이름 검색..." oninput="renderCharList()">
+      </div>
+    </div>
+
+    <!-- Character List -->
+    <div class="char-list" id="char-list"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right" id="right-panel">
+    <div class="placeholder">
+      <div class="ph-icon">⚔️</div>
+      <p>공격덱과 방어덱 각 5명을 선택한 후<br>전투 시작 버튼을 눌러주세요.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Character Data ───
+var CHARS = JSON.parse('[{"id":"c083","name":"네이드","element":"FIRE","role":"ATTACKER","atk":240,"def":120,"hp":2400,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c412","name":"카인","element":"FIRE","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c445","name":"카라라트리","element":"FIRE","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c501","name":"라가라자","element":"FIRE","role":"ATTACKER","atk":460,"def":230,"hp":4600,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c003","name":"다비","element":"FIRE","role":"MAGICIAN","atk":240,"def":160,"hp":4000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c283","name":"모건","element":"FIRE","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c339","name":"다비2","element":"FIRE","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4,"displayName":"다비(각성)"},{"id":"c417","name":"구미호","element":"FIRE","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c286","name":"베르들레","element":"FIRE","role":"HEALER","atk":120,"def":120,"hp":2400,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c429","name":"지바","element":"FIRE","role":"HEALER","atk":200,"def":200,"hp":4000,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c037","name":"유다","element":"FIRE","role":"DEFENDER","atk":150,"def":180,"hp":3600,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c462","name":"데레사","element":"FIRE","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c354","name":"드미테르","element":"FIRE","role":"SUPPORTER","atk":200,"def":160,"hp":4000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c562","name":"살마키스","element":"FIRE","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c002","name":"리자","element":"WATER","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c124","name":"이브","element":"WATER","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c193","name":"비루파","element":"WATER","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c442","name":"니르티","element":"WATER","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c022","name":"마야우엘","element":"WATER","role":"MAGICIAN","atk":180,"def":120,"hp":3000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c318","name":"바리","element":"WATER","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c502","name":"도계화","element":"WATER","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c281","name":"티스베","element":"WATER","role":"HEALER","atk":200,"def":200,"hp":4000,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c437","name":"에우로스","element":"WATER","role":"HEALER","atk":160,"def":160,"hp":3200,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c366","name":"데이노","element":"WATER","role":"DEFENDER","atk":150,"def":180,"hp":3600,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c537","name":"엘리시온","element":"WATER","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c167","name":"상아","element":"WATER","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c362","name":"레오","element":"WATER","role":"SUPPORTER","atk":150,"def":120,"hp":3000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c464","name":"아라한","element":"WATER","role":"SUPPORTER","atk":287,"def":230,"hp":5750,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c062","name":"에우로페","element":"FOREST","role":"ATTACKER","atk":240,"def":120,"hp":2400,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c132","name":"미다스","element":"FOREST","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c447","name":"미리암","element":"FOREST","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c549","name":"다누","element":"FOREST","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c033","name":"다이아나","element":"FOREST","role":"MAGICIAN","atk":180,"def":120,"hp":3000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c336","name":"판","element":"FOREST","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c601","name":"에레보스","element":"FOREST","role":"MAGICIAN","atk":345,"def":230,"hp":5750,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c031","name":"프레이야","element":"FOREST","role":"HEALER","atk":120,"def":120,"hp":2400,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c229","name":"브라우니","element":"FOREST","role":"HEALER","atk":200,"def":200,"hp":4000,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c180","name":"맘몬","element":"FOREST","role":"DEFENDER","atk":200,"def":240,"hp":4800,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c468","name":"메티스","element":"FOREST","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c398","name":"자청비","element":"FOREST","role":"SUPPORTER","atk":200,"def":160,"hp":4000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c461","name":"아우로라","element":"FOREST","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c525","name":"그릴라","element":"FOREST","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c194","name":"아슈토레스","element":"LIGHT","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c221","name":"야나","element":"LIGHT","role":"ATTACKER","atk":240,"def":120,"hp":2400,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c296","name":"힐드","element":"LIGHT","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c227","name":"마프데트","element":"LIGHT","role":"MAGICIAN","atk":240,"def":160,"hp":4000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c438","name":"세멜레","element":"LIGHT","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c600","name":"루미나","element":"LIGHT","role":"MAGICIAN","atk":345,"def":230,"hp":5750,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c183","name":"다나","element":"LIGHT","role":"HEALER","atk":160,"def":160,"hp":3200,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c455","name":"티와즈","element":"LIGHT","role":"HEALER","atk":200,"def":200,"hp":4000,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c353","name":"샤를","element":"LIGHT","role":"DEFENDER","atk":150,"def":180,"hp":3600,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c393","name":"모나","element":"LIGHT","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":100,"cri":0.15,"pen":0.0,"sp":3},{"id":"c473","name":"티타니아","element":"LIGHT","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c028","name":"레다","element":"LIGHT","role":"SUPPORTER","atk":150,"def":120,"hp":3000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c364","name":"시트리","element":"LIGHT","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c533","name":"오네이로이","element":"LIGHT","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c064","name":"메두사","element":"DARK","role":"ATTACKER","atk":240,"def":120,"hp":2400,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c156","name":"에르제베트","element":"DARK","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c486","name":"쿠바바","element":"DARK","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c532","name":"아누비스","element":"DARK","role":"ATTACKER","atk":460,"def":230,"hp":4600,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c400","name":"반시","element":"DARK","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c432","name":"아르테미스","element":"DARK","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c514","name":"두엣샤","element":"DARK","role":"MAGICIAN","atk":240,"def":160,"hp":4000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c048","name":"네반","element":"DARK","role":"HEALER","atk":120,"def":120,"hp":2400,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c448","name":"미르칼라","element":"DARK","role":"HEALER","atk":200,"def":200,"hp":4000,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c001","name":"모나","element":"DARK","role":"DEFENDER","atk":200,"def":240,"hp":4800,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c051","name":"프레이","element":"DARK","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c035","name":"페르세포네","element":"DARK","role":"SUPPORTER","atk":150,"def":120,"hp":3000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c294","name":"바토리","element":"DARK","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c485","name":"유나","element":"DARK","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4}]');
+
+// Normalize element/role to lowercase for engine
+CHARS.forEach(function(c){
+  c.element = c.element.toLowerCase();
+  c.role = c.role.toLowerCase();
+  c.def_ = c.def;
+  // displayName fallback
+  if(!c.displayName) c.displayName = c.name;
+  // grade based on atk tiers
+  c.grade = c.atk >= 400 ? (c.atk >= 450 ? 3.5 : 3) : c.atk >= 280 ? 2 : 1;
+});
+
+// ─── UI State ───
+var activeTab = 'ally'; // 'ally' or 'enemy'
+var allyDeck = []; // array of char ids
+var enemyDeck = [];
+var deckType = 'offense';
+var elFilters = {fire:true,water:true,forest:true,light:true,dark:true};
+var roleFilters = {attacker:true,magician:true,defender:true,healer:true,supporter:true};
+
+// ─── UI Helpers ───
+var EL_EMOJI = {fire:'🔥',water:'💧',forest:'🌿',light:'☀️',dark:'🌙'};
+var EL_KR = {fire:'화',water:'수',forest:'목',light:'광',dark:'암'};
+var ROLE_KR = {attacker:'딜러',magician:'마법',defender:'탱커',healer:'힐러',supporter:'서폿'};
+
+function gradeStars(g){
+  if(g>=3.5) return '★★★✦';
+  if(g>=3) return '★★★';
+  if(g>=2) return '★★';
+  return '★';
+}
+
+function elColor(el){
+  var m={fire:'var(--fire)',water:'var(--water)',forest:'var(--forest)',light:'var(--light)',dark:'var(--dark)'};
+  return m[el]||'var(--tx2)';
+}
+
+function hpColor(pct){
+  if(pct>0.5) return '#4aff8b';
+  if(pct>0.25) return '#ffd84a';
+  return '#ff4a6a';
+}
+
+// ─── Tab switching ───
+function switchTab(tab){
+  activeTab = tab;
+  document.getElementById('tab-ally').classList.toggle('active', tab==='ally');
+  document.getElementById('tab-enemy').classList.toggle('active', tab==='enemy');
+  renderDeckSlots();
+  renderCharList();
+}
+
+function setDeckType(t){
+  deckType = t;
+  document.getElementById('dtype-offense').classList.toggle('active', t==='offense');
+  document.getElementById('dtype-defense').classList.toggle('active', t==='defense');
+}
+
+// ─── Filter toggles ───
+function toggleElFilter(el){
+  elFilters[el] = !elFilters[el];
+  var btn = document.querySelector('[data-el="'+el+'"]');
+  btn.classList.toggle('active', elFilters[el]);
+  renderCharList();
+}
+function toggleRoleFilter(role){
+  roleFilters[role] = !roleFilters[role];
+  var btn = document.querySelector('[data-role="'+role+'"]');
+  btn.classList.toggle('active', roleFilters[role]);
+  renderCharList();
+}
+
+// ─── Deck management ───
+function getActiveDeck(){ return activeTab==='ally'?allyDeck:enemyDeck; }
+function getOtherDeck(){ return activeTab==='ally'?enemyDeck:allyDeck; }
+
+function toggleChar(id){
+  var deck = getActiveDeck();
+  var idx = deck.indexOf(id);
+  if(idx>=0){
+    deck.splice(idx,1);
+  } else {
+    if(deck.length>=5) return;
+    deck.push(id);
+  }
+  updateCounts();
+  renderDeckSlots();
+  renderCharList();
+  updateBattleBtn();
+}
+
+function removeFromDeck(id, side){
+  var deck = side==='ally' ? allyDeck : enemyDeck;
+  var idx = deck.indexOf(id);
+  if(idx>=0) deck.splice(idx,1);
+  updateCounts();
+  renderDeckSlots();
+  renderCharList();
+  updateBattleBtn();
+}
+
+function updateCounts(){
+  document.getElementById('cnt-ally').textContent = allyDeck.length;
+  document.getElementById('cnt-enemy').textContent = enemyDeck.length;
+}
+
+function updateBattleBtn(){
+  document.getElementById('btn-battle').disabled = !(allyDeck.length===5 && enemyDeck.length===5);
+}
+
+// ─── Render deck slots ───
+function renderDeckSlots(){
+  var deck = getActiveDeck();
+  var side = activeTab;
+  var html = '';
+  for(var i=0;i<5;i++){
+    if(i<deck.length){
+      var c = CHARS.find(function(x){return x.id===deck[i];});
+      if(!c){html+='<div class="deck-slot"></div>';continue;}
+      var ec = elColor(c.element);
+      var cid = c.id;
+      html += '<div class="deck-slot filled" onclick="removeFromDeck(\''+cid+'\',\''+side+'\')" title="클릭하여 제거">'
+        +'<div class="slot-x">✕</div>'
+        +'<div class="el-dot" style="background:'+ec+'"></div>'
+        +'<div class="slot-name">'+c.displayName+'</div>'
+        +'<div class="slot-role">'+ROLE_KR[c.role]+'</div>'
+        +'</div>';
+    } else {
+      html += '<div class="deck-slot"><span style="font-size:18px;opacity:.3">+</span></div>';
+    }
+  }
+  document.getElementById('deck-slots').innerHTML = html;
+}
+
+// ─── Render character list ───
+function renderCharList(){
+  var search = document.getElementById('search-input').value.toLowerCase();
+  var activeDeck = getActiveDeck();
+  var otherDeck = getOtherDeck();
+  var html = '';
+  CHARS.forEach(function(c){
+    if(!elFilters[c.element]) return;
+    if(!roleFilters[c.role]) return;
+    if(search && c.displayName.toLowerCase().indexOf(search)<0 && c.name.toLowerCase().indexOf(search)<0) return;
+    var inActive = activeDeck.indexOf(c.id)>=0;
+    var inOther = otherDeck.indexOf(c.id)>=0;
+    var cls = 'char-card';
+    if(inActive) cls += ' in-active';
+    else if(inOther) cls += ' in-other';
+    var ec = elColor(c.element);
+    html += '<div class="'+cls+'" onclick="toggleChar(\''+c.id+'\')">'
+      +'<div class="char-el '+c.element+'">'+EL_EMOJI[c.element]+'</div>'
+      +'<div class="char-info">'
+        +'<div class="char-name">'+c.displayName+'</div>'
+        +'<div class="char-meta">'
+          +'<span style="color:'+ec+'">'+EL_KR[c.element]+'</span>'
+          +'<span>'+ROLE_KR[c.role]+'</span>'
+          +'<span class="grade-stars">'+gradeStars(c.grade)+'</span>'
+        +'</div>'
+      +'</div>'
+      +'<div class="char-atk">ATK '+c.atk+'</div>'
+      +'</div>';
+  });
+  document.getElementById('char-list').innerHTML = html || '<div style="color:var(--tx3);font-size:12px;text-align:center;padding:20px">결과 없음</div>';
+}
+
+// ─────────────────────────────────────────
+// BATTLE ENGINE (copied from local_analyzer.html + log extension)
+// ─────────────────────────────────────────
+
+var EL_ADV={fire:{forest:1.2,water:0.8,fire:1,light:1,dark:1},water:{fire:1.2,forest:0.8,water:1,light:1,dark:1},
+forest:{water:1.2,fire:0.8,forest:1,light:1,dark:1},light:{dark:1.2,light:1,fire:1,water:1,forest:1},dark:{light:1.2,dark:1,fire:1,water:1,forest:1}};
+
+var BATTLE_LENGTH=300,MAX_TURN_TIME=10,MAX_TURNS=200,MAX_TIME=300.0,MAX_SP=10,ULT_COOLDOWN=4;
+var ULT_SP_COST={attacker:6,healer:3,magician:4,defender:3,supporter:4};
+
+// ─── Seeded RNG ───
+function seededRandom(seed){
+  var s = (seed||Math.floor(Math.random()*2147483646))+1;
+  return function(){
+    s = (s*16807+0)%2147483647;
+    return s/2147483647;
+  };
+}
+
+// ─── MinHeap ───
+function MinHeap(){this.data=[];}
+MinHeap.prototype.push=function(v){this.data.push(v);this._up(this.data.length-1);};
+MinHeap.prototype.pop=function(){var d=this.data,top=d[0],last=d.pop();if(d.length>0){d[0]=last;this._down(0);}return top;};
+MinHeap.prototype.size=function(){return this.data.length;};
+MinHeap.prototype._up=function(i){var d=this.data;while(i>0){var p=(i-1)>>1;if(d[p][0]>d[i][0]||(d[p][0]===d[i][0]&&d[p][1]>d[i][1])){var t=d[p];d[p]=d[i];d[i]=t;i=p;}else break;}};
+MinHeap.prototype._down=function(i){var d=this.data,n=d.length;while(true){var l=2*i+1,r=2*i+2,s=i;if(l<n&&(d[l][0]<d[s][0]||(d[l][0]===d[s][0]&&d[l][1]<d[s][1])))s=l;if(r<n&&(d[r][0]<d[s][0]||(d[r][0]===d[s][0]&&d[r][1]<d[s][1])))s=r;if(s!==i){var t=d[s];d[s]=d[i];d[i]=t;i=s;}else break;}};
+
+// ─── BattleUnit factory ───
+function makeBattleUnit(c,side,idx){
+  var hp=c.hp||5000;
+  return{
+    name:c.displayName||c.name,element:c.element,role:c.role,side:side,idx:idx,
+    atk:c.atk||0,def_:(c.def||c.def_||0),spd:c.spd||80,
+    max_hp:hp,current_hp:hp,
+    active_cd:0,ult_cd:0,used_ult_this_round:false,
+    sp_cost:ULT_SP_COST[c.role]||4,
+    dmgDealt:0,healDone:0,dmgTaken:0
+  };
+}
+
+// ─── Damage calc (accepts rng function) ───
+function calcDamage(attacker,defender,skillMult,elMult,rng){
+  var atk=attacker.atk,def=defender.def_;
+  var base=atk*(1-def/(atk+def));
+  var roll=rng();
+  var isCrit=roll<0.15;
+  var crit=isCrit?1.5:1.0;
+  return{dmg:Math.max(1,Math.floor(base*skillMult*elMult*crit)),crit:isCrit};
+}
+
+function getElMult(atkEl,defEl){
+  return(EL_ADV[atkEl]&&EL_ADV[atkEl][defEl]!==undefined)?EL_ADV[atkEl][defEl]:1.0;
+}
+
+// ─── Target selectors ───
+function aliveUnits(units){return units.filter(function(u){return u.current_hp>0;});}
+function lowestHpTarget(units){
+  var a=aliveUnits(units);if(a.length===0)return null;
+  var t=a[0];for(var i=1;i<a.length;i++)if(a[i].current_hp<t.current_hp)t=a[i];
+  return t;
+}
+function randomTarget(units,rng){
+  var a=aliveUnits(units);return a.length>0?a[Math.floor(rng()*a.length)]:null;
+}
+function lowestHpAlly(units){return lowestHpTarget(units);}
+
+// ─── Skill execution with log targets ───
+function executeNormalAttack(unit,enemies,allies,rng){
+  var target;
+  if(unit.role==='attacker'||unit.role==='magician') target=lowestHpTarget(enemies);
+  else target=randomTarget(enemies,rng);
+  if(!target)return[];
+  var mult=unit.role==='attacker'?1.2:unit.role==='magician'?0.7:unit.role==='defender'?0.5:unit.role==='healer'?0.3:0.6;
+  var elM=getElMult(unit.element,target.element);
+  var res=calcDamage(unit,target,mult,elM,rng);
+  target.current_hp=Math.max(0,target.current_hp-res.dmg);
+  unit.dmgDealt+=res.dmg;target.dmgTaken+=res.dmg;
+  return[{name:target.name,damage:res.dmg,crit:res.crit,hpAfter:target.current_hp,hpMax:target.max_hp,killed:target.current_hp<=0}];
+}
+
+function executeActiveSkill(unit,enemies,allies,rng){
+  unit.active_cd=2;
+  var targets=[];
+  if(unit.role==='attacker'){
+    var target=lowestHpTarget(enemies);
+    if(!target)return[];
+    var elM=getElMult(unit.element,target.element);
+    var res=calcDamage(unit,target,1.8,elM,rng);
+    target.current_hp=Math.max(0,target.current_hp-res.dmg);
+    unit.dmgDealt+=res.dmg;target.dmgTaken+=res.dmg;
+    targets.push({name:target.name,damage:res.dmg,crit:res.crit,hpAfter:target.current_hp,hpMax:target.max_hp,killed:target.current_hp<=0});
+  }else if(unit.role==='magician'){
+    var alive=aliveUnits(enemies);
+    for(var i=0;i<alive.length;i++){
+      var elM=getElMult(unit.element,alive[i].element);
+      var res=calcDamage(unit,alive[i],0.6,elM,rng);
+      alive[i].current_hp=Math.max(0,alive[i].current_hp-res.dmg);
+      unit.dmgDealt+=res.dmg;alive[i].dmgTaken+=res.dmg;
+      targets.push({name:alive[i].name,damage:res.dmg,crit:res.crit,hpAfter:alive[i].current_hp,hpMax:alive[i].max_hp,killed:alive[i].current_hp<=0});
+    }
+  }else if(unit.role==='defender'){
+    var alive=aliveUnits(enemies);
+    for(var i=0;i<alive.length;i++){
+      var elM=getElMult(unit.element,alive[i].element);
+      var res=calcDamage(unit,alive[i],0.35,elM,rng);
+      alive[i].current_hp=Math.max(0,alive[i].current_hp-res.dmg);
+      unit.dmgDealt+=res.dmg;alive[i].dmgTaken+=res.dmg;
+      targets.push({name:alive[i].name,damage:res.dmg,crit:res.crit,hpAfter:alive[i].current_hp,hpMax:alive[i].max_hp,killed:alive[i].current_hp<=0});
+    }
+    var heal=Math.floor(unit.max_hp*0.15);
+    unit.current_hp=Math.min(unit.max_hp,unit.current_hp+heal);
+    unit.healDone+=heal;
+  }else if(unit.role==='healer'){
+    var target=lowestHpAlly(allies);
+    if(!target)return[];
+    var heal=Math.floor(unit.atk*3*0.40);
+    var actual=Math.min(heal,target.max_hp-target.current_hp);
+    target.current_hp=Math.min(target.max_hp,target.current_hp+heal);
+    unit.healDone+=actual;
+    targets.push({name:target.name,damage:0,heal:actual,hpAfter:target.current_hp,hpMax:target.max_hp,killed:false,isHeal:true});
+  }else if(unit.role==='supporter'){
+    var target=randomTarget(enemies,rng);
+    if(target){
+      var elM=getElMult(unit.element,target.element);
+      var res=calcDamage(unit,target,0.7,elM,rng);
+      target.current_hp=Math.max(0,target.current_hp-res.dmg);
+      unit.dmgDealt+=res.dmg;target.dmgTaken+=res.dmg;
+      targets.push({name:target.name,damage:res.dmg,crit:res.crit,hpAfter:target.current_hp,hpMax:target.max_hp,killed:target.current_hp<=0});
+    }
+    var allyAlive=aliveUnits(allies);
+    for(var i=0;i<allyAlive.length;i++){
+      allyAlive[i]._atkBuff=(allyAlive[i]._atkBuff||0)+2;
+      allyAlive[i]._atkBuffAmt=Math.floor(allyAlive[i].atk*0.20);
+    }
+  }
+  return targets;
+}
+
+function executeUltimate(unit,enemies,allies,rng){
+  unit.ult_cd=ULT_COOLDOWN;
+  unit.used_ult_this_round=true;
+  var targets=[];
+  if(unit.role==='attacker'){
+    var target=lowestHpTarget(enemies);
+    if(!target)return[];
+    var elM=getElMult(unit.element,target.element);
+    var res=calcDamage(unit,target,3.0,elM,rng);
+    target.current_hp=Math.max(0,target.current_hp-res.dmg);
+    unit.dmgDealt+=res.dmg;target.dmgTaken+=res.dmg;
+    targets.push({name:target.name,damage:res.dmg,crit:res.crit,hpAfter:target.current_hp,hpMax:target.max_hp,killed:target.current_hp<=0});
+  }else if(unit.role==='magician'){
+    var alive=aliveUnits(enemies);
+    for(var i=0;i<alive.length;i++){
+      var elM=getElMult(unit.element,alive[i].element);
+      var res=calcDamage(unit,alive[i],1.0,elM,rng);
+      alive[i].current_hp=Math.max(0,alive[i].current_hp-res.dmg);
+      unit.dmgDealt+=res.dmg;alive[i].dmgTaken+=res.dmg;
+      targets.push({name:alive[i].name,damage:res.dmg,crit:res.crit,hpAfter:alive[i].current_hp,hpMax:alive[i].max_hp,killed:alive[i].current_hp<=0});
+    }
+  }else if(unit.role==='defender'){
+    var allyAlive=aliveUnits(allies);
+    for(var i=0;i<allyAlive.length;i++){
+      var heal=Math.floor(allyAlive[i].max_hp*0.20);
+      var actual=Math.min(heal,allyAlive[i].max_hp-allyAlive[i].current_hp);
+      allyAlive[i].current_hp=Math.min(allyAlive[i].max_hp,allyAlive[i].current_hp+heal);
+      unit.healDone+=actual;
+      targets.push({name:allyAlive[i].name,damage:0,heal:actual,hpAfter:allyAlive[i].current_hp,hpMax:allyAlive[i].max_hp,killed:false,isHeal:true});
+    }
+  }else if(unit.role==='healer'){
+    var allyAlive=aliveUnits(allies);
+    for(var i=0;i<allyAlive.length;i++){
+      var heal=Math.floor(allyAlive[i].max_hp*0.30);
+      var actual=Math.min(heal,allyAlive[i].max_hp-allyAlive[i].current_hp);
+      allyAlive[i].current_hp=Math.min(allyAlive[i].max_hp,allyAlive[i].current_hp+heal);
+      unit.healDone+=actual;
+      targets.push({name:allyAlive[i].name,damage:0,heal:actual,hpAfter:allyAlive[i].current_hp,hpMax:allyAlive[i].max_hp,killed:false,isHeal:true});
+    }
+  }else if(unit.role==='supporter'){
+    var allyAlive=aliveUnits(allies);
+    for(var i=0;i<allyAlive.length;i++){
+      allyAlive[i]._atkBuff=(allyAlive[i]._atkBuff||0)+2;
+      allyAlive[i]._atkBuffAmt=Math.floor(allyAlive[i].atk*0.30);
+    }
+    var target=randomTarget(enemies,rng);
+    if(target){
+      var elM=getElMult(unit.element,target.element);
+      var res=calcDamage(unit,target,0.8,elM,rng);
+      target.current_hp=Math.max(0,target.current_hp-res.dmg);
+      unit.dmgDealt+=res.dmg;target.dmgTaken+=res.dmg;
+      targets.push({name:target.name,damage:res.dmg,crit:res.crit,hpAfter:target.current_hp,hpMax:target.max_hp,killed:target.current_hp<=0});
+    }
+  }
+  return targets;
+}
+
+// ─── Main battle with log ───
+function runBattleWithLog(allyData,enemyData,deckType,seed){
+  var rng = seededRandom(seed);
+  var log = [];
+  var allyUnits=[],enemyUnits=[];
+  for(var i=0;i<allyData.length;i++) allyUnits.push(makeBattleUnit(allyData[i],'ally',i));
+  for(var i=0;i<enemyData.length;i++) enemyUnits.push(makeBattleUnit(enemyData[i],'enemy',i));
+  var allUnits=allyUnits.concat(enemyUnits);
+
+  function applyBuffs(unit){
+    if(unit._atkBuff&&unit._atkBuff>0&&unit._atkBuffAmt){
+      unit.atk+=unit._atkBuffAmt;
+      unit._atkBuffRestore=unit._atkBuffAmt;
+      unit._atkBuff--;
+    }else{unit._atkBuffRestore=0;}
+  }
+  function revertBuffs(unit){
+    if(unit._atkBuffRestore){unit.atk-=unit._atkBuffRestore;unit._atkBuffRestore=0;}
+  }
+
+  var allySp=0,enemySp=0;
+  var currentRound=0;
+  var heap=new MinHeap();
+  var tieCounter=0;
+  for(var i=0;i<allUnits.length;i++){
+    var t=BATTLE_LENGTH/allUnits[i].spd;
+    heap.push([t,tieCounter++,i,false]);
+  }
+
+  var turnCount=0;
+  var currentTime=0;
+
+  function pushLog(entry){ log.push(entry); }
+
+  while(heap.size()>0&&turnCount<MAX_TURNS){
+    var entry=heap.pop();
+    var actionTime=entry[0],unitIdx=entry[2],isExtra=entry[3];
+    currentTime=actionTime;
+
+    if(currentTime>MAX_TIME){break;}
+
+    var unit=allUnits[unitIdx];
+    if(unit.current_hp<=0)continue;
+
+    var allies=(unit.side==='ally')?allyUnits:enemyUnits;
+    var enemies=(unit.side==='ally')?enemyUnits:allyUnits;
+
+    // Check round transition
+    var newRound=Math.floor(currentTime/MAX_TURN_TIME);
+    if(newRound>currentRound){
+      currentRound=newRound;
+      pushLog({type:'round',turn:turnCount,time:currentTime.toFixed(2),round:currentRound,
+        events:['라운드 '+currentRound+' 시작 — SP 초기화'],allySp:allySp,enemySp:enemySp});
+      allySp=0;enemySp=0;
+      for(var i=0;i<allUnits.length;i++){allUnits[i].used_ult_this_round=false;}
+      heap=new MinHeap();
+      tieCounter=0;
+      var roundStart=currentRound*MAX_TURN_TIME;
+      for(var i=0;i<allUnits.length;i++){
+        if(allUnits[i].current_hp>0){
+          var nt=roundStart+BATTLE_LENGTH/allUnits[i].spd;
+          heap.push([nt,tieCounter++,i,false]);
+        }
+      }
+      continue;
+    }
+
+    turnCount++;
+
+    if(!isExtra){
+      allySp=Math.min(MAX_SP,allySp+1);
+      enemySp=Math.min(MAX_SP,enemySp+1);
+    }
+
+    applyBuffs(unit);
+
+    var logEntry = {
+      turn:turnCount,time:currentTime.toFixed(2),round:currentRound,
+      charName:unit.name,charSide:unit.side,charElement:unit.element,
+      skill:'Normal',skillType:'normal',
+      targets:[],spAlly:allySp,spEnemy:enemySp,isExtra:isExtra,events:[],type:'action'
+    };
+
+    // Try ultimate
+    var didUlt = false;
+    if(!unit.used_ult_this_round&&unit.ult_cd<=0){
+      var sideSpRef=(unit.side==='ally');
+      var currentSideSp=sideSpRef?allySp:enemySp;
+      if(currentSideSp>=unit.sp_cost){
+        var spBefore = currentSideSp;
+        if(sideSpRef){allySp-=unit.sp_cost;}else{enemySp-=unit.sp_cost;}
+        var ultTargets=executeUltimate(unit,enemies,allies,rng);
+        logEntry.skill='궁극기';
+        logEntry.skillType='ultimate';
+        logEntry.spBefore=spBefore;
+        logEntry.spAfter=sideSpRef?allySp:enemySp;
+        logEntry.targets=ultTargets;
+        logEntry.spAlly=allySp;logEntry.spEnemy=enemySp;
+        didUlt=true;
+        // push ult log entry separately
+        pushLog(JSON.parse(JSON.stringify(logEntry)));
+        // check win
+        if(aliveUnits(enemies).length===0){
+          revertBuffs(unit);
+          return buildResultWithLog(unit.side==='ally'?'ally_win':'enemy_win',turnCount,currentTime,allyUnits,enemyUnits,log,deckType);
+        }
+        // reset for next action in same turn
+        logEntry = {
+          turn:turnCount,time:currentTime.toFixed(2),round:currentRound,
+          charName:unit.name,charSide:unit.side,charElement:unit.element,
+          skill:'Normal',skillType:'normal',
+          targets:[],spAlly:allySp,spEnemy:enemySp,isExtra:isExtra,events:[],type:'action'
+        };
+      }
+    }
+
+    // Active or normal
+    var skillTargets;
+    if(unit.active_cd<=0){
+      logEntry.skill='액티브';
+      logEntry.skillType='active';
+      skillTargets=executeActiveSkill(unit,enemies,allies,rng);
+    }else{
+      logEntry.skill='일반 공격';
+      logEntry.skillType='normal';
+      skillTargets=executeNormalAttack(unit,enemies,allies,rng);
+    }
+    logEntry.targets=skillTargets;
+    logEntry.spAlly=allySp;logEntry.spEnemy=enemySp;
+    pushLog(logEntry);
+
+    revertBuffs(unit);
+
+    if(unit.active_cd>0)unit.active_cd--;
+    if(unit.ult_cd>0)unit.ult_cd--;
+
+    var nextTime=currentTime+BATTLE_LENGTH/unit.spd;
+    heap.push([nextTime,tieCounter++,unitIdx,false]);
+
+    if(aliveUnits(enemyUnits).length===0){
+      return buildResultWithLog('ally_win',turnCount,currentTime,allyUnits,enemyUnits,log,deckType);
+    }
+    if(aliveUnits(allyUnits).length===0){
+      return buildResultWithLog('enemy_win',turnCount,currentTime,allyUnits,enemyUnits,log,deckType);
+    }
+  }
+
+  var timeoutResult=(deckType==='defense')?'ally_win':'enemy_win';
+  log.push({type:'timeout',events:['타임오버 — '+(deckType==='defense'?'방어덱 승리 (방어 성공)':'공격덱 패배 (공격 실패)')]});
+  return buildResultWithLog(timeoutResult,turnCount,currentTime,allyUnits,enemyUnits,log,deckType);
+}
+
+function buildResultWithLog(result,turns,time,allyUnits,enemyUnits,log,deckType){
+  function mapStats(units){
+    return units.map(function(u){
+      return{name:u.name,element:u.element,role:u.role,
+        dmgDealt:u.dmgDealt,healDone:u.healDone,dmgTaken:u.dmgTaken,
+        alive:u.current_hp>0,hpRemain:u.current_hp,hpMax:u.max_hp};
+    });
+  }
+  return{result:result,turns:turns,time:Math.round(time*10)/10,deckType:deckType,
+    allyStats:mapStats(allyUnits),enemyStats:mapStats(enemyUnits),log:log};
+}
+
+// ─── Start Battle ───
+function startBattle(){
+  if(allyDeck.length!==5||enemyDeck.length!==5) return;
+  var seedVal = parseInt(document.getElementById('seed-input').value)||undefined;
+  var allyData = allyDeck.map(function(id){return CHARS.find(function(c){return c.id===id;});});
+  var enemyData = enemyDeck.map(function(id){return CHARS.find(function(c){return c.id===id;});});
+  var result = runBattleWithLog(allyData, enemyData, deckType, seedVal);
+  renderResults(result, allyData, enemyData);
+  document.getElementById('right-panel').scrollIntoView({behavior:'smooth'});
+}
+
+// ─── Render Results ───
+function renderResults(result, allyData, enemyData){
+  var rp = document.getElementById('right-panel');
+  var isAllyWin = result.result==='ally_win';
+  var winnerLabel = isAllyWin ? '⚔️ 공격덱 승리!' : '🛡️ 방어덱 승리!';
+  var winCls = isAllyWin ? 'ally-win' : 'enemy-win';
+  var rounds = Math.floor(result.time/MAX_TURN_TIME)+1;
+
+  var html = '';
+
+  // Summary
+  html += '<div class="result-summary">'
+    +'<div class="result-winner '+winCls+'">'+winnerLabel+'</div>'
+    +'<div class="result-meta">'
+      +'<div class="result-meta-item">총 턴수: <span>'+result.turns+'</span></div>'
+      +'<div class="result-meta-item">전투 시간: <span>'+result.time+'</span></div>'
+      +'<div class="result-meta-item">라운드: <span>'+rounds+'</span></div>'
+      +'<div class="result-meta-item">덱 타입: <span>'+(result.deckType==='offense'?'공격덱':'방어덱')+'</span></div>'
+    +'</div>'
+  +'</div>';
+
+  // HP bars
+  html += '<div class="hp-section">';
+  html += '<div class="section-title">최종 HP 현황</div>';
+  html += '<div class="hp-grid">';
+
+  function renderHpTeam(stats, label){
+    var h = '<div class="hp-team"><div class="hp-team-title">'+label+'</div>';
+    stats.forEach(function(u){
+      var pct = u.hpMax>0 ? u.hpRemain/u.hpMax : 0;
+      var ec = elColor(u.element);
+      h += '<div class="hp-row">'
+        +'<div class="hp-name" style="color:'+ec+'">'+u.name+'</div>'
+        +'<div class="hp-bar-wrap"><div class="hp-bar-fill" style="width:'+Math.round(pct*100)+'%;background:'+hpColor(pct)+'"></div></div>';
+      if(u.alive){
+        h += '<div class="hp-pct">'+Math.round(pct*100)+'%</div>';
+      } else {
+        h += '<div class="hp-dead">💀</div>';
+      }
+      h += '</div>';
+    });
+    h += '</div>';
+    return h;
+  }
+  html += renderHpTeam(result.allyStats, '⚔️ 공격덱');
+  html += renderHpTeam(result.enemyStats, '🛡️ 방어덱');
+  html += '</div></div>';
+
+  // Damage meter (ally team)
+  html += '<div class="dmg-section"><div class="section-title">공격덱 딜 기여도</div>';
+  var totalDmg = result.allyStats.reduce(function(s,u){return s+u.dmgDealt;},0);
+  if(totalDmg===0) totalDmg=1;
+  var maxDmg = Math.max.apply(null, result.allyStats.map(function(u){return u.dmgDealt;}));
+  if(maxDmg===0) maxDmg=1;
+  // sort by damage
+  var sortedAlly = result.allyStats.slice().sort(function(a,b){return b.dmgDealt-a.dmgDealt;});
+  sortedAlly.forEach(function(u){
+    var pct = Math.round(u.dmgDealt/totalDmg*1000)/10;
+    var barW = Math.round(u.dmgDealt/maxDmg*100);
+    var ec = elColor(u.element);
+    html += '<div class="dmg-row">'
+      +'<div class="dmg-name" style="color:'+ec+'">'+u.name+'</div>'
+      +'<div class="dmg-bar-wrap"><div class="dmg-bar-fill" style="width:'+barW+'%"></div></div>'
+      +'<div class="dmg-pct">'+pct+'%</div>'
+    +'</div>';
+  });
+  html += '</div>';
+
+  // Battle Log
+  html += '<div class="log-section"><div class="section-title">전투 로그</div>';
+  html += '<div class="log-container"><div class="log-scroll" id="battle-log">';
+  html += renderLog(result.log);
+  html += '</div></div></div>';
+
+  rp.innerHTML = html;
+}
+
+function renderLog(log){
+  var html = '';
+  log.forEach(function(entry){
+    if(entry.type==='round'){
+      html += '<div class="log-entry log-round">'
+        +'── 라운드 '+entry.round+' 시작  |  SP 초기화  |  시간: '+entry.time+' ──'
+        +'</div>';
+      return;
+    }
+    if(entry.type==='timeout'){
+      html += '<div class="log-entry log-round">⏱️ '+entry.events[0]+'</div>';
+      return;
+    }
+
+    // Determine entry class
+    var hasKill = entry.targets && entry.targets.some(function(t){return t.killed;});
+    var cls = 'log-entry ';
+    if(hasKill) cls += 'log-kill';
+    else if(entry.skillType==='ultimate') cls += 'log-ult';
+    else if(entry.charSide==='ally') cls += 'log-ally';
+    else cls += 'log-enemy';
+
+    var elCls = 'el-'+entry.charElement;
+    var sideLabel = entry.charSide==='ally'?'[공]':'[적]';
+
+    var skillIcon = '';
+    if(entry.skillType==='ultimate') skillIcon = '✨';
+    else if(entry.skillType==='active') skillIcon = '🔷';
+    else skillIcon = '·';
+
+    html += '<div class="'+cls+'">';
+    html += '<span class="log-time">'+entry.time+'</span>';
+    html += '<span style="color:var(--tx3)">T'+entry.turn+' </span>';
+    html += '<span style="color:var(--tx3)">'+sideLabel+' </span>';
+    html += '<span class="log-char '+elCls+'">'+entry.charName+'</span>';
+    html += ' <span class="log-skill">'+skillIcon+' '+entry.skill+'</span>';
+
+    if(entry.skillType==='ultimate' && entry.spBefore!==undefined){
+      html += ' <span class="log-sp">[SP: '+entry.spBefore+'→'+entry.spAfter+']</span>';
+    }
+
+    if(entry.targets && entry.targets.length>0){
+      html += '<br>';
+      entry.targets.forEach(function(t,i){
+        if(i>0) html += ' ';
+        if(t.isHeal){
+          html += '&nbsp;&nbsp;→ <span class="'+elCls+'">'+t.name+'</span>';
+          html += ' <span style="color:#4aff8b">+'+t.heal+' HP</span>';
+          html += ' <span class="log-hp">('+Math.round(t.hpAfter/t.hpMax*100)+'%)</span>';
+        } else {
+          html += '&nbsp;&nbsp;→ <span class="log-char">'+t.name+'</span>';
+          var dmgCls = t.crit ? 'log-dmg crit' : 'log-dmg';
+          html += ' <span class="'+dmgCls+'">'+t.damage+(t.crit?' ★':'')+'</span>';
+          if(t.killed){
+            html += ' <span style="color:var(--ts)">💀 사망</span>';
+          } else {
+            html += ' <span class="log-hp">(HP: '+Math.round(t.hpAfter/t.hpMax*100)+'%)</span>';
+          }
+        }
+      });
+    }
+
+    // SP display on non-ult turns
+    if(entry.skillType!=='ultimate'){
+      html += ' <span class="log-sp">[공격SP:'+entry.spAlly+' 방어SP:'+entry.spEnemy+']</span>';
+    }
+
+    html += '</div>';
+  });
+  return html;
+}
+
+// ─── Init ───
+renderDeckSlots();
+renderCharList();
+</script>
+</body>
+</html>
