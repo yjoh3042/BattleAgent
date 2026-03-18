@@ -4,6 +4,14 @@
     from fixtures.test_data import _dmg, _stat_buff, _burn, _normal, _active, _ult
     # → CharacterData / SkillData 를 조립해 사용
 
+═══════════════════════════════════════════════════════════════
+밸런싱 정책 v2.0 — 스탯 고정 + 스킬 밸런싱
+═══════════════════════════════════════════════════════════════
+스탯(ATK/DEF/HP)은 역할×등급으로 완전 고정 (ROLE_STAT_STANDARD).
+캐릭터 개성화는 스킬(배율/타겟/부가효과)로만 수행한다.
+→ battle.rules.ROLE_SKILL_TEMPLATE : 역할별 기본 스킬 설정
+→ battle.rules.SKILL_MULTIPLIER_RANGE : 역할별 허용 배율 범위
+
 전투 룰 요약 (엔진 불변):
   - CTB 큐: 300 / SPD 기반 heapq
   - 타일 배치: 3×3 그리드, row 0=전열·2=후열
@@ -11,17 +19,30 @@
   - SP 공유 (파티 전원 합산), 얼티밋 끼어들기
   - 도발(Taunt) → 단일 타겟 강제, 다중 타겟 포함 강제
 
-역할별 기본 스탯 룰 (battle.rules 참조):
+스탯 규약 (역할×등급 고정, 개별 조정 금지):
+  역할        1★               2★               3★               3.5★
+  ATTACKER   ATK240/DEF120   ATK320/DEF160   ATK400/DEF200   ATK460/DEF230
+             HP2400           HP3200           HP4000           HP4600
+  MAGICIAN   ATK180/DEF120   ATK240/DEF160   ATK300/DEF200   ATK345/DEF230
+             HP3000           HP4000           HP5000           HP5750
+  DEFENDER   ATK150/DEF180   ATK200/DEF240   ATK250/DEF300   ATK287/DEF345
+             HP3600           HP4800           HP6000           HP6900
+  HEALER     ATK120/DEF120   ATK160/DEF160   ATK200/DEF200   ATK230/DEF230
+             HP2400           HP3200           HP4000           HP4600
+  SUPPORTER  ATK150/DEF120   ATK200/DEF160   ATK250/DEF200   ATK287/DEF230
+             HP3000           HP4000           HP5000           HP5750
+
+역할별 고정값 (등급 무관):
   속도(SPD): Attacker=80 / Healer=90 / Magician=100 / Defender=110 / Supporter=120
   SP 비용:   Attacker=6  / Healer=3  / Magician=4   / Defender=3   / Supporter=4
 
-역할별 기본 스탯 (평균값, battle.rules 참조):
-  역할        ATK    DEF     HP
-  ATTACKER   420    120    5100
-  MAGICIAN   341    108    4743
-  DEFENDER   252    240    8650
-  HEALER     168    151    6475
-  SUPPORTER  198    142    5909
+스킬 배율 허용 범위 (battle.rules.SKILL_MULTIPLIER_RANGE):
+  역할        일반공격        액티브           궁극기
+  ATTACKER   1.00~2.50×     1.20~2.80×      2.00~4.00×
+  MAGICIAN   0.80~2.20×     0.40~1.80×      0.80~2.50×
+  DEFENDER   0.30~1.00×     0.20~0.80×      0.00~0.50×
+  HEALER     0.20~0.80×     0.80~2.00×      0.20~0.40×
+  SUPPORTER  0.40~1.20×     0.50~1.50×      0.60~1.80×
 
 검증: py -3 -X utf8 scripts/validate_role_stats.py
 """
@@ -234,12 +255,12 @@ def make_morgan() -> CharacterData:
     return CharacterData(
         id=sid, name="모건", element=Element.FIRE, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=415, def_=120, hp=5000, spd=100),
+        stats=StatBlock(atk=300, def_=200, hp=5000, spd=100),
         normal_skill=_normal(f"{sid}_n", "철화의 검",
             [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "홍염의 비도",
             [_stat_eff(TargetType.SELF,
-                _sb('atk', 0.30, 3, f"{sid}_a", "공격력", is_ratio=True))]),
+                _sb('atk', 0.15, 3, f"{sid}_a", "공격력", is_ratio=True))]),  # ATK버프 30→20→15% (3차 너프)
         ultimate_skill=_ult(f"{sid}_u", "화도난무",
             [_dmg(TargetType.ALL_ENEMY, 1.60),
              _dot_eff(TargetType.ALL_ENEMY, _bleed(f"{sid}_u", dot_ratio=0.15, duration=2))],
@@ -254,7 +275,7 @@ def make_dabi() -> CharacterData:
     return CharacterData(
         id=sid, name="다비", element=Element.FIRE, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=360, def_=110, hp=4800, spd=100),
+        stats=StatBlock(atk=300, def_=200, hp=5000, spd=100),
         normal_skill=_normal(f"{sid}_n", "파이어리 서펀트",
             [_dmg(TargetType.ENEMY_NEAR, 2.00)]),
         active_skill=_active(f"{sid}_a", "화차",
@@ -274,7 +295,7 @@ def make_gumiho() -> CharacterData:
     return CharacterData(
         id=sid, name="구미호", element=Element.FIRE, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=335, def_=100, hp=4500, spd=100),
+        stats=StatBlock(atk=300, def_=200, hp=5000, spd=100),
         normal_skill=_normal(f"{sid}_n", "꼬리의 매질",
             [_dmg(TargetType.ENEMY_NEAR, 1.50)]),
         active_skill=_active(f"{sid}_a", "원혼의 아홉 꼬리",
@@ -294,7 +315,7 @@ def make_jiva() -> CharacterData:
     return CharacterData(
         id=sid, name="지바", element=Element.FIRE, role=Role.HEALER,
         side="ally",
-        stats=StatBlock(atk=180, def_=150, hp=7000, spd=90),
+        stats=StatBlock(atk=200, def_=200, hp=4000, spd=90),
         normal_skill=_normal(f"{sid}_n", "물의 촉수",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "생명수",
@@ -317,7 +338,7 @@ def make_kararatri() -> CharacterData:
     return CharacterData(
         id=sid, name="카라라트리", element=Element.FIRE, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=355, def_=110, hp=4800, spd=80),
+        stats=StatBlock(atk=400, def_=200, hp=4000, spd=80),
         normal_skill=_normal(f"{sid}_n", "무기법",
             [_dmg(TargetType.ENEMY_NEAR, 1.50)]),
         active_skill=_active(f"{sid}_a", "무루의 고통",
@@ -338,7 +359,7 @@ def make_deresa() -> CharacterData:
     return CharacterData(
         id=sid, name="데레사", element=Element.FIRE, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=220, def_=275, hp=9500, spd=110),
+        stats=StatBlock(atk=250, def_=300, hp=6000, spd=110),
         normal_skill=_normal(f"{sid}_n", "스틸 웨일링",
             [_dmg(TargetType.ENEMY_NEAR, 1.50)]),
         active_skill=_active(f"{sid}_a", "데털민트 소드",
@@ -348,7 +369,7 @@ def make_deresa() -> CharacterData:
              _counter(2)]),
         ultimate_skill=_ult(f"{sid}_u", "새크리파이스",
             [_dmg(TargetType.ENEMY_NEAR_ROW, 2.50),
-             _taunt(3)],
+             _taunt(2)],
             sp=3),
         tile_pos=(0, 1),
     )
@@ -360,7 +381,7 @@ def make_ragaraja() -> CharacterData:
     return CharacterData(
         id=sid, name="라가라자", element=Element.FIRE, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=140, hp=5200, spd=80),
+        stats=StatBlock(atk=460, def_=230, hp=4600, spd=80),
         normal_skill=_normal(f"{sid}_n", "지장",
             [_dmg(TargetType.ENEMY_NEAR, 2.00),
              _stat_eff(TargetType.SELF,
@@ -370,7 +391,7 @@ def make_ragaraja() -> CharacterData:
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('def_', 0.20, 2, f"{sid}_a", "방어력", is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "맹화",
-            [_dmg(TargetType.ALL_ENEMY, 3.40)],
+            [_dmg(TargetType.ALL_ENEMY, 2.20)],  # AoE 배율 3.40→2.80→2.50→2.20 (4차 너프)
             sp=6),
         tile_pos=(0, 2),
     )
@@ -382,7 +403,7 @@ def make_salmakis() -> CharacterData:
     return CharacterData(
         id=sid, name="살마키스", element=Element.FIRE, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=200, def_=130, hp=5500, spd=120),
+        stats=StatBlock(atk=250, def_=200, hp=5000, spd=120),
         normal_skill=_normal(f"{sid}_n", "물의 손길",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "축복",
@@ -407,12 +428,12 @@ def make_demeter() -> CharacterData:
     return CharacterData(
         id=sid, name="드미테르", element=Element.FIRE, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=120),
+        stats=StatBlock(atk=200, def_=160, hp=4000, spd=120),
         normal_skill=_normal(f"{sid}_n", "프릭킹 니들",
             [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "사이드 이펙트",
             [_dmg(TargetType.ALL_ENEMY, 0.35),
-             _dot_eff(TargetType.ALL_ENEMY, _burn(f"{sid}_a", dot_ratio=0.30, duration=3))]),
+             _dot_eff(TargetType.ALL_ENEMY, _burn(f"{sid}_a", dot_ratio=0.20, duration=2))]),
         ultimate_skill=_ult(f"{sid}_u", "극약처방",
             [_dmg(TargetType.ENEMY_NEAR, 2.20),
              _stat_eff(TargetType.ENEMY_NEAR,
@@ -428,7 +449,7 @@ def make_dabi_sup() -> CharacterData:
     return CharacterData(
         id=sid, name="다비", element=Element.FIRE, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=198, def_=142, hp=5909, spd=100),
+        stats=StatBlock(atk=240, def_=160, hp=4000, spd=100),
         normal_skill=_normal(f"{sid}_n", "다비의 불꽃",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "화상 촉진",
@@ -449,7 +470,7 @@ def make_yuda() -> CharacterData:
     return CharacterData(
         id=sid, name="유다", element=Element.FIRE, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=252, def_=240, hp=8650, spd=110),
+        stats=StatBlock(atk=150, def_=180, hp=3600, spd=110),
         normal_skill=_normal(f"{sid}_n", "마탄",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "악마의 방패",
@@ -470,7 +491,7 @@ def make_neide() -> CharacterData:
     return CharacterData(
         id=sid, name="네이드", element=Element.FIRE, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=240, def_=120, hp=2400, spd=80),
         normal_skill=_normal(f"{sid}_n", "파이어 스트라이크",
             [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "플레임 버스트",
@@ -489,7 +510,7 @@ def make_verdelet() -> CharacterData:
     return CharacterData(
         id=sid, name="베르들레", element=Element.FIRE, role=Role.HEALER,
         side="ally",
-        stats=StatBlock(atk=168, def_=151, hp=6475, spd=90),
+        stats=StatBlock(atk=120, def_=120, hp=2400, spd=90),
         normal_skill=_normal(f"{sid}_n", "생명의 불길",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "화염 치유",
@@ -512,17 +533,17 @@ def make_eve() -> CharacterData:
     return CharacterData(
         id=sid, name="이브", element=Element.WATER, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=545, def_=110, hp=5600, spd=80),
+        stats=StatBlock(atk=400, def_=200, hp=4000, spd=80),
         normal_skill=_normal(f"{sid}_n", "다크 미스트",
-            [_dmg(TargetType.ENEMY_NEAR, 2.50)]),
+            [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "레인 드랍",
-            [_dmg(TargetType.ENEMY_LOWEST_HP, 4.50),
+            [_dmg(TargetType.ENEMY_LOWEST_HP, 2.00),  # 기본 배율 4.50→3.00→2.50→2.00 (4차 너프)
              SkillEffect(logic_type=LogicType.DAMAGE, target_type=TargetType.ENEMY_LOWEST_HP,
-                         multiplier=3.00, condition={'target_hp_below': 0.30})]),
+                         multiplier=1.50, condition={'target_hp_below': 0.25})]),  # 처형 조건 0.30→0.25
         ultimate_skill=_ult(f"{sid}_u", "실낙원",
-            [_dmg(TargetType.ENEMY_LOWEST_HP, 3.50),
+            [_dmg(TargetType.ENEMY_LOWEST_HP, 2.50),
              SkillEffect(logic_type=LogicType.DAMAGE, target_type=TargetType.ENEMY_LOWEST_HP,
-                         multiplier=2.50, condition={'target_hp_below': 0.30})],
+                         multiplier=1.00, condition={'target_hp_below': 0.25})],  # 처형 조건 0.30→0.25
             sp=6),
         tile_pos=(0, 1),
     )
@@ -534,18 +555,20 @@ def make_sangah() -> CharacterData:
     return CharacterData(
         id=sid, name="상아", element=Element.WATER, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=220, def_=155, hp=6000, spd=120),
+        stats=StatBlock(atk=250, def_=200, hp=5000, spd=120),
         normal_skill=_normal(f"{sid}_n", "수류",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "수렁",
-            [_dmg(TargetType.ALL_ENEMY, 1.00),
+            [_dmg(TargetType.ALL_ENEMY, 1.50),
              _stat_eff(TargetType.ALL_ENEMY,
-                _sb('spd', 20.0, 2, f"{sid}_a", "속도", is_debuff=True, is_ratio=False))]),
+                _sb('spd', 20.0, 2, f"{sid}_a", "속도", is_debuff=True, is_ratio=False)),
+             _stat_eff(TargetType.ALL_ENEMY,
+                _sb('def_', 0.15, 2, f"{sid}_a", "수렁", is_debuff=True, is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "대조수",
             [_stat_eff(TargetType.ALL_ENEMY,
                 _sb('spd', 20.0, 2, f"{sid}_u", "속도", is_debuff=True, is_ratio=False)),
              _stat_eff(TargetType.ALL_ALLY,
-                _sb('atk', 0.25, 2, f"{sid}_u", "공격력", is_ratio=True))],
+                _sb('atk', 0.30, 2, f"{sid}_u", "공격력", is_ratio=True))],
             sp=4),
         tile_pos=(2, 2),
     )
@@ -557,7 +580,7 @@ def make_thisbe() -> CharacterData:
     return CharacterData(
         id=sid, name="티스베", element=Element.WATER, role=Role.HEALER,
         side="ally",
-        stats=StatBlock(atk=180, def_=135, hp=5800, spd=90),
+        stats=StatBlock(atk=200, def_=200, hp=4000, spd=90),
         normal_skill=_normal(f"{sid}_n", "오아시스",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "하늘의 창문",
@@ -580,7 +603,7 @@ def make_bari() -> CharacterData:
     return CharacterData(
         id=sid, name="바리", element=Element.WATER, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=350, def_=115, hp=5000, spd=100),
+        stats=StatBlock(atk=300, def_=200, hp=5000, spd=100),
         normal_skill=_normal(f"{sid}_n", "삼재",
             [_dmg(TargetType.ENEMY_NEAR, 1.50),
              _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_n"))]),
@@ -601,7 +624,7 @@ def make_dogyehwa() -> CharacterData:
     return CharacterData(
         id=sid, name="도계화", element=Element.WATER, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=310, def_=105, hp=4600, spd=100),
+        stats=StatBlock(atk=300, def_=200, hp=5000, spd=100),
         normal_skill=_normal(f"{sid}_n", "원거만리",
             [_dmg(TargetType.ENEMY_NEAR, 2.00)]),
         active_skill=_active(f"{sid}_a", "신행귀신 속거천리",
@@ -623,14 +646,16 @@ def make_elysion() -> CharacterData:
     return CharacterData(
         id=sid, name="엘리시온", element=Element.WATER, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=160, def_=155, hp=6200, spd=110),
+        stats=StatBlock(atk=250, def_=300, hp=6000, spd=110),
         normal_skill=_normal(f"{sid}_n", "정화의 물",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "생명수",
-            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.50),
+            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.60),
+             _shield(TargetType.ALLY_LOWEST_HP, 0.20),
+             _taunt(2),
              _remove_debuff_eff(TargetType.ALLY_LOWEST_HP)]),
         ultimate_skill=_ult(f"{sid}_u", "성역",
-            [_heal_ratio(TargetType.ALL_ALLY, 0.46),
+            [_heal_ratio(TargetType.ALL_ALLY, 0.55),
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_ratio=True)),
              _sp_gain(1.0, TargetType.ALL_ALLY)],
@@ -649,15 +674,15 @@ def make_nirrti() -> CharacterData:
     return CharacterData(
         id=sid, name="니르티", element=Element.WATER, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=400, def_=200, hp=4000, spd=80),
         normal_skill=_normal(f"{sid}_n", "암류의 일격",
-            [_dmg(TargetType.ENEMY_NEAR, 2.25)]),
+            [_dmg(TargetType.ENEMY_NEAR, 2.50)]),
         active_skill=_active(f"{sid}_a", "심연의 창",
-            [_dmg(TargetType.ENEMY_NEAR, 3.50),
+            [_dmg(TargetType.ENEMY_NEAR, 4.50),
              _stat_eff(TargetType.SELF,
                 _sb('def_', 0.15, 2, f"{sid}_a", "방어비율", is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "파도의 심판",
-            [_dmg(TargetType.ENEMY_NEAR_CROSS, 1.90),
+            [_dmg(TargetType.ENEMY_NEAR_CROSS, 2.50),
              _heal_ratio(TargetType.ALL_ALLY, 0.20)],
             sp=6),
         tile_pos=(0, 0),
@@ -674,7 +699,7 @@ def make_arhat() -> CharacterData:
     return CharacterData(
         id=sid, name="아라한", element=Element.WATER, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=198, def_=142, hp=5909, spd=120),
+        stats=StatBlock(atk=287, def_=230, hp=5750, spd=120),
         normal_skill=_normal(f"{sid}_n", "장풍",
             [_dmg(TargetType.ENEMY_NEAR, 4.28)]),
         active_skill=_active(f"{sid}_a", "진천뢰",
@@ -698,7 +723,7 @@ def make_lisa() -> CharacterData:
     return CharacterData(
         id=sid, name="리자", element=Element.WATER, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=341, def_=108, hp=4743, spd=80),
+        stats=StatBlock(atk=320, def_=160, hp=3200, spd=80),
         normal_skill=_normal(f"{sid}_n", "수정 화살",
             [_dmg(TargetType.ENEMY_NEAR, 0.60)]),
         active_skill=_active(f"{sid}_a", "얼음 창",
@@ -718,7 +743,7 @@ def make_virupa() -> CharacterData:
     return CharacterData(
         id=sid, name="비루파", element=Element.WATER, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=320, def_=160, hp=3200, spd=80),
         normal_skill=_normal(f"{sid}_n", "퇴마의 일격",
             [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "집중 강화",
@@ -740,7 +765,7 @@ def make_euros() -> CharacterData:
     return CharacterData(
         id=sid, name="에우로스", element=Element.WATER, role=Role.HEALER,
         side="ally",
-        stats=StatBlock(atk=168, def_=151, hp=6475, spd=90),
+        stats=StatBlock(atk=160, def_=160, hp=3200, spd=90),
         normal_skill=_normal(f"{sid}_n", "바람의 속삭임",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "회복의 바람",
@@ -761,16 +786,19 @@ def make_mayahuel() -> CharacterData:
     return CharacterData(
         id=sid, name="마야우엘", element=Element.WATER, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=198, def_=142, hp=5909, spd=100),
+        stats=StatBlock(atk=180, def_=120, hp=3000, spd=120),
         normal_skill=_normal(f"{sid}_n", "물의 채찍",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "빙결의 손길",
             [_cc(CCType.FREEZE, 1, f"{sid}_a", TargetType.ENEMY_NEAR),
              _dmg(TargetType.ENEMY_NEAR, 1.00)]),
         ultimate_skill=_ult(f"{sid}_u", "얼어붙은 세계",
-            [_cc(CCType.FREEZE, 2, f"{sid}_u", TargetType.ALL_ENEMY),
+            [_dmg(TargetType.ALL_ENEMY, 2.50),  # AoE 데미지 1.00→1.50→2.50 (3차 버프)
+             _cc(CCType.FREEZE, 2, f"{sid}_u", TargetType.ALL_ENEMY),
+             _dot_eff(TargetType.ALL_ENEMY,
+                _poison(f"{sid}_u", dot_ratio=0.15, duration=2)),
              _stat_eff(TargetType.ALL_ENEMY,
-                _sb('spd', 0.20, 2, f"{sid}_u", "빙결 감속", is_debuff=True, is_ratio=True))],
+                _sb('spd', 0.30, 2, f"{sid}_u", "빙결 감속", is_debuff=True, is_ratio=True))],
             sp=4),
         tile_pos=(1, 2),
     )
@@ -782,7 +810,7 @@ def make_leo() -> CharacterData:
     return CharacterData(
         id=sid, name="레오", element=Element.WATER, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=198, def_=142, hp=5909, spd=120),
+        stats=StatBlock(atk=150, def_=120, hp=3000, spd=120),
         normal_skill=_normal(f"{sid}_n", "물결 타격",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "수류 가호",
@@ -803,7 +831,7 @@ def make_deino() -> CharacterData:
     return CharacterData(
         id=sid, name="데이노", element=Element.WATER, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=252, def_=240, hp=8650, spd=110),
+        stats=StatBlock(atk=150, def_=180, hp=3600, spd=110),
         normal_skill=_normal(f"{sid}_n", "수류 강타",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "철벽 방어",
@@ -828,7 +856,7 @@ def make_brownie() -> CharacterData:
     return CharacterData(
         id=sid, name="브라우니", element=Element.FOREST, role=Role.HEALER,
         side="ally",
-        stats=StatBlock(atk=170, def_=148, hp=6300, spd=90),
+        stats=StatBlock(atk=200, def_=200, hp=4000, spd=90),
         normal_skill=_normal(f"{sid}_n", "고급정보입니다!",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "특급정보입니다!",
@@ -849,7 +877,7 @@ def make_batory() -> CharacterData:
     return CharacterData(
         id=sid, name="바토리", element=Element.DARK, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=350, def_=108, hp=4700, spd=120),
+        stats=StatBlock(atk=250, def_=200, hp=5000, spd=120),
         normal_skill=_normal(f"{sid}_n", "동반자 예우",
             [_dmg(TargetType.ENEMY_NEAR, 2.20)]),
         active_skill=_active(f"{sid}_a", "피의 맹세",
@@ -868,7 +896,7 @@ def make_pan() -> CharacterData:
     return CharacterData(
         id=sid, name="판", element=Element.FOREST, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=290, def_=112, hp=4900, spd=100),
+        stats=StatBlock(atk=300, def_=200, hp=5000, spd=100),
         normal_skill=_normal(f"{sid}_n", "목동의 휘파람",
             [_dmg(TargetType.ENEMY_NEAR, 1.50)]),
         active_skill=_active(f"{sid}_a", "작은 양을 위한 굴레",
@@ -888,14 +916,14 @@ def make_miriam() -> CharacterData:
     return CharacterData(
         id=sid, name="미리암", element=Element.FOREST, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=478, def_=118, hp=5100, spd=80),
+        stats=StatBlock(atk=400, def_=200, hp=4000, spd=80),
         normal_skill=_normal(f"{sid}_n", "웨이팅 포 딜",
             [_dmg(TargetType.ENEMY_NEAR, 1.70)]),
         active_skill=_active(f"{sid}_a", "크로스 더 루비콘",
             [_stat_eff(TargetType.SELF,
                 _sb('atk', 0.30, 3, f"{sid}_a", "공격력", is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "퓨리오스",
-            [_dmg(TargetType.ALL_ENEMY, 2.38),
+            [_dmg(TargetType.ALL_ENEMY, 2.80),
              _cc(CCType.PANIC, 2, f"{sid}_u", TargetType.ALL_ENEMY)],
             sp=6),
         tile_pos=(0, 1),
@@ -908,7 +936,7 @@ def make_aurora() -> CharacterData:
     return CharacterData(
         id=sid, name="아우로라", element=Element.FOREST, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=185, def_=138, hp=5600, spd=120),
+        stats=StatBlock(atk=250, def_=200, hp=5000, spd=120),
         normal_skill=_normal(f"{sid}_n", "기다림의 끝",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "지켜주는 나무",
@@ -932,11 +960,12 @@ def make_metis() -> CharacterData:
     return CharacterData(
         id=sid, name="메티스", element=Element.FOREST, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=185, def_=168, hp=7500, spd=110),
+        stats=StatBlock(atk=250, def_=300, hp=6000, spd=110),
         normal_skill=_normal(f"{sid}_n", "지혜의 일격",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "철벽 수호",
-            [_stat_eff(TargetType.ALL_ALLY,
+            [_dmg(TargetType.ALL_ENEMY, 0.80),
+             _stat_eff(TargetType.ALL_ALLY,
                 _sb('def_', 0.25, 2, f"{sid}_a", "방어력", is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "지혜의 방패",
             [_stat_eff(TargetType.ALL_ALLY,
@@ -955,7 +984,7 @@ def make_grilla() -> CharacterData:
     return CharacterData(
         id=sid, name="그릴라", element=Element.FOREST, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=245, def_=130, hp=5400, spd=120),
+        stats=StatBlock(atk=250, def_=200, hp=5000, spd=120),
         normal_skill=_normal(f"{sid}_n", "악마의 야망",
             [_dmg(TargetType.ENEMY_RANDOM, 2.00)]),
         active_skill=_active(f"{sid}_a", "발푸르기스의 밤",
@@ -965,7 +994,7 @@ def make_grilla() -> CharacterData:
                 _sb('atk', 0.15, 2, f"{sid}_a", "공격력", is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "드림 오브 레기온",
             [_stat_eff(TargetType.ALL_ALLY,
-                _sb('atk', 0.25, 3, f"{sid}_u", "공격력", is_ratio=True)),
+                _sb('atk', 0.20, 2, f"{sid}_u", "공격력", is_ratio=True)),
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True))],
             sp=4),
@@ -979,15 +1008,15 @@ def make_danu() -> CharacterData:
     return CharacterData(
         id=sid, name="다누", element=Element.FOREST, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=160, def_=152, hp=6400, spd=80),
+        stats=StatBlock(atk=400, def_=200, hp=4000, spd=80),
         normal_skill=_normal(f"{sid}_n", "생명의 손길",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "대지의 치유",
-            [_heal_ratio(TargetType.ALL_ALLY, 0.15),
+            [_heal_ratio(TargetType.ALL_ALLY, 0.25),
              _remove_debuff_eff(TargetType.ALL_ALLY)]),
         ultimate_skill=_ult(f"{sid}_u", "부활의 땅",
-            [_heal_ratio(TargetType.ALL_ALLY, 0.25),
-             _revive(0.30)],
+            [_heal_ratio(TargetType.ALL_ALLY, 0.40),
+             _revive(0.50)],
             sp=6),
         tile_pos=(2, 2),
     )
@@ -1003,7 +1032,7 @@ def make_mammon() -> CharacterData:
     return CharacterData(
         id=sid, name="맘몬", element=Element.FOREST, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=252, def_=240, hp=8650, spd=110),
+        stats=StatBlock(atk=200, def_=240, hp=4800, spd=110),
         normal_skill=_normal(f"{sid}_n", "대지의 주먹",
             [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "지진 강타",
@@ -1022,7 +1051,7 @@ def make_freya() -> CharacterData:
     return CharacterData(
         id=sid, name="프레이야", element=Element.FOREST, role=Role.HEALER,
         side="ally",
-        stats=StatBlock(atk=168, def_=151, hp=6475, spd=90),
+        stats=StatBlock(atk=120, def_=120, hp=2400, spd=90),
         normal_skill=_normal(f"{sid}_n", "자연의 가시",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "생명의 꽃",
@@ -1043,14 +1072,15 @@ def make_diana() -> CharacterData:
     return CharacterData(
         id=sid, name="다이아나", element=Element.FOREST, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=198, def_=142, hp=5909, spd=100),
+        stats=StatBlock(atk=180, def_=120, hp=3000, spd=120),
         normal_skill=_normal(f"{sid}_n", "달빛 화살",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "숲의 속박",
             [_cc(CCType.STUN, 1, f"{sid}_a", TargetType.ENEMY_NEAR),
              _dmg(TargetType.ENEMY_NEAR, 1.00)]),
         ultimate_skill=_ult(f"{sid}_u", "달빛 심판",
-            [_cc(CCType.SLEEP, 2, f"{sid}_u", TargetType.ALL_ENEMY),
+            [_dmg(TargetType.ALL_ENEMY, 1.00),  # AoE 데미지 추가 (CC+딜 하이브리드)
+             _cc(CCType.SLEEP, 2, f"{sid}_u", TargetType.ALL_ENEMY),
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('spd', 0.20, 2, f"{sid}_u", "감속", is_debuff=True, is_ratio=True))],
             sp=4),
@@ -1064,7 +1094,7 @@ def make_europe() -> CharacterData:
     return CharacterData(
         id=sid, name="에우로페", element=Element.FOREST, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=240, def_=120, hp=2400, spd=80),
         normal_skill=_normal(f"{sid}_n", "넝쿨 타격",
             [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "자연의 분노",
@@ -1083,7 +1113,7 @@ def make_midas() -> CharacterData:
     return CharacterData(
         id=sid, name="미다스", element=Element.FOREST, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=320, def_=160, hp=3200, spd=80),
         normal_skill=_normal(f"{sid}_n", "황금 주먹",
             [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "황금의 손길",
@@ -1105,7 +1135,7 @@ def make_jacheongbi() -> CharacterData:
     return CharacterData(
         id=sid, name="자청비", element=Element.FOREST, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=198, def_=142, hp=5909, spd=120),
+        stats=StatBlock(atk=200, def_=160, hp=4000, spd=120),
         normal_skill=_normal(f"{sid}_n", "바람의 일격",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "숲의 가호",
@@ -1132,13 +1162,13 @@ def make_ashtoreth() -> CharacterData:
     return CharacterData(
         id=sid, name="아슈토레스", element=Element.LIGHT, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=465, def_=118, hp=5000, spd=80),
+        stats=StatBlock(atk=400, def_=200, hp=4000, spd=80),
         normal_skill=_normal(f"{sid}_n", "밤의 속삭임",
             [_dmg(TargetType.ENEMY_RANDOM_2, 2.00)]),
         active_skill=_active(f"{sid}_a", "심연의 덫",
             [_dmg(TargetType.ENEMY_NEAR, 3.00)]),
         ultimate_skill=_ult(f"{sid}_u", "가시 무도회",
-            [_dmg(TargetType.ENEMY_NEAR, 4.50)],
+            [_dmg(TargetType.ENEMY_NEAR, 3.80)],
             sp=6),
         tile_pos=(0, 0),
     )
@@ -1150,7 +1180,7 @@ def make_sitri() -> CharacterData:
     return CharacterData(
         id=sid, name="시트리", element=Element.LIGHT, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=188, def_=132, hp=5500, spd=120),
+        stats=StatBlock(atk=250, def_=200, hp=5000, spd=120),
         normal_skill=_normal(f"{sid}_n", "폴 인 러브",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "크런치 캔디",
@@ -1163,7 +1193,7 @@ def make_sitri() -> CharacterData:
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.25, 3, f"{sid}_u", "공격력", is_ratio=True)),
              _stat_eff(TargetType.ALL_ALLY,
-                _sb('cri_dmg_ratio', 0.30, 3, f"{sid}_u", "크리피해", is_ratio=False))],
+                _sb('cri_dmg_ratio', 0.20, 3, f"{sid}_u", "크리피해", is_ratio=False))],
             sp=4),
         tile_pos=(2, 0),
     )
@@ -1175,7 +1205,7 @@ def make_mona() -> CharacterData:
     return CharacterData(
         id=sid, name="모나", element=Element.LIGHT, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=182, def_=140, hp=5600, spd=110),
+        stats=StatBlock(atk=250, def_=300, hp=6000, spd=100),
         normal_skill=_normal(f"{sid}_n", "이클립스",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "트릭스타",
@@ -1197,7 +1227,7 @@ def make_semele() -> CharacterData:
     return CharacterData(
         id=sid, name="세멜레", element=Element.LIGHT, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=370, def_=115, hp=4900, spd=100),
+        stats=StatBlock(atk=300, def_=200, hp=5000, spd=100),
         normal_skill=_normal(f"{sid}_n", "신성 강타",
             [_dmg(TargetType.ENEMY_NEAR, 2.00)]),
         active_skill=_active(f"{sid}_a", "제우스의 불꽃",
@@ -1205,7 +1235,7 @@ def make_semele() -> CharacterData:
              _stat_eff(TargetType.ENEMY_NEAR,
                 _sb('atk', 0.20, 2, f"{sid}_a", "공격력", is_debuff=True, is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "신의 번개",
-            [_dmg(TargetType.ALL_ENEMY, 1.50),
+            [_dmg(TargetType.ALL_ENEMY, 2.00),
              _dot_eff(TargetType.ALL_ENEMY, _burn(f"{sid}_u"))],
             sp=4),
         tile_pos=(0, 2),
@@ -1218,7 +1248,7 @@ def make_tiwaz() -> CharacterData:
     return CharacterData(
         id=sid, name="티와즈", element=Element.LIGHT, role=Role.HEALER,
         side="ally",
-        stats=StatBlock(atk=385, def_=130, hp=5200, spd=90),
+        stats=StatBlock(atk=200, def_=200, hp=4000, spd=90),
         normal_skill=_normal(f"{sid}_n", "전쟁신의 검",
             [_dmg(TargetType.ENEMY_NEAR, 2.00)]),
         active_skill=_active(f"{sid}_a", "관통 공격",
@@ -1238,7 +1268,7 @@ def make_titania() -> CharacterData:
     return CharacterData(
         id=sid, name="티타니아", element=Element.LIGHT, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=180, def_=135, hp=5800, spd=110),
+        stats=StatBlock(atk=250, def_=300, hp=6000, spd=110),
         normal_skill=_normal(f"{sid}_n", "요정의 손길",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "요정의 축복",
@@ -1262,7 +1292,7 @@ def make_oneiroi() -> CharacterData:
     return CharacterData(
         id=sid, name="오네이로이", element=Element.LIGHT, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=400, def_=108, hp=4700, spd=120),
+        stats=StatBlock(atk=250, def_=200, hp=5000, spd=120),
         normal_skill=_normal(f"{sid}_n", "꿈의 속삭임",
             [_dmg(TargetType.ENEMY_NEAR, 1.50)]),
         active_skill=_active(f"{sid}_a", "잠의 손길",
@@ -1270,7 +1300,7 @@ def make_oneiroi() -> CharacterData:
              _cc(CCType.SLEEP, 1, f"{sid}_a", TargetType.ENEMY_RANDOM)]),
         ultimate_skill=_ult(f"{sid}_u", "영원한 꿈",
             [_dmg(TargetType.ALL_ENEMY, 1.50),
-             _cc(CCType.SLEEP, 1, f"{sid}_u", TargetType.ALL_ENEMY)],
+             _cc(CCType.SLEEP, 2, f"{sid}_u", TargetType.ALL_ENEMY)],
             sp=4),
         tile_pos=(1, 2),
     )
@@ -1285,22 +1315,21 @@ def make_c600() -> CharacterData:
     return CharacterData(
         id=sid, name="루미나", element=Element.LIGHT, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=230, def_=160, hp=6800, spd=100),
+        stats=StatBlock(atk=345, def_=230, hp=5750, spd=100),
         normal_skill=_normal(f"{sid}_n", "성광의 채찍",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "빛의 축복",
             [_stat_eff(TargetType.ALL_ALLY,
-                _sb('atk', 0.30, 3, f"{sid}_a", "공격력", is_ratio=True)),
+                _sb('atk', 0.15, 2, f"{sid}_a", "공격력", is_ratio=True)),
              _stat_eff(TargetType.ALL_ALLY,
-                _sb('spd', 20.0, 3, f"{sid}_a", "속도", is_ratio=False)),
+                _sb('spd', 15.0, 2, f"{sid}_a", "속도", is_ratio=False)),
              _remove_debuff_eff(TargetType.ALL_ALLY)]),
         ultimate_skill=_ult(f"{sid}_u", "성역의 은총",
-            [_heal_ratio(TargetType.ALL_ALLY, 0.35),
+            [_heal_ratio(TargetType.ALL_ALLY, 0.25),
              _stat_eff(TargetType.ALL_ALLY,
-                _sb('atk', 0.35, 3, f"{sid}_u", "공격력", is_ratio=True)),
+                _sb('atk', 0.25, 3, f"{sid}_u", "공격력", is_ratio=True)),
              _stat_eff(TargetType.ALL_ALLY,
-                _sb('cri_dmg_ratio', 0.50, 3, f"{sid}_u", "크리피해", is_ratio=False)),
-             _sp_gain(1.0, TargetType.ALL_ALLY)],
+                _sb('cri_dmg_ratio', 0.30, 3, f"{sid}_u", "크리피해", is_ratio=False))],
             sp=4),
         tile_pos=(2, 0),
     )
@@ -1316,7 +1345,7 @@ def make_dana() -> CharacterData:
     return CharacterData(
         id=sid, name="다나", element=Element.LIGHT, role=Role.HEALER,
         side="ally",
-        stats=StatBlock(atk=168, def_=151, hp=6475, spd=90),
+        stats=StatBlock(atk=160, def_=160, hp=3200, spd=90),
         normal_skill=_normal(f"{sid}_n", "빛의 화살",
             [_dmg(TargetType.ENEMY_NEAR, 4.28)]),
         active_skill=_active(f"{sid}_a", "성스러운 기도",
@@ -1340,7 +1369,7 @@ def make_hildr() -> CharacterData:
     return CharacterData(
         id=sid, name="힐드", element=Element.LIGHT, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=320, def_=160, hp=3200, spd=80),
         normal_skill=_normal(f"{sid}_n", "빛의 검",
             [_dmg(TargetType.ENEMY_NEAR, 2.25)]),
         active_skill=_active(f"{sid}_a", "섬광 베기",
@@ -1365,14 +1394,15 @@ def make_charlotte() -> CharacterData:
     return CharacterData(
         id=sid, name="샤를", element=Element.LIGHT, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=252, def_=240, hp=8650, spd=110),
+        stats=StatBlock(atk=150, def_=180, hp=3600, spd=110),
         normal_skill=_normal(f"{sid}_n", "빛의 방패",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "성벽",
-            [_shield(TargetType.ALL_ALLY, 0.30)]),
+            [_shield(TargetType.ALL_ALLY, 0.60)]),
         ultimate_skill=_ult(f"{sid}_u", "수호의 빛",
             [_dmg(TargetType.ENEMY_NEAR_ROW, 2.00),
-             _shield(TargetType.ALL_ALLY, 0.35)],
+             _heal_ratio(TargetType.ALL_ALLY, 0.20),
+             _shield(TargetType.ALL_ALLY, 0.70)],
             sp=3),
         tile_pos=(1, 0),
     )
@@ -1384,18 +1414,18 @@ def make_leda() -> CharacterData:
     return CharacterData(
         id=sid, name="레다", element=Element.LIGHT, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=198, def_=142, hp=5909, spd=120),
+        stats=StatBlock(atk=150, def_=120, hp=3000, spd=120),
         normal_skill=_normal(f"{sid}_n", "빛의 화살",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "성광의 가호",
             [_stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.15, 2, f"{sid}_a", "성광 공격", is_ratio=True)),
-             _heal_ratio(TargetType.ALL_ALLY, 0.10)]),
+             _heal_ratio(TargetType.ALL_ALLY, 0.20)]),
         ultimate_skill=_ult(f"{sid}_u", "빛의 은혜",
             [_stat_eff(TargetType.ALL_ALLY,
-                _sb('atk', 0.25, 2, f"{sid}_u", "빛의 축복", is_ratio=True)),
+                _sb('atk', 0.15, 2, f"{sid}_u", "빛의 축복", is_ratio=True)),
              _stat_eff(TargetType.ALL_ALLY,
-                _sb('def_', 0.15, 2, f"{sid}_u", "빛의 보호", is_ratio=True))],
+                _sb('def_', 0.20, 2, f"{sid}_u", "빛의 보호", is_ratio=True))],
             sp=4),
         tile_pos=(2, 2),
     )
@@ -1407,7 +1437,7 @@ def make_yana() -> CharacterData:
     return CharacterData(
         id=sid, name="야나", element=Element.LIGHT, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=240, def_=120, hp=2400, spd=80),
         normal_skill=_normal(f"{sid}_n", "광선 타격",
             [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "섬광 일격",
@@ -1427,7 +1457,7 @@ def make_mafdet() -> CharacterData:
     return CharacterData(
         id=sid, name="마프데트", element=Element.LIGHT, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=198, def_=142, hp=5909, spd=100),
+        stats=StatBlock(atk=240, def_=160, hp=4000, spd=120),
         normal_skill=_normal(f"{sid}_n", "빛의 발톱",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "심판의 사슬",
@@ -1435,7 +1465,8 @@ def make_mafdet() -> CharacterData:
              _stat_eff(TargetType.ENEMY_NEAR,
                 _sb('spd', 0.20, 2, f"{sid}_a", "구속", is_debuff=True, is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "정의의 심판",
-            [_cc(CCType.STUN, 2, f"{sid}_u", TargetType.ALL_ENEMY),
+            [_dmg(TargetType.ALL_ENEMY, 2.50),  # AoE 데미지 1.00→1.50→2.50 (3차 버프)
+             _cc(CCType.STUN, 2, f"{sid}_u", TargetType.ALL_ENEMY),
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('atk', 0.20, 2, f"{sid}_u", "약화", is_debuff=True, is_ratio=True))],
             sp=4),
@@ -1453,7 +1484,7 @@ def make_frey() -> CharacterData:
     return CharacterData(
         id=sid, name="프레이", element=Element.DARK, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=285, def_=205, hp=7800, spd=110),
+        stats=StatBlock(atk=250, def_=300, hp=6000, spd=110),
         normal_skill=_normal(f"{sid}_n", "그림 리퍼",
             [_dmg(TargetType.ENEMY_NEAR, 1.50)]),
         active_skill=_active(f"{sid}_a", "사신의 잔상",
@@ -1461,7 +1492,7 @@ def make_frey() -> CharacterData:
                 _sb('atk', 0.25, 2, f"{sid}_a", "공격력", is_ratio=True)),
              _stat_eff(TargetType.SELF,
                 _sb('cri_ratio', 0.40, 2, f"{sid}_a", "크리율", is_ratio=False)),
-             _counter(3)]),
+             _counter(2)]),
         ultimate_skill=_ult(f"{sid}_u", "트릭스터",
             [_dmg(TargetType.ENEMY_NEAR_ROW, 2.00),
              _stat_eff(TargetType.ENEMY_NEAR_ROW,
@@ -1477,7 +1508,7 @@ def make_banshee() -> CharacterData:
     return CharacterData(
         id=sid, name="반시", element=Element.DARK, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=360, def_=112, hp=5000, spd=100),
+        stats=StatBlock(atk=300, def_=200, hp=5000, spd=100),
         normal_skill=_normal(f"{sid}_n", "4연격",
             [_dmg(TargetType.ENEMY_NEAR, 1.00, hit_count=4)]),
         active_skill=_active(f"{sid}_a", "전투 기도",
@@ -1498,14 +1529,15 @@ def make_artemis() -> CharacterData:
     return CharacterData(
         id=sid, name="아르테미스", element=Element.DARK, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=450, def_=115, hp=4900, spd=100),
+        stats=StatBlock(atk=300, def_=200, hp=5000, spd=100),
         normal_skill=_normal(f"{sid}_n", "나이트메어 이블",
             [_dmg(TargetType.ENEMY_RANDOM, 2.00, hit_count=4)]),
         active_skill=_active(f"{sid}_a", "광포한 분노",
-            [_stat_eff(TargetType.SELF,
-                _sb('acc', 0.30, 2, f"{sid}_a", "명중", is_ratio=True))]),
+            [_dmg(TargetType.ENEMY_NEAR, 1.50),
+             _stat_eff(TargetType.ENEMY_NEAR,
+                _sb('def_', 0.25, 2, f"{sid}_a", "방어력", is_debuff=True, is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "침식하는 어둠",
-            [_dmg(TargetType.ALL_ENEMY, 1.80),
+            [_dmg(TargetType.ALL_ENEMY, 2.50),
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True))],
             sp=4),
@@ -1519,7 +1551,7 @@ def make_mircalla() -> CharacterData:
     return CharacterData(
         id=sid, name="미르칼라", element=Element.DARK, role=Role.HEALER,
         side="ally",
-        stats=StatBlock(atk=350, def_=110, hp=5000, spd=90),
+        stats=StatBlock(atk=200, def_=200, hp=4000, spd=90),
         normal_skill=_normal(f"{sid}_n", "흡혈",
             [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "핏빛 저주",
@@ -1542,7 +1574,7 @@ def make_yuna() -> CharacterData:
     return CharacterData(
         id=sid, name="유나", element=Element.DARK, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=188, def_=135, hp=5500, spd=120),
+        stats=StatBlock(atk=250, def_=200, hp=5000, spd=120),
         normal_skill=_normal(f"{sid}_n", "달그림자",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "어둠의 가호",
@@ -1565,7 +1597,7 @@ def make_kubaba() -> CharacterData:
     return CharacterData(
         id=sid, name="쿠바바", element=Element.DARK, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=380, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=400, def_=200, hp=4000, spd=80),
         normal_skill=_normal(f"{sid}_n", "와일드 로드",
             [_dmg(TargetType.ENEMY_NEAR, 1.90)]),
         active_skill=_active(f"{sid}_a", "오버 더 리밋",
@@ -1573,7 +1605,7 @@ def make_kubaba() -> CharacterData:
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.20, 2, f"{sid}_a", "방어력", is_debuff=True, is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "데스 스키드 마크",
-            [_dmg(TargetType.ENEMY_NEAR, 7.20)],
+            [_dmg(TargetType.ENEMY_NEAR, 3.80)],
             sp=6),
         tile_pos=(0, 0),
     )
@@ -1585,7 +1617,7 @@ def make_anubis() -> CharacterData:
     return CharacterData(
         id=sid, name="아누비스", element=Element.DARK, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=365, def_=122, hp=5100, spd=80),
+        stats=StatBlock(atk=460, def_=230, hp=4600, spd=80),
         normal_skill=_normal(f"{sid}_n", "사자의 인도",
             [_dmg(TargetType.ENEMY_NEAR, 1.70)]),
         active_skill=_active(f"{sid}_a", "직선 심판",
@@ -1606,19 +1638,19 @@ def make_c601() -> CharacterData:
     return CharacterData(
         id=sid, name="에레보스", element=Element.FOREST, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=530, def_=135, hp=5500, spd=100),
+        stats=StatBlock(atk=345, def_=230, hp=5750, spd=100),
         normal_skill=_normal(f"{sid}_n", "심연의 쌍격",
-            [_dmg(TargetType.ENEMY_NEAR, 2.50, hit_count=2)]),
+            [_dmg(TargetType.ENEMY_NEAR, 2.00, hit_count=2)]),
         active_skill=_active(f"{sid}_a", "종결자의 일격",
-            [_dmg(TargetType.ENEMY_LOWEST_HP, 5.00),
+            [_dmg(TargetType.ENEMY_LOWEST_HP, 2.80),  # 기본 배율 5.00→3.50→2.80 (3차 너프)
              SkillEffect(logic_type=LogicType.DAMAGE, target_type=TargetType.ENEMY_LOWEST_HP,
-                         multiplier=3.00, condition={'target_hp_below': 0.50}),
+                         multiplier=1.50, condition={'target_hp_below': 0.50}),  # 처형 배율 2.00→1.50
              _stat_eff(TargetType.ENEMY_LOWEST_HP,
                 _sb('def_', 0.25, 2, f"{sid}_a", "방어력", is_debuff=True, is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "심판의 심연",
-            [_dmg(TargetType.ALL_ENEMY, 3.50),
+            [_dmg(TargetType.ALL_ENEMY, 2.00),  # AoE 배율 3.50→2.50→2.00 (2차 너프)
              _stat_eff(TargetType.ALL_ENEMY,
-                _sb('def_', 0.30, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True)),
+                _sb('def_', 0.15, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True)),
              _dot_eff(TargetType.ALL_ENEMY,
                 _bleed(f"{sid}_u", dot_ratio=0.20, duration=3))],
             sp=4),
@@ -1636,7 +1668,7 @@ def make_cain() -> CharacterData:
     return CharacterData(
         id=sid, name="카인", element=Element.FIRE, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=320, def_=160, hp=3200, spd=80),
         normal_skill=_normal(f"{sid}_n", "암흑 참격",
             [_dmg(TargetType.ENEMY_NEAR, 4.43)]),
         active_skill=_active(f"{sid}_a", "광기의 힘",
@@ -1661,15 +1693,17 @@ def make_elizabeth() -> CharacterData:
     return CharacterData(
         id=sid, name="에르제베트", element=Element.DARK, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=320, def_=160, hp=3200, spd=80),
         normal_skill=_normal(f"{sid}_n", "피의 채찍",
-            [_dmg(TargetType.ENEMY_NEAR, 4.43)]),
+            [_dmg(TargetType.ENEMY_NEAR, 6.50)]),
         active_skill=_active(f"{sid}_a", "선혈의 창",
-            [_dmg(TargetType.ENEMY_NEAR, 3.20),
+            [_dmg(TargetType.ENEMY_NEAR, 4.00),
              _stat_eff(TargetType.SELF,
-                _sb('acc', 15.0, 2, f"{sid}_a", "명중", is_ratio=False))]),
+                _sb('acc', 15.0, 2, f"{sid}_a", "명중", is_ratio=False)),
+             _stat_eff(TargetType.SELF,
+                _sb('atk', 0.30, 2, f"{sid}_a", "피의 광기", is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "핏빛 향연",
-            [_dmg(TargetType.ALL_ENEMY, 0.40),
+            [_dmg(TargetType.ALL_ENEMY, 1.00),
              _dot_eff(TargetType.ALL_ENEMY,
                 _poison(f"{sid}_u", dot_ratio=0.30, duration=2))],
             sp=6),
@@ -1687,13 +1721,13 @@ def make_duetsha() -> CharacterData:
     return CharacterData(
         id=sid, name="두엣샤", element=Element.DARK, role=Role.MAGICIAN,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=100),
+        stats=StatBlock(atk=240, def_=160, hp=4000, spd=100),
         normal_skill=_normal(f"{sid}_n", "그림자 베기",
             [_dmg(TargetType.ENEMY_NEAR, 2.25)]),
         active_skill=_active(f"{sid}_a", "이중 참격",
             [_dmg(TargetType.ENEMY_NEAR, 0.40)]),
         ultimate_skill=_ult(f"{sid}_u", "심연의 무도",
-            [_dmg(TargetType.ENEMY_NEAR_ROW, 3.20)],
+            [_dmg(TargetType.ENEMY_NEAR_ROW, 2.50)],
             sp=4),
         tile_pos=(0, 2),
     )
@@ -1705,7 +1739,7 @@ def make_mona_dark() -> CharacterData:
     return CharacterData(
         id=sid, name="모나", element=Element.DARK, role=Role.DEFENDER,
         side="ally",
-        stats=StatBlock(atk=252, def_=240, hp=8650, spd=110),
+        stats=StatBlock(atk=200, def_=240, hp=4800, spd=110),
         normal_skill=_normal(f"{sid}_n", "암흑 타격",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "암흑 장벽",
@@ -1726,7 +1760,7 @@ def make_persephone() -> CharacterData:
     return CharacterData(
         id=sid, name="페르세포네", element=Element.DARK, role=Role.SUPPORTER,
         side="ally",
-        stats=StatBlock(atk=198, def_=142, hp=5909, spd=120),
+        stats=StatBlock(atk=150, def_=120, hp=3000, spd=120),
         normal_skill=_normal(f"{sid}_n", "암흑의 가시",
             [_dmg(TargetType.ENEMY_NEAR, 1.20)]),
         active_skill=_active(f"{sid}_a", "명계의 축복",
@@ -1749,15 +1783,15 @@ def make_nevan() -> CharacterData:
     return CharacterData(
         id=sid, name="네반", element=Element.DARK, role=Role.HEALER,
         side="ally",
-        stats=StatBlock(atk=168, def_=151, hp=6475, spd=90),
+        stats=StatBlock(atk=120, def_=120, hp=2400, spd=90),
         normal_skill=_normal(f"{sid}_n", "어둠의 손길",
             [_dmg(TargetType.ENEMY_NEAR, 1.00)]),
         active_skill=_active(f"{sid}_a", "암흑 치유",
-            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.30),
+            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.40),
              _remove_debuff_eff(TargetType.ALLY_LOWEST_HP)]),
         ultimate_skill=_ult(f"{sid}_u", "명계의 은혜",
-            [_heal_ratio(TargetType.ALL_ALLY, 0.35),
-             _shield(TargetType.ALL_ALLY, 0.10)],
+            [_heal_ratio(TargetType.ALL_ALLY, 0.50),
+             _shield(TargetType.ALL_ALLY, 0.30)],
             sp=3),
         tile_pos=(2, 2),
     )
@@ -1769,7 +1803,7 @@ def make_medusa() -> CharacterData:
     return CharacterData(
         id=sid, name="메두사", element=Element.DARK, role=Role.ATTACKER,
         side="ally",
-        stats=StatBlock(atk=420, def_=120, hp=5100, spd=80),
+        stats=StatBlock(atk=240, def_=120, hp=2400, spd=80),
         normal_skill=_normal(f"{sid}_n", "석화의 눈",
             [_dmg(TargetType.ENEMY_NEAR, 1.80)]),
         active_skill=_active(f"{sid}_a", "독사의 일격",
