@@ -1,9 +1,25 @@
-"""밸런스 룰 상수 - 역할(Role)별 기본 스탯 가이드라인
+"""밸런스 룰 상수 — 스탯 고정 + 스킬 밸런싱 프레임워크
 
-새 캐릭터를 설계할 때 아래 수치를 기준값으로 사용한다.
-기존 캐릭터는 밸런스 패치로 개별 조정된 값을 우선한다.
+═══════════════════════════════════════════════════════════════
+밸런싱 정책 (v2.0)
+═══════════════════════════════════════════════════════════════
+1. 스탯(ATK/DEF/HP)은 역할×등급으로 **완전 고정** (ROLE_STAT_STANDARD).
+   → 개별 캐릭터의 스탯 조정은 금지. 밸런스 패치 대상이 아님.
+   → SPD, SP 비용도 역할 고정.
+
+2. 캐릭터 개성화는 **스킬**로만 수행:
+   → 액티브/얼티밋의 배율(multiplier), 타겟(targeting), 부가효과(effects)
+   → 역할별 스킬 템플릿(ROLE_SKILL_TEMPLATE)을 기준으로 ±조정
+   → 배율 범위(SKILL_MULTIPLIER_RANGE)를 벗어나지 않도록 관리
+
+3. 밸런싱 축 우선순위: 스킬 배율 > 타겟 범위 > 부가효과 > (스탯 금지)
+═══════════════════════════════════════════════════════════════
 """
 from __future__ import annotations
+
+import math
+from dataclasses import dataclass
+from typing import Optional
 
 from battle.enums import Role
 
@@ -12,7 +28,30 @@ from battle.enums import Role
 # ────────────────────────────────────────────────────────────
 BATTLE_LENGTH: int = 300          # 배틀 길이 (턴 공식 분자)
 MAX_TURN_TIME: int = 10           # 배틀 턴 최대 시간
+MAX_TURNS: int = 200              # 최대 턴 수
+MAX_TIME: float = 300.0           # 최대 전투 시간
 # Turn Formula = BATTLE_LENGTH / Spd
+
+# ────────────────────────────────────────────────────────────
+# 덱 타입 & 타임오버 룰
+# ────────────────────────────────────────────────────────────
+# 전투는 두 가지 덱 타입으로 구분된다:
+#
+# ┌──────────┬────────────────────────────────────────────┐
+# │ 덱 타입   │ 타임오버 시 결과                             │
+# ├──────────┼────────────────────────────────────────────┤
+# │ 공격덱    │ 패배 (적 전멸 실패 = 공격 목표 미달성)       │
+# │ (OFFENSE) │ → 제한 시간 내 적을 처치해야 승리            │
+# │          │ → 공격력 확보가 편성의 필수 조건              │
+# ├──────────┼────────────────────────────────────────────┤
+# │ 방어덱    │ 승리 (생존 성공 = 방어 목표 달성)            │
+# │ (DEFENSE) │ → 제한 시간 동안 살아남으면 승리             │
+# │          │ → 생존력 확보가 편성의 필수 조건              │
+# └──────────┴────────────────────────────────────────────┘
+#
+# 기본값: OFFENSE (공격덱) — 기존 동작과 동일.
+# MAX_TURNS(200턴) 또는 MAX_TIME(300.0) 초과 시 덱 타입에 따라 판정.
+DEFAULT_DECK_TYPE: str = "offense"  # enums.DeckType.OFFENSE
 
 # ────────────────────────────────────────────────────────────
 # 속도 룰: 역할별 기본 SPD
@@ -81,6 +120,58 @@ ROLE_BASE_HP: dict[Role, int] = {
 
 
 # ────────────────────────────────────────────────────────────
+# 등급별 스탯 스케일링 룰
+# ────────────────────────────────────────────────────────────
+# 등급별 스케일링: 3성 = 100% (기준), 2성 = 75%, 1성 = 50%, 3.5성 = 115%
+# ATK, DEF, HP에 적용. SPD, SP는 역할 고정값이므로 스케일링 미적용.
+# → 3성 캐릭터가 압도적 성능, 1성은 절반 수준
+# → 3.5성은 프리미엄 등급으로 3성 대비 15% 상향
+# → 편성 시 등급 조합이 전략적 선택 요소가 됨
+GRADE_STAT_SCALE: dict[float, float] = {
+    3.5: 1.15,  # 3.5성: 115% (프리미엄)
+    3:   1.00,  # 3성: 풀 스탯
+    2:   0.75,  # 2성: 75%
+    1:   0.50,  # 1성: 50%
+}
+
+
+# ────────────────────────────────────────────────────────────
+# 역할별 등급 기준 스탯표 (스탯 규약.xlsx 기준)
+# ────────────────────────────────────────────────────────────
+# 개별 캐릭터는 역할 기본값에서 ±조정된 고유 스탯을 가지며,
+# 등급 스케일링(GRADE_STAT_SCALE)은 해당 캐릭터의 3성 스탯에 적용한다.
+#
+# 아래 표는 설계 참조용 표준 기본값 (스탯 규약.xlsx 원본).
+ROLE_STAT_STANDARD: dict[Role, dict[str, dict[float, int]]] = {
+    Role.ATTACKER: {
+        "hp":  {1: 2400, 2: 3200, 3: 4000, 3.5: 4600},
+        "atk": {1: 240,  2: 320,  3: 400,  3.5: 460},
+        "def": {1: 120,  2: 160,  3: 200,  3.5: 230},
+    },
+    Role.DEFENDER: {
+        "hp":  {1: 3600, 2: 4800, 3: 6000, 3.5: 6900},
+        "atk": {1: 150,  2: 200,  3: 250,  3.5: 287},
+        "def": {1: 180,  2: 240,  3: 300,  3.5: 345},
+    },
+    Role.MAGICIAN: {
+        "hp":  {1: 3000, 2: 4000, 3: 5000, 3.5: 5750},
+        "atk": {1: 180,  2: 240,  3: 300,  3.5: 345},
+        "def": {1: 120,  2: 160,  3: 200,  3.5: 230},
+    },
+    Role.SUPPORTER: {
+        "hp":  {1: 3000, 2: 4000, 3: 5000, 3.5: 5750},
+        "atk": {1: 150,  2: 200,  3: 250,  3.5: 287},
+        "def": {1: 120,  2: 160,  3: 200,  3.5: 230},
+    },
+    Role.HEALER: {
+        "hp":  {1: 2400, 2: 3200, 3: 4000, 3.5: 4600},
+        "atk": {1: 120,  2: 160,  3: 200,  3.5: 230},
+        "def": {1: 120,  2: 160,  3: 200,  3.5: 230},
+    },
+}
+
+
+# ────────────────────────────────────────────────────────────
 # 헬퍼 함수
 # ────────────────────────────────────────────────────────────
 
@@ -112,3 +203,277 @@ def default_def(role: Role) -> int:
 def default_hp(role: Role) -> int:
     """역할에 해당하는 기본 HP 반환."""
     return ROLE_BASE_HP[role]
+
+
+def grade_scale(grade: float) -> float:
+    """등급에 해당하는 스탯 스케일링 비율 반환 (3성=1.0, 3.5성=1.15)."""
+    return GRADE_STAT_SCALE.get(grade, 1.0)
+
+
+def scale_stat(base_value: int, grade: float) -> int:
+    """3성 기준 스탯을 주어진 등급으로 스케일링. (올림)"""
+    return math.ceil(base_value * grade_scale(grade))
+
+
+def standard_stat(role: Role, stat: str, grade: float) -> int:
+    """역할/등급에 대한 표준 기준값 반환 (스탯 규약.xlsx 기준)."""
+    return ROLE_STAT_STANDARD[role][stat][grade]
+
+
+# ════════════════════════════════════════════════════════════════
+# 스킬 밸런싱 프레임워크 (v2.0)
+# ════════════════════════════════════════════════════════════════
+# 스탯이 역할×등급으로 고정된 이후, 캐릭터 개성화의 유일한 축.
+# 아래 템플릿과 범위를 기준으로 개별 캐릭터 스킬을 설계한다.
+
+
+# ────────────────────────────────────────────────────────────
+# 스킬 배율 범위: 역할별 허용 배율 (min, max)
+# ────────────────────────────────────────────────────────────
+# 개별 캐릭터의 스킬 배율은 이 범위 안에서만 조정한다.
+# 범위를 벗어나면 밸런스 검증에서 경고가 발생한다.
+
+@dataclass(frozen=True)
+class MultRange:
+    """스킬 배율 허용 범위."""
+    min: float
+    max: float
+
+
+SKILL_MULTIPLIER_RANGE: dict[Role, dict[str, MultRange]] = {
+    # ── 딜러: 높은 단일 타겟 배율, 궁극기 최대 폭딜 ──
+    Role.ATTACKER: {
+        "normal":   MultRange(1.00, 2.50),   # 기본공격: 안정적 딜
+        "active":   MultRange(1.20, 2.80),   # 액티브: 메인 딜 스킬
+        "ultimate": MultRange(2.00, 4.00),   # 궁극기: 최대 단일 폭딜
+    },
+    # ── 마법사: AoE 특화, 개별 배율은 낮지만 총합 높음 ──
+    Role.MAGICIAN: {
+        "normal":   MultRange(0.80, 2.20),   # 기본: 단일 or 소범위
+        "active":   MultRange(0.40, 1.80),   # 액티브: AoE 주력
+        "ultimate": MultRange(0.80, 2.50),   # 궁극기: AoE 광역
+    },
+    # ── 탱커: 낮은 배율, 자힐/도발에 가치 집중 ──
+    Role.DEFENDER: {
+        "normal":   MultRange(0.30, 1.00),
+        "active":   MultRange(0.20, 0.80),   # AoE + 자힐/도발
+        "ultimate": MultRange(0.00, 0.50),   # 데미지 미미, 전체힐/보호막
+    },
+    # ── 힐러: 힐 배율(ATK×계수), 궁극기는 %HP 힐 ──
+    Role.HEALER: {
+        "normal":   MultRange(0.20, 0.80),   # 미미한 공격
+        "active":   MultRange(0.80, 2.00),   # 힐 계수 (ATK×value×0.40)
+        "ultimate": MultRange(0.20, 0.40),   # %maxHP 전체힐 비율
+    },
+    # ── 서포터: 중간 배율 + 버프 부여가 핵심 ──
+    Role.SUPPORTER: {
+        "normal":   MultRange(0.40, 1.20),
+        "active":   MultRange(0.50, 1.50),   # 데미지 + 버프
+        "ultimate": MultRange(0.60, 1.80),   # 데미지 + 강화 버프
+    },
+}
+
+
+# ────────────────────────────────────────────────────────────
+# 역할별 스킬 템플릿 (기본값)
+# ────────────────────────────────────────────────────────────
+# 새 캐릭터 설계 시 이 템플릿에서 시작하여 개성을 부여한다.
+# 각 필드는 스킬의 "기준점"이며, 실제 캐릭터는 여기서 변형.
+#
+# 밸런싱 조정 축 (우선순위 순):
+#   1. multiplier  — 스킬 배율 (데미지/힐 강도)
+#   2. target      — 타겟 범위 (단일↔AoE↔범위)
+#   3. effects     — 부가효과 (버프/디버프/DoT/CC/쉴드 등)
+#   4. hit_count   — 다단 히트 수
+#   5. cooldown    — 액티브 쿨타임 (기본 3턴)
+
+@dataclass(frozen=True)
+class SkillTemplate:
+    """역할별 스킬 기준 설정."""
+    multiplier: float           # 기본 배율
+    target: str                 # 기본 타겟 (TargetType.value)
+    effect_desc: str            # 기본 부가효과 설명
+    cooldown: int = 0           # 액티브 쿨타임 (normal=0)
+    hit_count: int = 1          # 기본 히트 수
+    aoe: bool = False           # AoE 여부
+    note: str = ""              # 밸런싱 참고사항
+
+
+ROLE_SKILL_TEMPLATE: dict[Role, dict[str, SkillTemplate]] = {
+    # ════════════════════════════════════════════
+    # 딜러 (ATTACKER): 단일 타겟 폭딜 전문
+    # ════════════════════════════════════════════
+    Role.ATTACKER: {
+        "normal": SkillTemplate(
+            multiplier=1.50,
+            target="enemy_near",
+            effect_desc="단순 데미지",
+            note="기본 DPS 소스. 1.0~2.5× 범위에서 조정",
+        ),
+        "active": SkillTemplate(
+            multiplier=1.80,
+            target="enemy_lowest_hp",
+            effect_desc="단일 고데미지",
+            cooldown=3,
+            note="메인 딜 스킬. 타겟을 바꿔 개성화 (near/lowest_hp/random_2)",
+        ),
+        "ultimate": SkillTemplate(
+            multiplier=3.00,
+            target="enemy_lowest_hp",
+            effect_desc="단일 극대 폭딜",
+            note="SP6. 원킬 잠재력. 배율로 캐릭터 등급감 조절",
+        ),
+    },
+
+    # ════════════════════════════════════════════
+    # 마법사 (MAGICIAN): AoE 광역 전문
+    # ════════════════════════════════════════════
+    Role.MAGICIAN: {
+        "normal": SkillTemplate(
+            multiplier=1.20,
+            target="enemy_near",
+            effect_desc="단일 데미지",
+            note="기본공격은 단일. 일부 MAG는 소범위(near_row) 가능",
+        ),
+        "active": SkillTemplate(
+            multiplier=0.60,
+            target="all_enemy",
+            effect_desc="AoE 전체 데미지",
+            cooldown=3,
+            aoe=True,
+            note="AoE 주력. 배율 낮지만 ×5 총합이 핵심. 0.4~1.8× 범위",
+        ),
+        "ultimate": SkillTemplate(
+            multiplier=1.00,
+            target="all_enemy",
+            effect_desc="AoE 전체 강화 데미지",
+            aoe=True,
+            note="SP4. AoE 궁극기. 부가효과(DoT/디버프)로 개성화",
+        ),
+    },
+
+    # ════════════════════════════════════════════
+    # 탱커 (DEFENDER): 생존+보호 전문
+    # ════════════════════════════════════════════
+    Role.DEFENDER: {
+        "normal": SkillTemplate(
+            multiplier=0.50,
+            target="enemy_near",
+            effect_desc="약한 데미지",
+            note="데미지 미미. 도발/자힐 부가효과가 핵심",
+        ),
+        "active": SkillTemplate(
+            multiplier=0.35,
+            target="all_enemy",
+            effect_desc="AoE 약데미지 + 자힐 15%maxHP",
+            cooldown=3,
+            aoe=True,
+            note="자힐(10~20%), 도발(1~2턴), 보호막 등으로 개성화",
+        ),
+        "ultimate": SkillTemplate(
+            multiplier=0.00,
+            target="all_ally",
+            effect_desc="전체 아군 20%maxHP 회복",
+            note="SP3. 힐/보호막/부활 등 팀 생존 기여. 데미지는 0~최소",
+        ),
+    },
+
+    # ════════════════════════════════════════════
+    # 힐러 (HEALER): 회복 전문
+    # ════════════════════════════════════════════
+    Role.HEALER: {
+        "normal": SkillTemplate(
+            multiplier=0.30,
+            target="enemy_random",
+            effect_desc="약한 데미지",
+            note="딜 기여 미미. 일부 힐러는 normal에 소량 힐 가능",
+        ),
+        "active": SkillTemplate(
+            multiplier=1.20,
+            target="ally_lowest_hp",
+            effect_desc="단일 힐 (ATK × mult × 0.40)",
+            cooldown=3,
+            note="힐 주력. 배율로 힐량 조절. 타겟(단일/2인)으로 개성화",
+        ),
+        "ultimate": SkillTemplate(
+            multiplier=0.30,
+            target="all_ally",
+            effect_desc="전체 아군 30%maxHP 회복",
+            note="SP3. %maxHP 전체힐. 비율(20~40%)로 캐릭터 격차",
+        ),
+    },
+
+    # ════════════════════════════════════════════
+    # 서포터 (SUPPORTER): 버프+보조딜 전문
+    # ════════════════════════════════════════════
+    Role.SUPPORTER: {
+        "normal": SkillTemplate(
+            multiplier=0.60,
+            target="enemy_random",
+            effect_desc="약한 데미지",
+            note="기본 딜 약함. 일부 SUP는 normal에 소량 버프 가능",
+        ),
+        "active": SkillTemplate(
+            multiplier=0.70,
+            target="enemy_random",
+            effect_desc="데미지 + 아군 ATK+20% 2턴 버프",
+            cooldown=3,
+            note="버프가 핵심. 버프 종류/강도/대상으로 개성화",
+        ),
+        "ultimate": SkillTemplate(
+            multiplier=0.80,
+            target="enemy_random",
+            effect_desc="데미지 + 아군 ATK+30% 2턴 버프",
+            note="SP4. 강화 버프. 버프 대상(전체/역할별)/디버프 부여로 개성화",
+        ),
+    },
+}
+
+
+# ────────────────────────────────────────────────────────────
+# 스킬 밸런싱 개성화 가이드
+# ────────────────────────────────────────────────────────────
+# 동일 역할/등급의 캐릭터가 같은 스탯을 가지므로,
+# 아래 축을 조합하여 캐릭터별 고유 전투 정체성을 부여한다.
+#
+# ┌─────────────┬──────────────────────────────────────────┐
+# │ 조정 축      │ 예시                                      │
+# ├─────────────┼──────────────────────────────────────────┤
+# │ 배율 상향    │ 궁극기 3.0→3.4× (화력 특화)              │
+# │ 배율 하향    │ 궁극기 3.0→2.5× + DoT 추가 (지속 데미지) │
+# │ 타겟 확장    │ 단일→2명→행→십자 (범위 확대)              │
+# │ 타겟 축소    │ 전체→단일 (집중 화력)                     │
+# │ CC 부가      │ 기절/동결/수면 1턴 (행동 제어)            │
+# │ DoT 부가     │ 화상/중독/출혈 (지속 피해)                │
+# │ 버프 부가    │ 공+방, 크리율, 관통 (복합 버프)           │
+# │ 디버프 부가  │ DEF-20%, SPD-15% (약화)                  │
+# │ 보호막       │ maxHP 10~20% 쉴드 (생존 보조)            │
+# │ 다단 히트    │ hit_count 2~3 (DoT 중첩 시너지)          │
+# │ 쿨타임 조정  │ CD 2턴(공격적) / CD 4턴(강력한 효과)     │
+# │ 자힐 비율    │ 탱커 자힐 10~20% (생존력 조절)           │
+# │ 전체힐 비율  │ 힐러 궁극 20~40%maxHP (힐량 격차)        │
+# │ SP 비용      │ ATK SP 5~7 / MAG SP 3~5 (궁극 빈도)     │
+# └─────────────┴──────────────────────────────────────────┘
+#
+# 트레이드오프 원칙:
+#   - 배율 ↑ → 부가효과 ↓ (순수 폭딜형)
+#   - 배율 ↓ → 부가효과 ↑ (유틸형)
+#   - 타겟 넓음 → 배율 ↓ (AoE 패널티)
+#   - 타겟 좁음 → 배율 ↑ (집중 보상)
+#   - CC 강함(기절 2턴) → 데미지 배율 대폭 ↓
+#   - DoT 강함(3스택) → 기본 배율 소폭 ↓
+
+
+# ────────────────────────────────────────────────────────────
+# 헬퍼: 스킬 배율 검증
+# ────────────────────────────────────────────────────────────
+
+def validate_skill_mult(role: Role, skill_type: str, mult: float) -> tuple[bool, MultRange]:
+    """스킬 배율이 역할별 허용 범위 내인지 검증. (통과여부, 범위) 반환."""
+    mr = SKILL_MULTIPLIER_RANGE[role][skill_type]
+    return (mr.min <= mult <= mr.max), mr
+
+
+def skill_template(role: Role, skill_type: str) -> SkillTemplate:
+    """역할/스킬타입에 대한 기본 템플릿 반환."""
+    return ROLE_SKILL_TEMPLATE[role][skill_type]

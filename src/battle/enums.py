@@ -118,6 +118,12 @@ class Side(Enum):
     ENEMY = "enemy"
 
 
+class DeckType(Enum):
+    """덱 타입 — 타임오버 승패 기준 결정"""
+    OFFENSE = "offense"    # 공격덱: 타임오버 시 패배 (적 전멸 실패)
+    DEFENSE = "defense"    # 방어덱: 타임오버 시 승리 (생존 성공)
+
+
 class BattleResult(Enum):
     """전투 결과"""
     ALLY_WIN = "ally_win"

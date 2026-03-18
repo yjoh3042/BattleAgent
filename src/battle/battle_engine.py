@@ -11,7 +11,7 @@ from typing import List, Dict, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from battle.battle_recorder import BattleRecorder
 
-from battle.enums import BattleResult, SkillType, CCType, TriggerEvent
+from battle.enums import BattleResult, DeckType, SkillType, CCType, TriggerEvent
 from battle.models import CharacterData
 from battle.battle_unit import BattleUnit
 from battle.turn_manager import TurnManager
@@ -19,7 +19,7 @@ from battle.sp_manager import SPManager
 from battle.buff_manager import BuffManager
 from battle.skill_executor import SkillExecutor, EngineContext
 from battle.trigger_system import TriggerSystem
-from battle.rules import BATTLE_LENGTH
+from battle.rules import BATTLE_LENGTH, DEFAULT_DECK_TYPE
 
 MAX_TURNS: int = 500                    # 무한 루프 방지 턴 한계
 MAX_TIME: float = float(BATTLE_LENGTH)  # 최대 전투 시간 (타임오버)
@@ -47,6 +47,7 @@ class BattleEngine:
         ultimate_order: Optional[List[str]] = None,  # 지정 발동 순서 (ID)
         recorder: Optional["BattleRecorder"] = None,  # 시각화용 레코더
         seed: Optional[int] = None,                    # 랜덤 시드 (재현용)
+        deck_type: str = DEFAULT_DECK_TYPE,  # 'offense' | 'defense'
     ):
         self.seed = seed
 
@@ -58,6 +59,7 @@ class BattleEngine:
         }
 
         self.battle_type = battle_type
+        self.deck_type = DeckType(deck_type)
         self.allow_active = allow_active
         self.allow_ultimate = allow_ultimate
         self.ultimate_mode = ultimate_mode
@@ -109,11 +111,15 @@ class BattleEngine:
 
             self.turn_count += 1
 
-            # 타임오버 체크
+            # 타임오버 체크 — 덱 타입에 따라 승패 결정
             if self.turn_manager.current_time > MAX_TIME:
-                self._log.append(f"\n⏰ 타임오버 ({self.turn_manager.current_time:.2f})")
-                self.result = BattleResult.TIME_OVER
-                return BattleResult.TIME_OVER
+                result = self._resolve_time_over()
+                self._log.append(
+                    f"\n⏰ 타임오버 ({self.turn_manager.current_time:.2f}) "
+                    f"→ {self.deck_type.value}덱 → {result.value}"
+                )
+                self.result = result
+                return result
 
             # ─── 배틀 라운드 전환 체크 ────────────────────────────
             if self.turn_manager.check_battle_round():
@@ -242,10 +248,24 @@ class BattleEngine:
             if result:
                 return result
 
-        # 턴 한계 초과
-        self._log.append(f"\n⏰ 최대 턴({MAX_TURNS}) 초과 → 타임오버")
-        self.result = BattleResult.TIME_OVER
-        return BattleResult.TIME_OVER
+        # 턴 한계 초과 — 덱 타입에 따라 승패 결정
+        result = self._resolve_time_over()
+        self._log.append(
+            f"\n⏰ 최대 턴({MAX_TURNS}) 초과 → {self.deck_type.value}덱 → {result.value}"
+        )
+        self.result = result
+        return result
+
+    # ─── 타임오버 판정 ─────────────────────────────────────────────
+    def _resolve_time_over(self) -> BattleResult:
+        """덱 타입에 따른 타임오버 결과 반환.
+
+        - 공격덱(OFFENSE): 타임오버 = 적 전멸 실패 → ally 패배 (ENEMY_WIN)
+        - 방어덱(DEFENSE): 타임오버 = 생존 성공 → ally 승리 (ALLY_WIN)
+        """
+        if self.deck_type == DeckType.DEFENSE:
+            return BattleResult.ALLY_WIN
+        return BattleResult.ENEMY_WIN
 
     # ─── 얼티밋 시도 ──────────────────────────────────────────────
     def _try_ultimate(self, unit: BattleUnit, ctx: EngineContext):
