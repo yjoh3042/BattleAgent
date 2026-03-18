@@ -65,6 +65,23 @@ def extract_skill(skill):
     tgt = skill.effects[0].target_type.name if skill.effects else '?'
     return {'name': skill.name, 'target': tgt, 'effects': ' | '.join(effs)}
 
+# StarGrade 역산: 역할별 ATK 기준값으로 등급 판별
+_GRADE_ATK = {
+    'ATTACKER':  {460: 3.5, 400: 3, 320: 2, 240: 1},
+    'MAGICIAN':  {345: 3.5, 300: 3, 240: 2, 180: 1},
+    'DEFENDER':  {287: 3.5, 250: 3, 200: 2, 150: 1},
+    'HEALER':    {230: 3.5, 200: 3, 160: 2, 120: 1},
+    'SUPPORTER': {287: 3.5, 250: 3, 200: 2, 150: 1},
+}
+
+def _grade_from_stats(role, atk, hp):
+    table = _GRADE_ATK.get(role, {})
+    for atk_val, grade in sorted(table.items(), reverse=True):
+        if atk >= atk_val:
+            return grade
+    return 1
+
+
 chars = []
 for name, func in sorted(inspect.getmembers(td, inspect.isfunction)):
     if not name.startswith('make_') or name.startswith('make_teddy'):
@@ -76,9 +93,13 @@ for name, func in sorted(inspect.getmembers(td, inspect.isfunction)):
         a_info = extract_skill(c.active_skill)
         u_info = extract_skill(c.ultimate_skill)
 
+        # StarGrade: Excel 기준 역할×스탯으로 등급 역산
+        grade = _grade_from_stats(c.role.name, st.atk, st.hp)
+
         chars.append({
             'id': c.id, 'name': c.name,
             'element': c.element.name, 'role': c.role.name,
+            'grade': grade,
             'atk': st.atk, 'def': st.def_, 'hp': st.hp, 'spd': st.spd,
             'cri': st.cri_ratio, 'pen': st.penetration,
             'sp': c.ultimate_skill.sp_cost,
