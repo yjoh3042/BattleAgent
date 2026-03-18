@@ -70,7 +70,7 @@
   "normal": {
    "name": "무기법",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x"
+   "effects": "DMG 1.50x +burn40%/stk"
   },
   "active": {
    "name": "무루의 고통",
@@ -103,7 +103,7 @@
   "active": {
    "name": "관음",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x | def_+20%(2T)"
+   "effects": "DMG 1.50x | def_+25%(2T)"
   },
   "ultimate": {
    "name": "맹화",
@@ -154,7 +154,7 @@
   "normal": {
    "name": "철화의 검",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x"
+   "effects": "DMG 0.90x x2hit"
   },
   "active": {
    "name": "홍염의 비도",
@@ -215,7 +215,7 @@
   "active": {
    "name": "원혼의 아홉 꼬리",
    "target": "ENEMY_RANDOM",
-   "effects": "DMG 2.00x | CC:PANIC(1T)"
+   "effects": "DMG 2.00x | CC:PANIC(1T) | def_-15%(2T)"
   },
   "ultimate": {
    "name": "붉은 원망의 폭풍",
@@ -355,7 +355,7 @@
   "active": {
    "name": "사이드 이펙트",
    "target": "ALL_ENEMY",
-   "effects": "DMG 0.35x | burn 20%(2T)"
+   "effects": "DMG 0.50x +burn20%/stk | burn 20%(2T) | spd-15%(2T)"
   },
   "ultimate": {
    "name": "극약처방",
@@ -523,12 +523,12 @@
   "active": {
    "name": "빙결의 손길",
    "target": "ENEMY_NEAR",
-   "effects": "CC:FREEZE(1T) | DMG 1.00x"
+   "effects": "CC:FREEZE(1T) | DMG 1.00x | def_-20%(2T)"
   },
   "ultimate": {
    "name": "얼어붙은 세계",
    "target": "ALL_ENEMY",
-   "effects": "DMG 2.50x | CC:FREEZE(2T) | poison 15%(2T) | spd-30%(2T)"
+   "effects": "DMG 2.50x | CC:FREEZE(2T) | poison 15%(2T) | spd-30%(2T) | def_-20%(2T)"
   }
  },
  {
@@ -546,7 +546,7 @@
   "normal": {
    "name": "삼재",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x | poison 20%(2T)"
+   "effects": "DMG 0.75x x2hit | poison 20%(2T)"
   },
   "active": {
    "name": "천라홍수",
@@ -579,7 +579,7 @@
   "active": {
    "name": "신행귀신 속거천리",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.80x | poison 20%(2T) | CC:STUN(1T)"
+   "effects": "DMG 1.80x | poison 20%(2T) | CC:STUN(1T) | def_-15%(2T)"
   },
   "ultimate": {
    "name": "급급여율령",
@@ -719,7 +719,7 @@
   "active": {
    "name": "수렁",
    "target": "ALL_ENEMY",
-   "effects": "DMG 1.50x | spd-20(2T) | def_-15%(2T)"
+   "effects": "DMG 1.50x | spd-20(2T) | def_-15%(2T) | REMOVE_BUFF"
   },
   "ultimate": {
    "name": "대조수",
@@ -854,7 +854,7 @@
   "normal": {
    "name": "웨이팅 포 딜",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.70x"
+   "effects": "DMG 1.70x +burn20%/stk"
   },
   "active": {
    "name": "크로스 더 루비콘",
@@ -882,7 +882,7 @@
   "normal": {
    "name": "생명의 손길",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.00x"
+   "effects": "DMG 2.00x | poison 15%(2T)"
   },
   "active": {
    "name": "대지의 치유",
@@ -971,12 +971,12 @@
   "active": {
    "name": "종결자의 일격",
    "target": "ENEMY_LOWEST_HP",
-   "effects": "DMG 2.80x | DMG 1.50x (HP<50%) | def_-25%(2T)"
+   "effects": "DMG 2.50x | DMG 1.20x (HP<50%) | def_-25%(2T)"
   },
   "ultimate": {
    "name": "심판의 심연",
    "target": "ALL_ENEMY",
-   "effects": "DMG 2.00x | def_-15%(2T) | bleed 20%(3T)"
+   "effects": "DMG 1.70x | def_-15%(2T) | bleed 20%(3T)"
   }
  },
  {
@@ -1083,7 +1083,7 @@
   "active": {
    "name": "철벽 수호",
    "target": "ALL_ENEMY",
-   "effects": "DMG 0.80x | def_+25%(2T)"
+   "effects": "DMG 0.80x | def_+25%(2T) | REMOVE_BUFF"
   },
   "ultimate": {
    "name": "지혜의 방패",
@@ -1111,7 +1111,7 @@
   "active": {
    "name": "숲의 가호",
    "target": "ALL_ALLY",
-   "effects": "atk+15%(2T) | def_+10%(2T)"
+   "effects": "atk+15%(2T) | def_+10%(2T) | REMOVE_BUFF"
   },
   "ultimate": {
    "name": "대자연의 축복",
@@ -1284,7 +1284,7 @@
   "ultimate": {
    "name": "정의의 심판",
    "target": "ALL_ENEMY",
-   "effects": "DMG 2.50x | CC:STUN(2T) | atk-20%(2T)"
+   "effects": "DMG 2.80x | CC:STUN(2T) | atk-20%(2T)"
   }
  },
  {
@@ -1302,7 +1302,7 @@
   "normal": {
    "name": "신성 강타",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 2.00x"
+   "effects": "DMG 1.00x x2hit"
   },
   "active": {
    "name": "제우스의 불꽃",
@@ -1507,8 +1507,8 @@
   },
   "ultimate": {
    "name": "빛의 은혜",
-   "target": "ALL_ALLY",
-   "effects": "atk+15%(2T) | def_+20%(2T)"
+   "target": "ALL_ENEMY",
+   "effects": "DMG 0.80x | atk+15%(2T) | def_+20%(2T)"
   }
  },
  {
@@ -1559,7 +1559,7 @@
   "active": {
    "name": "잠의 손길",
    "target": "ENEMY_RANDOM",
-   "effects": "DMG 2.50x | CC:SLEEP(1T)"
+   "effects": "DMG 2.50x | CC:SLEEP(1T) | def_-15%(2T)"
   },
   "ultimate": {
    "name": "영원한 꿈",
@@ -1610,7 +1610,7 @@
   "normal": {
    "name": "피의 채찍",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 6.50x"
+   "effects": "DMG 3.75x x2hit"
   },
   "active": {
    "name": "선혈의 창",
@@ -1648,7 +1648,7 @@
   "ultimate": {
    "name": "데스 스키드 마크",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 3.80x"
+   "effects": "DMG 3.50x"
   }
  },
  {
@@ -1671,7 +1671,7 @@
   "active": {
    "name": "직선 심판",
    "target": "ENEMY_SAME_COL",
-   "effects": "DMG 2.50x x3hit"
+   "effects": "DMG 2.00x x3hit"
   },
   "ultimate": {
    "name": "심판의 저울",
@@ -1727,7 +1727,7 @@
   "active": {
    "name": "광포한 분노",
    "target": "ENEMY_NEAR",
-   "effects": "DMG 1.50x | def_-25%(2T)"
+   "effects": "DMG 1.50x | def_-25%(2T) | REMOVE_BUFF"
   },
   "ultimate": {
    "name": "침식하는 어둠",
@@ -1754,8 +1754,8 @@
   },
   "active": {
    "name": "이중 참격",
-   "target": "ENEMY_NEAR",
-   "effects": "DMG 0.40x"
+   "target": "ALL_ENEMY",
+   "effects": "DMG 1.20x | def_-10%(1T)"
   },
   "ultimate": {
    "name": "심연의 무도",
@@ -1783,7 +1783,7 @@
   "active": {
    "name": "암흑 치유",
    "target": "ALLY_LOWEST_HP",
-   "effects": "HEAL 40% | CLEANSE"
+   "effects": "HEAL 40% | CLEANSE | BARRIER"
   },
   "ultimate": {
    "name": "명계의 은혜",
@@ -1951,7 +1951,7 @@
   "active": {
    "name": "어둠의 가호",
    "target": "ALLY_LOWEST_HP",
-   "effects": "HEAL 20% | def_+20%(2T)"
+   "effects": "HEAL 25% | def_+20%(2T) | spd-15(2T)"
   },
   "ultimate": {
    "name": "달의 수호",
