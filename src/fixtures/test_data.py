@@ -146,6 +146,25 @@ def _bleed(skill_id: str, dot_ratio: float = 0.15, duration: int = 2) -> BuffDat
     )
 
 
+def _hot(skill_id: str, heal_ratio: float = 0.05, duration: int = 2) -> BuffData:
+    """지속 회복 (HoT) BuffData — 매 턴 최대HP% 회복"""
+    return BuffData(
+        id=f"buff_{skill_id}_hot",
+        name="재생",
+        source_skill_id=skill_id,
+        logic_type=LogicType.DOT_HEAL_HP_RATIO,
+        value=heal_ratio,
+        duration=duration,
+        is_debuff=False,
+        buff_turn_reduce_timing="CharacterTurnStart",
+    )
+
+
+def _hot_eff(target: TargetType, buff: BuffData) -> SkillEffect:
+    """HoT(지속회복) 부여 이펙트"""
+    return SkillEffect(logic_type=LogicType.DOT_HEAL_HP_RATIO, target_type=target, buff_data=buff)
+
+
 # ════════════════════════════════════════════════════════════════
 # ─── SkillEffect 빌더 ───────────────────────────────────────────
 # ════════════════════════════════════════════════════════════════
@@ -226,6 +245,13 @@ def _ult(sid: str, name: str, effects: list, sp: int) -> SkillData:
                      effects=effects, sp_cost=sp)
 
 
+def _passive(sid: str, name: str, effects: list) -> SkillData:
+    """패시브 스킬 (트리거 또는 전투 시작 시 자동 발동)."""
+    return SkillData(id=sid, name=name, skill_type=SkillType.PASSIVE,
+                     effects=effects, cooldown_turns=0)
+
+
+
 # ════════════════════════════════════════════════════════════════
 # ─── 캐릭터 팩토리 ───────────────────────────────────────────────
 # ════════════════════════════════════════════════════════════════
@@ -250,6 +276,110 @@ def _remove_buff_eff(target: TargetType) -> SkillEffect:
     return SkillEffect(logic_type=LogicType.REMOVE_BUFF, target_type=target)
 
 
+# ════════════════════════════════════════════════════════════════
+# ─── 신규 LogicType 이펙트 빌더 ──────────────────────────────────
+# ════════════════════════════════════════════════════════════════
+
+def _dmg_pen(target: TargetType, mult: float) -> SkillEffect:
+    """DEF 무시 관통 데미지"""
+    return SkillEffect(logic_type=LogicType.DAMAGE_PENETRATION, target_type=target, multiplier=mult)
+
+
+def _dmg_hp_ratio(target: TargetType, ratio: float) -> SkillEffect:
+    """대상 최대HP% 데미지"""
+    return SkillEffect(logic_type=LogicType.DAMAGE_HP_RATIO, target_type=target, value=ratio)
+
+
+def _dmg_cri(target: TargetType, mult: float) -> SkillEffect:
+    """확정 크리티컬 데미지"""
+    return SkillEffect(logic_type=LogicType.DAMAGE_CRI, target_type=target, multiplier=mult)
+
+
+def _dmg_buff_scale(target: TargetType, mult: float, scale: float = 0.10) -> SkillEffect:
+    """시전자 버프 수 비례 데미지"""
+    return SkillEffect(logic_type=LogicType.DAMAGE_BUFF_SCALE, target_type=target, multiplier=mult, value=scale)
+
+
+def _dmg_buff_scale_target(target: TargetType, mult: float, scale: float = 0.10) -> SkillEffect:
+    """타겟 버프 수 비례 데미지"""
+    return SkillEffect(logic_type=LogicType.DAMAGE_BUFF_SCALE_TARGET, target_type=target, multiplier=mult, value=scale)
+
+
+def _dmg_debuff_scale(target: TargetType, mult: float, scale: float = 0.10) -> SkillEffect:
+    """타겟 디버프 수 비례 데미지"""
+    return SkillEffect(logic_type=LogicType.DAMAGE_DEBUFF_SCALE_TARGET, target_type=target, multiplier=mult, value=scale)
+
+
+def _heal_loss(target: TargetType, ratio: float) -> SkillEffect:
+    """잃은 HP 비례 회복"""
+    return SkillEffect(logic_type=LogicType.HEAL_LOSS_SCALE, target_type=target, value=ratio)
+
+
+def _barrier_ratio(target: TargetType, ratio: float) -> SkillEffect:
+    """대상 최대HP% 보호막"""
+    return SkillEffect(logic_type=LogicType.BARRIER_RATIO, target_type=target, value=ratio)
+
+
+def _invincibility(target: TargetType, duration: int = 1) -> SkillEffect:
+    """무적 부여"""
+    return SkillEffect(logic_type=LogicType.INVINCIBILITY, target_type=target, value=float(duration))
+
+
+def _undying(target: TargetType, duration: int = 1) -> SkillEffect:
+    """불사 부여 (HP 1 미만 불가)"""
+    return SkillEffect(logic_type=LogicType.UNDYING, target_type=target, value=float(duration))
+
+
+def _debuff_immune(target: TargetType, duration: int = 2) -> SkillEffect:
+    """디버프 면역 부여"""
+    return SkillEffect(logic_type=LogicType.DEBUFF_IMMUNE, target_type=target, value=float(duration))
+
+
+def _sp_steal(target: TargetType, amount: int = 2) -> SkillEffect:
+    """SP 강탈"""
+    return SkillEffect(logic_type=LogicType.SP_STEAL, target_type=target, value=float(amount))
+
+
+def _sp_lock(target: TargetType, duration: int = 2) -> SkillEffect:
+    """SP 충전 잠금"""
+    return SkillEffect(logic_type=LogicType.SP_LOCK, target_type=target, value=float(duration))
+
+
+def _buff_turn_inc(target: TargetType, amount: int = 1) -> SkillEffect:
+    """버프 턴 증가"""
+    return SkillEffect(logic_type=LogicType.BUFF_TURN_INCREASE, target_type=target, value=float(amount))
+
+
+def _debuff_turn_inc(target: TargetType, amount: int = 1) -> SkillEffect:
+    """디버프 턴 증가"""
+    return SkillEffect(logic_type=LogicType.DEBUFF_TURN_INCREASE, target_type=target, value=float(amount))
+
+
+def _cri_unavailable(target: TargetType, duration: int = 2) -> SkillEffect:
+    """크리 불가 부여"""
+    return SkillEffect(logic_type=LogicType.CRI_UNAVAILABLE, target_type=target, value=float(duration))
+
+
+def _counter_unavailable(target: TargetType, duration: int = 2) -> SkillEffect:
+    """반격 불가 부여"""
+    return SkillEffect(logic_type=LogicType.COUNTER_UNAVAILABLE, target_type=target, value=float(duration))
+
+
+def _use_skill(skill_id: str) -> SkillEffect:
+    """스킬 발동 (체인)"""
+    return SkillEffect(logic_type=LogicType.USE_SKILL, target_type=TargetType.SELF, condition={'skill_id': skill_id})
+
+
+def _ignore_element(target: TargetType, duration: int = 2) -> SkillEffect:
+    """속성 상성 무시"""
+    return SkillEffect(logic_type=LogicType.IGNORE_ELEMENT, target_type=target, value=float(duration))
+
+
+def _active_cd_change(target: TargetType, change: int = -2) -> SkillEffect:
+    """액티브 쿨타임 변경 (양수=증가, 음수=감소)"""
+    return SkillEffect(logic_type=LogicType.ACTIVE_CD_CHANGE, target_type=target, value=float(change))
+
+
 def _dmg_cond(target: TargetType, mult: float,
               condition: dict) -> SkillEffect:
     """조건부 데미지 이펙트 (target_hp_below, burn_bonus 등)."""
@@ -263,7 +393,7 @@ def _dmg_cond(target: TargetType, mult: float,
 
 def make_morgan() -> CharacterData:
     """c283 모건 - 화/구속형
-    ★콤보: Normal 2연타로 출혈 빠르게 중첩 → 카라라트리 burn_bonus 시너지
+    ★콤보: Normal 2연타로 화상 빠르게 중첩 → 카라라트리 burn_bonus 시너지
     """
     sid = "c283"
     return CharacterData(
@@ -277,8 +407,15 @@ def make_morgan() -> CharacterData:
                 _sb('atk', 0.15, 3, f"{sid}_a", "공격력", is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "화도난무",
             [_dmg(TargetType.ALL_ENEMY, 3.20),
-             _dot_eff(TargetType.ALL_ENEMY, _bleed(f"{sid}_u", dot_ratio=0.15, duration=2))],
+             _dot_eff(TargetType.ALL_ENEMY, _burn(f"{sid}_u", dot_ratio=0.15, duration=2))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "잔화의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _dot_eff(TargetType.ENEMY_NEAR, _burn(f"{sid}_p", 0.10, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 1),
     )
 
@@ -299,6 +436,13 @@ def make_dabi() -> CharacterData:
             [_dmg(TargetType.ALL_ENEMY, 2.80),
              _dot_eff(TargetType.ALL_ENEMY, _burn(f"{sid}_u"))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "화상 확산",
+            [_dot_eff(TargetType.ALL_ENEMY, _burn(f"{sid}_p", 0.10, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 0),
     )
 
@@ -321,6 +465,13 @@ def make_gumiho() -> CharacterData:
             [_dmg(TargetType.ALL_ENEMY, 5.00),
              _cc(CCType.PANIC, 1, f"{sid}_u", TargetType.ALL_ENEMY)],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "원혼의 울음",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _cc(CCType.PANIC, 1, f"{sid}_p", TargetType.ENEMY_NEAR)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(1, 1),
     )
 
@@ -337,13 +488,21 @@ def make_jiva() -> CharacterData:
         active_skill=_active(f"{sid}_a", "생명수",
             [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.30),
              _stat_eff(TargetType.ALLY_LOWEST_HP,
-                _sb('atk', 0.15, 2, f"{sid}_a", "공격력", is_ratio=True))]),
+                _sb('atk', 0.15, 2, f"{sid}_a", "공격력", is_ratio=True)),
+             _hot_eff(TargetType.ALLY_LOWEST_HP, _hot(f"{sid}_a", heal_ratio=0.05, duration=2))]),
         ultimate_skill=_ult(f"{sid}_u", "대자연의 손길",
             [_heal_ratio(TargetType.ALL_ALLY, 0.30),
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.20, 2, f"{sid}_u", "공격력", is_ratio=True)),
              _sp_gain(1.0, TargetType.ALL_ALLY)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "생명의 씨앗",
+            [_heal_ratio(TargetType.ALL_ALLY, 0.10), _hot_eff(TargetType.ALL_ALLY, _hot(f"{sid}_p", 0.03, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 1),
     )
 
@@ -365,9 +524,17 @@ def make_kararatri() -> CharacterData:
              _dot_eff(TargetType.ENEMY_NEAR_ROW, _burn(f"{sid}_a"))]),
         ultimate_skill=_ult(f"{sid}_u", "출세간의 선법",
             [_dmg(TargetType.ALL_ENEMY, 2.60),
+             _dmg_debuff_scale(TargetType.ALL_ENEMY, 1.50, 0.15),
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True))],
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "화염 추격자",
+            [_dmg(TargetType.ENEMY_NEAR, 2.00, burn_bonus=0.20)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=False),
+        ],
         tile_pos=(1, 0),
     )
 
@@ -388,8 +555,16 @@ def make_deresa() -> CharacterData:
              _counter(2)]),
         ultimate_skill=_ult(f"{sid}_u", "새크리파이스",
             [_dmg(TargetType.ENEMY_NEAR_ROW, 5.00),
-             _taunt(2)],
+             _taunt(2),
+             _counter_unavailable(TargetType.ALL_ENEMY, 2)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "불꽃 반격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _dot_eff(TargetType.ENEMY_NEAR, _burn(f"{sid}_p", 0.10, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 1),
     )
 
@@ -406,12 +581,20 @@ def make_ragaraja() -> CharacterData:
              _stat_eff(TargetType.SELF,
                 _sb('def_', 0.15, 2, f"{sid}_n", "방어력", is_ratio=True))]),
         active_skill=_active(f"{sid}_a", "관음",
-            [_dmg(TargetType.ENEMY_NEAR, 3.00),
+            [_dmg(TargetType.ENEMY_NEAR, 3.00, burn_bonus=0.25),
+             _dot_eff(TargetType.ENEMY_NEAR, _burn(f"{sid}_a", dot_ratio=0.15, duration=2)),
              _stat_eff(TargetType.ALL_ALLY,
-                _sb('def_', 0.25, 2, f"{sid}_a", "방어력", is_ratio=True))]),  # DEF 0.20→0.25 (REMOVE_BUFF 제거 보상)
+                _sb('def_', 0.25, 2, f"{sid}_a", "방어력", is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "맹화",
             [_dmg(TargetType.ALL_ENEMY, 4.40)],  # AoE 배율 3.40→2.80→2.50→2.20 (4차 너프)
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "화신의 분노",
+            [_dmg(TargetType.ENEMY_NEAR, 2.50, burn_bonus=0.15)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=False),
+        ],
         tile_pos=(0, 2),
     )
 
@@ -428,8 +611,7 @@ def make_salmakis() -> CharacterData:
         active_skill=_active(f"{sid}_a", "축복",
             [_stat_eff(TargetType.ALLY_LOWEST_HP,
                 _sb('atk', 0.36, 2, f"{sid}_a", "공격력", is_ratio=True)),
-             _stat_eff(TargetType.ALLY_LOWEST_HP,
-                _sb('spd', 15.0, 2, f"{sid}_a", "속도", is_ratio=False))]),
+             _debuff_turn_inc(TargetType.ALL_ENEMY, 1)]),
         ultimate_skill=_ult(f"{sid}_u", "대축복",
             [_dmg(TargetType.ALL_ENEMY, 1.60),
              _stat_eff(TargetType.ALL_ENEMY,
@@ -437,6 +619,13 @@ def make_salmakis() -> CharacterData:
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.20, 2, f"{sid}_u", "공격력", is_ratio=True))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "저주의 연장",
+            [_debuff_turn_inc(TargetType.ALL_ENEMY, 1), _stat_eff(TargetType.ALL_ALLY, _sb("atk", 0.10, 2, f"{sid}_p", "패시브 공격", is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 0),
     )
 
@@ -458,8 +647,16 @@ def make_demeter() -> CharacterData:
         ultimate_skill=_ult(f"{sid}_u", "극약처방",
             [_dmg(TargetType.ENEMY_NEAR, 4.40),
              _stat_eff(TargetType.ENEMY_NEAR,
-                _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True))],
+                _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True)),
+             _debuff_turn_inc(TargetType.ALL_ENEMY, 1)],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "화상 촉매",
+            [_dot_eff(TargetType.ENEMY_NEAR, _burn(f"{sid}_p", 0.10, 2)), _stat_eff(TargetType.ENEMY_NEAR, _sb("spd", 0.10, 2, f"{sid}_p", "패시브 감속", is_debuff=True, is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 0),
     )
 
@@ -481,6 +678,12 @@ def make_dabi_sup() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR_CROSS, 2.80),
              _dot_eff(TargetType.ENEMY_NEAR_CROSS, _burn(f"{sid}_u", dot_ratio=0.20, duration=3))],
             sp=4),
+        passive_skill=_passive(f"{sid}_p", "화염 증폭",
+            [_dot_eff(TargetType.ENEMY_NEAR, _burn(f"{sid}_p", 0.10, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 1),
     )
 
@@ -502,6 +705,12 @@ def make_yuda() -> CharacterData:
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('atk', 0.15, 2, f"{sid}_u", "위축", is_debuff=True, is_ratio=True))],
             sp=3),
+        passive_skill=_passive(f"{sid}_p", "방화벽",
+            [_shield(TargetType.SELF, 0.10)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 1),
     )
 
@@ -521,6 +730,12 @@ def make_neide() -> CharacterData:
         ultimate_skill=_ult(f"{sid}_u", "인페르노",
             [_dmg(TargetType.ENEMY_NEAR, 6.40)],
             sp=6),
+        passive_skill=_passive(f"{sid}_p", "화염 일격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 2),
     )
 
@@ -540,6 +755,12 @@ def make_verdelet() -> CharacterData:
             [_heal_ratio(TargetType.ALL_ALLY, 0.55),
              _remove_debuff_eff(TargetType.ALL_ALLY)],
             sp=3),
+        passive_skill=_passive(f"{sid}_p", "잔불의 온기",
+            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.15)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 2),
     )
 
@@ -563,14 +784,20 @@ def make_eve() -> CharacterData:
         active_skill=_active(f"{sid}_a", "레인 드랍",
             [_dmg(TargetType.ENEMY_LOWEST_HP, 4.00),  # 기본 배율 4.50→3.00→2.50→2.00 (4차 너프)
              SkillEffect(logic_type=LogicType.DAMAGE, target_type=TargetType.ENEMY_LOWEST_HP,
-                         multiplier=3.00, condition={'target_hp_below': 0.25})]),  # 처형 조건 0.30→0.25
+                         multiplier=3.00, condition={'target_hp_below': 0.25}),  # 처형 조건 0.30→0.25
+             _cc(CCType.FREEZE, 1, f"{sid}_a", TargetType.ENEMY_NEAR)]),
         ultimate_skill=_ult(f"{sid}_u", "실낙원",
             [_dmg(TargetType.ENEMY_LOWEST_HP, 5.00),
              SkillEffect(logic_type=LogicType.DAMAGE, target_type=TargetType.ENEMY_LOWEST_HP,
-                         multiplier=2.00, condition={'target_hp_below': 0.25})],  # 처형 조건 0.30→0.25
+                         multiplier=2.00, condition={'target_hp_below': 0.25}),  # 처형 조건 0.30→0.25
+             _active_cd_change(TargetType.ALL_ENEMY, 1)],
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "처형자의 본능",
+            [_dmg(TargetType.ENEMY_LOWEST_HP, 2.00)]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_n"),  # ★ 처치 시 Normal 추격공격
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=False),
         ],
         tile_pos=(0, 1),
     )
@@ -591,13 +818,22 @@ def make_sangah() -> CharacterData:
                 _sb('spd', 20.0, 2, f"{sid}_a", "속도", is_debuff=True, is_ratio=False)),
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.15, 2, f"{sid}_a", "수렁", is_debuff=True, is_ratio=True)),
-             _remove_buff_eff(TargetType.ALL_ENEMY)]),  # ★ 감속+방깎+버프스트립 (속도 격차 확대)
+             _remove_buff_eff(TargetType.ALL_ENEMY),
+             _sp_lock(TargetType.ALL_ENEMY, 1)]),  # ★ 감속+방깎+버프스트립 (속도 격차 확대)
         ultimate_skill=_ult(f"{sid}_u", "대조수",
-            [_stat_eff(TargetType.ALL_ENEMY,
+            [_sp_steal(TargetType.ENEMY_HIGHEST_SPD, 2),
+             _stat_eff(TargetType.ALL_ENEMY,
                 _sb('spd', 20.0, 2, f"{sid}_u", "속도", is_debuff=True, is_ratio=False)),
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.30, 2, f"{sid}_u", "공격력", is_ratio=True))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "수류 보복",
+            [_stat_eff(TargetType.ALL_ENEMY, _sb("spd", 10.0, 2, f"{sid}_p", "패시브 감속", is_debuff=True, is_ratio=False)), _sp_steal(TargetType.ENEMY_HIGHEST_SPD, 1)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 2),
     )
 
@@ -621,6 +857,13 @@ def make_thisbe() -> CharacterData:
                 _sb('spd', 15.0, 3, f"{sid}_u", "속도", is_ratio=False)),
              _heal_ratio(TargetType.ALL_ALLY, 0.22)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "가속의 축복",
+            [_stat_eff(TargetType.ALL_ALLY, _sb("spd", 10.0, 2, f"{sid}_p", "패시브 속도", is_ratio=False))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 1),
     )
 
@@ -633,15 +876,28 @@ def make_bari() -> CharacterData:
         side="ally",
         stats=StatBlock(atk=600, def_=400, hp=5000, spd=100),
         normal_skill=_normal(f"{sid}_n", "삼재",
-            [_dmg(TargetType.ENEMY_NEAR, 1.50, hit_count=2),  # ★ 2연타 (독 2회 적용 → 빠른 스택)
-             _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_n"))]),
+            [_dmg(TargetType.ENEMY_NEAR, 1.50, hit_count=2),  # ★ 2연타 (CC 2회 적용 기회)
+             _cc(CCType.FREEZE, 1, f"{sid}_n", TargetType.ENEMY_NEAR),
+             _stat_eff(TargetType.ENEMY_NEAR,
+                _sb('spd', 0.15, 2, f"{sid}_n", "빙결 감속", is_debuff=True, is_ratio=True))]),
         active_skill=_active(f"{sid}_a", "천라홍수",
             [_dmg(TargetType.ENEMY_RANDOM_3, 2.40),
-             _dot_eff(TargetType.ENEMY_RANDOM_3, _poison(f"{sid}_a"))]),
+             _cc(CCType.FREEZE, 1, f"{sid}_a", TargetType.ENEMY_NEAR),
+             _stat_eff(TargetType.ENEMY_NEAR,
+                _sb('spd', 0.15, 2, f"{sid}_a", "감속", is_debuff=True, is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "은하수 곡성",
             [_dmg(TargetType.ALL_ENEMY, 2.00),
-             _dot_eff(TargetType.ALL_ENEMY, _poison(f"{sid}_u"))],
+             _cc(CCType.FREEZE, 1, f"{sid}_u", TargetType.ALL_ENEMY),
+             _stat_eff(TargetType.ALL_ENEMY,
+                _sb('spd', 0.15, 2, f"{sid}_u", "감속", is_debuff=True, is_ratio=True))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "빙결의 기운",
+            [_cc(CCType.FREEZE, 1, f"{sid}_p", TargetType.ENEMY_NEAR), _stat_eff(TargetType.ENEMY_NEAR, _sb("spd", 0.10, 2, f"{sid}_p", "패시브 감속", is_debuff=True, is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 0),
     )
 
@@ -657,15 +913,25 @@ def make_dogyehwa() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 4.00)]),
         active_skill=_active(f"{sid}_a", "신행귀신 속거천리",
             [_dmg(TargetType.ENEMY_NEAR, 3.60),
-             _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_a")),
              _cc(CCType.STUN, 1, f"{sid}_a", TargetType.ENEMY_NEAR),
              _stat_eff(TargetType.ENEMY_NEAR,
-                _sb('def_', 0.15, 2, f"{sid}_a", "독소 침식", is_debuff=True, is_ratio=True))]),  # ★ 독+스턴+방깎 콤보
+                _sb('def_', 0.15, 2, f"{sid}_a", "독소 침식", is_debuff=True, is_ratio=True)),
+             _stat_eff(TargetType.ALL_ENEMY,
+                _sb('spd', 0.15, 2, f"{sid}_a", "감속", is_debuff=True, is_ratio=True)),
+             _active_cd_change(TargetType.ALL_ENEMY, 1)]),
         ultimate_skill=_ult(f"{sid}_u", "급급여율령",
             [_dmg(TargetType.ENEMY_BACK_ROW, 3.00),
-             _dot_eff(TargetType.ENEMY_BACK_ROW,
-                _poison(f"{sid}_u", dot_ratio=0.20, duration=3))],
+             _cc(CCType.FREEZE, 1, f"{sid}_u", TargetType.ALL_ENEMY),
+             _stat_eff(TargetType.ALL_ENEMY,
+                _sb('spd', 0.15, 2, f"{sid}_u", "감속", is_debuff=True, is_ratio=True))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "급습의 한기",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _cc(CCType.STUN, 1, f"{sid}_p", TargetType.ENEMY_NEAR)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(1, 2),
     )
 
@@ -690,11 +956,16 @@ def make_elysion() -> CharacterData:
             [_heal_ratio(TargetType.ALL_ALLY, 0.75),
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_ratio=True)),
-             _sp_gain(1.0, TargetType.ALL_ALLY)],
+             _sp_gain(2.0, TargetType.ALL_ALLY),
+             _stat_eff(TargetType.ALL_ALLY,
+                _sb('spd', 10.0, 2, f"{sid}_u", "속도", is_ratio=False))],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "성수의 반격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _stat_eff(TargetType.SELF, _sb("def_", 0.10, 2, f"{sid}_p", "패시브 방어", is_ratio=True))]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_n",
-                        once_per_battle=True),  # ★ 피격 시 Normal 반격 1회 (탱커 카운터)
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
         ],
         tile_pos=(2, 2),
     )
@@ -721,6 +992,13 @@ def make_nirrti() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR_CROSS, 5.00),
              _heal_ratio(TargetType.ALL_ALLY, 0.20)],
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "심연의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 2.50)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=False),
+        ],
         tile_pos=(0, 0),
     )
 
@@ -745,6 +1023,13 @@ def make_arhat() -> CharacterData:
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "장풍 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 2.00)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 1),
     )
 
@@ -769,6 +1054,12 @@ def make_lisa() -> CharacterData:
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.15, 2, f"{sid}_u", "공격력", is_ratio=True))],
             sp=6),
+        passive_skill=_passive(f"{sid}_p", "수정의 일격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(1, 1),
     )
 
@@ -791,6 +1082,12 @@ def make_virupa() -> CharacterData:
              _stat_eff(TargetType.SELF,
                 _sb('atk', 0.20, 2, f"{sid}_u", "극한 집중", is_ratio=True))],
             sp=6),
+        passive_skill=_passive(f"{sid}_p", "집중의 일섬",
+            [_stat_eff(TargetType.SELF, _sb("atk", 0.15, 2, f"{sid}_p", "패시브 공격", is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 0),
     )
 
@@ -812,6 +1109,13 @@ def make_euros() -> CharacterData:
             [_heal_ratio(TargetType.ALL_ALLY, 0.55),
              _remove_debuff_eff(TargetType.ALL_ALLY)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "바람의 가호",
+            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.15), _stat_eff(TargetType.ALLY_LOWEST_HP, _sb("def_", 0.10, 2, f"{sid}_p", "패시브 방어", is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 1),
     )
 
@@ -833,13 +1137,20 @@ def make_mayahuel() -> CharacterData:
         ultimate_skill=_ult(f"{sid}_u", "얼어붙은 세계",
             [_dmg(TargetType.ALL_ENEMY, 5.00),  # AoE 데미지 1.00→1.50→2.50 (3차 버프)
              _cc(CCType.FREEZE, 2, f"{sid}_u", TargetType.ALL_ENEMY),
-             _dot_eff(TargetType.ALL_ENEMY,
-                _poison(f"{sid}_u", dot_ratio=0.15, duration=2)),
+             _sp_lock(TargetType.ALL_ENEMY, 1),
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('spd', 0.30, 2, f"{sid}_u", "빙결 감속", is_debuff=True, is_ratio=True)),
              _stat_eff(TargetType.ALL_ENEMY,
-                _sb('def_', 0.20, 2, f"{sid}_u", "빙결 취약", is_debuff=True, is_ratio=True))],  # ★ DEF-20% (CC창 딜 증폭)
+                _sb('def_', 0.20, 2, f"{sid}_u", "빙결 취약", is_debuff=True, is_ratio=True)),  # ★ DEF-20% (CC창 딜 증폭)
+             _cri_unavailable(TargetType.ALL_ENEMY, 2)],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "빙결 카운터",
+            [_cc(CCType.FREEZE, 1, f"{sid}_p", TargetType.ENEMY_NEAR)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(1, 2),
     )
 
@@ -861,6 +1172,12 @@ def make_leo() -> CharacterData:
                 _sb('atk', 0.20, 2, f"{sid}_u", "해류 공격", is_ratio=True)),
              _heal_ratio(TargetType.ALL_ALLY, 0.15)],
             sp=4),
+        passive_skill=_passive(f"{sid}_p", "수류의 힘",
+            [_stat_eff(TargetType.ALL_ALLY, _sb("def_", 0.10, 2, f"{sid}_p", "패시브 방어", is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 2),
     )
 
@@ -882,6 +1199,12 @@ def make_deino() -> CharacterData:
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('def_', 0.20, 2, f"{sid}_u", "해일 방어", is_ratio=True))],
             sp=3),
+        passive_skill=_passive(f"{sid}_p", "해류 장벽",
+            [_shield(TargetType.SELF, 0.10)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 1),
     )
 
@@ -901,12 +1224,20 @@ def make_brownie() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 2.00)]),
         active_skill=_active(f"{sid}_a", "특급정보입니다!",
             [_stat_eff(TargetType.ALLY_LOWEST_HP_2,
-                _sb('spd', 15.0, 2, f"{sid}_a", "속도", is_ratio=False))]),
+                _sb('spd', 15.0, 2, f"{sid}_a", "속도", is_ratio=False)),
+             _hot_eff(TargetType.ALL_ALLY, _hot(f"{sid}_a", heal_ratio=0.04, duration=2))]),
         ultimate_skill=_ult(f"{sid}_u", "데스페라도 친칠라",
             [_remove_debuff_eff(TargetType.ALL_ALLY),
              _heal_ratio(TargetType.ALL_ALLY, 0.28),
              _sp_gain(1.0, TargetType.ALL_ALLY)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "정보원의 선물",
+            [_hot_eff(TargetType.ALL_ALLY, _hot(f"{sid}_p", 0.03, 2)), _stat_eff(TargetType.ALL_ALLY, _sb("spd", 10.0, 2, f"{sid}_p", "패시브 속도", is_ratio=False))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 0),
     )
 
@@ -922,10 +1253,18 @@ def make_batory() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 4.40)]),
         active_skill=_active(f"{sid}_a", "피의 맹세",
             [_dmg(TargetType.ENEMY_NEAR_ROW, 4.50),
-             _dot_eff(TargetType.ENEMY_NEAR_ROW, _bleed(f"{sid}_a"))]),
+             _dmg_pen(TargetType.ENEMY_NEAR, 1.20)]),
         ultimate_skill=_ult(f"{sid}_u", "에스코트",
-            [_dmg(TargetType.ENEMY_NEAR, 7.00)],
+            [_dmg(TargetType.ENEMY_NEAR, 7.00),
+             _remove_buff_eff(TargetType.ALL_ENEMY)],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "혈맹의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _remove_buff_eff(TargetType.ENEMY_NEAR)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 2),
     )
 
@@ -941,11 +1280,19 @@ def make_pan() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 3.00)]),
         active_skill=_active(f"{sid}_a", "작은 양을 위한 굴레",
             [_dmg(TargetType.ENEMY_RANDOM, 4.00),
-             _cc(CCType.SLEEP, 1, f"{sid}_a", TargetType.ENEMY_RANDOM)]),
+             _cc(CCType.SLEEP, 1, f"{sid}_a", TargetType.ENEMY_RANDOM),
+             _dot_eff(TargetType.ENEMY_RANDOM, _poison(f"{sid}_a", 0.15, 2))]),
         ultimate_skill=_ult(f"{sid}_u", "고요한 봄의 들판",
             [_dmg(TargetType.ALL_ENEMY, 3.00),
              _cc(CCType.SLEEP, 1, f"{sid}_u", TargetType.ALL_ENEMY)],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "독의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_p", 0.10, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(1, 1),
     )
 
@@ -958,14 +1305,22 @@ def make_miriam() -> CharacterData:
         side="ally",
         stats=StatBlock(atk=800, def_=400, hp=4000, spd=80),
         normal_skill=_normal(f"{sid}_n", "웨이팅 포 딜",
-            [_dmg(TargetType.ENEMY_NEAR, 3.40, burn_bonus=0.20)]),  # ★ 세멜레 화상 스택 비례 추가 피해
+            [_dmg(TargetType.ENEMY_NEAR, 3.40)]),
         active_skill=_active(f"{sid}_a", "크로스 더 루비콘",
             [_stat_eff(TargetType.SELF,
                 _sb('atk', 0.30, 3, f"{sid}_a", "공격력", is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "퓨리오스",
-            [_dmg(TargetType.ALL_ENEMY, 7.50),
-             _cc(CCType.PANIC, 2, f"{sid}_u", TargetType.ALL_ENEMY)],
+            [_dmg(TargetType.ALL_ENEMY, 5.50),
+             _dot_eff(TargetType.ALL_ENEMY, _poison(f"{sid}_u", dot_ratio=0.15, duration=2)),
+             _cc(CCType.PANIC, 1, f"{sid}_u", TargetType.ALL_ENEMY)],  # v7.1 너프: 2→1턴 (M12 과도 CC 억제)
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "분노의 씨앗",
+            [_stat_eff(TargetType.SELF, _sb("atk", 0.20, 2, f"{sid}_p", "패시브 공격", is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 1),
     )
 
@@ -982,14 +1337,19 @@ def make_aurora() -> CharacterData:
         active_skill=_active(f"{sid}_a", "지켜주는 나무",
             [_stat_eff(TargetType.ALLY_HIGHEST_ATK,
                 _sb('atk', 0.25, 2, f"{sid}_a", "공격력", is_ratio=True)),
-             _stat_eff(TargetType.ALLY_HIGHEST_ATK,
-                _sb('cri_ratio', 0.15, 2, f"{sid}_a", "크리율", is_ratio=False))]),
+             _hot_eff(TargetType.ALL_ALLY, _hot(f"{sid}_a", heal_ratio=0.05, duration=2))]),
         ultimate_skill=_ult(f"{sid}_u", "당신을 향한 고백",
             [_stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.20, 3, f"{sid}_u", "공격력", is_ratio=True)),
-             _stat_eff(TargetType.ALL_ALLY,
-                _sb('cri_ratio', 0.10, 3, f"{sid}_u", "크리율", is_ratio=False))],
+             _heal_loss(TargetType.ALLY_LOWEST_HP, 0.25)],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "숲의 각성",
+            [_stat_eff(TargetType.ALL_ALLY, _sb("atk", 0.10, 2, f"{sid}_p", "패시브 공격", is_ratio=True)), _hot_eff(TargetType.ALL_ALLY, _hot(f"{sid}_p", 0.03, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 2),
     )
 
@@ -1013,8 +1373,15 @@ def make_metis() -> CharacterData:
                 _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_ratio=True)),
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('atk', 0.20, 2, f"{sid}_u", "공격력", is_debuff=True, is_ratio=True)),
-             _remove_debuff_eff(TargetType.ALL_ALLY)],
+             _hot_eff(TargetType.ALL_ALLY, _hot(f"{sid}_u", heal_ratio=0.04, duration=2))],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "지혜의 가시",
+            [_dmg(TargetType.ENEMY_NEAR, 1.00), _stat_eff(TargetType.SELF, _sb("def_", 0.15, 2, f"{sid}_p", "패시브 방어", is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 1),
     )
 
@@ -1037,10 +1404,15 @@ def make_grilla() -> CharacterData:
             [_stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.20, 2, f"{sid}_u", "공격력", is_ratio=True)),
              _stat_eff(TargetType.ALL_ENEMY,
-                _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True))],
+                _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True)),
+             _dot_eff(TargetType.ALL_ENEMY, _poison(f"{sid}_u", dot_ratio=0.10, duration=2))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "악마의 축복",
+            [_stat_eff(TargetType.ALL_ALLY, _sb("cri_ratio", 0.15, 2, f"{sid}_p", "패시브 크리", is_ratio=False)), _stat_eff(TargetType.ALL_ALLY, _sb("atk", 0.10, 2, f"{sid}_p", "패시브 공격", is_ratio=True))]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_a"),  # ★ 전투 시작 시 Active 자동 발동 (팀 CRI+ATK 버프)
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=False),
         ],
         tile_pos=(1, 0),
     )
@@ -1063,8 +1435,16 @@ def make_danu() -> CharacterData:
         ultimate_skill=_ult(f"{sid}_u", "부활의 땅",
             [_dmg(TargetType.ALL_ENEMY, 3.00),  # ★ AoE 추가 (M05 킬프레셔)
              _heal_ratio(TargetType.ALL_ALLY, 0.40),
-             _revive(0.50)],
+             _revive(0.50),
+             _barrier_ratio(TargetType.ALLY_LOWEST_HP, 0.15)],
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "대지의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 2.00), _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_p", 0.10, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 2),
     )
 
@@ -1088,9 +1468,12 @@ def make_mammon() -> CharacterData:
         ultimate_skill=_ult(f"{sid}_u", "대지 분쇄",
             [_dmg(TargetType.ALL_ENEMY, 3.20)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "대지의 반격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_p", 0.10, 2))]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_n",
-                        once_per_battle=True),  # ★ 피격 시 Normal 반격 1회 (광전사 탱커)
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
         ],
         tile_pos=(1, 0),
     )
@@ -1113,6 +1496,12 @@ def make_freya() -> CharacterData:
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('def_', 0.15, 2, f"{sid}_u", "대지 방어", is_ratio=True))],
             sp=3),
+        passive_skill=_passive(f"{sid}_p", "자연의 치유",
+            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.15)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 2),
     )
 
@@ -1131,10 +1520,16 @@ def make_diana() -> CharacterData:
              _dmg(TargetType.ENEMY_NEAR, 2.00)]),
         ultimate_skill=_ult(f"{sid}_u", "달빛 심판",
             [_dmg(TargetType.ALL_ENEMY, 2.00),  # AoE 데미지 추가 (CC+딜 하이브리드)
-             _cc(CCType.SLEEP, 2, f"{sid}_u", TargetType.ALL_ENEMY),
+             _cc(CCType.SLEEP, 1, f"{sid}_u", TargetType.ALL_ENEMY),  # v7.1 너프: 2→1턴 (M12 과도 CC 억제)
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('spd', 0.20, 2, f"{sid}_u", "감속", is_debuff=True, is_ratio=True))],
             sp=4),
+        passive_skill=_passive(f"{sid}_p", "달빛 저주",
+            [_cc(CCType.SLEEP, 1, f"{sid}_p", TargetType.ENEMY_NEAR)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(1, 2),
     )
 
@@ -1154,6 +1549,12 @@ def make_europe() -> CharacterData:
         ultimate_skill=_ult(f"{sid}_u", "가이아의 심판",
             [_dmg(TargetType.ENEMY_NEAR, 6.40)],
             sp=6),
+        passive_skill=_passive(f"{sid}_p", "넝쿨의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_p", 0.10, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 2),
     )
 
@@ -1176,6 +1577,13 @@ def make_midas() -> CharacterData:
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.15, 2, f"{sid}_u", "황금 부식", is_debuff=True, is_ratio=True))],
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "황금의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _stat_eff(TargetType.ENEMY_NEAR, _sb("def_", 0.10, 2, f"{sid}_p", "패시브 방깎", is_debuff=True, is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 0),
     )
 
@@ -1194,12 +1602,20 @@ def make_jacheongbi() -> CharacterData:
                 _sb('atk', 0.15, 2, f"{sid}_a", "숲의 힘", is_ratio=True)),
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('def_', 0.10, 2, f"{sid}_a", "숲의 보호", is_ratio=True)),
-             _remove_buff_eff(TargetType.ALL_ENEMY)]),  # ★ 아군 버프 + 적 버프 스트립 (혼돈의밤 카오스)
+             _remove_buff_eff(TargetType.ALL_ENEMY),
+             _barrier_ratio(TargetType.ALL_ALLY, 0.08)]),
         ultimate_skill=_ult(f"{sid}_u", "대자연의 축복",
             [_stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.25, 2, f"{sid}_u", "자연의 힘", is_ratio=True)),
              _heal_ratio(TargetType.ALL_ALLY, 0.15)],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "숲의 선물",
+            [_stat_eff(TargetType.ALL_ALLY, _sb("atk", 0.10, 2, f"{sid}_p", "패시브 공격", is_ratio=True)), _barrier_ratio(TargetType.ALL_ALLY, 0.05)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 1),
     )
 
@@ -1218,10 +1634,19 @@ def make_ashtoreth() -> CharacterData:
         normal_skill=_normal(f"{sid}_n", "밤의 속삭임",
             [_dmg(TargetType.ENEMY_RANDOM_2, 4.00)]),
         active_skill=_active(f"{sid}_a", "심연의 덫",
-            [_dmg(TargetType.ENEMY_NEAR, 4.50)]),
+            [_dmg(TargetType.ENEMY_NEAR, 4.50),
+             _use_skill(f"{sid}_n")]),
         ultimate_skill=_ult(f"{sid}_u", "가시 무도회",
-            [_dmg(TargetType.ENEMY_NEAR, 4.00)],  # 5.50→4.50→4.00 (M10 너프, 킬체인 제거)
+            [_dmg(TargetType.ENEMY_NEAR, 7.00),
+             _barrier_ratio(TargetType.SELF, 0.10)],
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "가시의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 2.00), _barrier_ratio(TargetType.SELF, 0.05)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=False),
+        ],
         tile_pos=(0, 0),
     )
 
@@ -1238,15 +1663,22 @@ def make_sitri() -> CharacterData:
         active_skill=_active(f"{sid}_a", "크런치 캔디",
             [_stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.25, 3, f"{sid}_a", "공격력", is_ratio=True)),
-             _stat_eff(TargetType.ALL_ALLY,
-                _sb('spd', 10.0, 3, f"{sid}_a", "속도", is_ratio=False))]),
+             _buff_turn_inc(TargetType.ALL_ALLY, 1)]),
         ultimate_skill=_ult(f"{sid}_u", "라 돌체 비타",
             [_dmg(TargetType.ALL_ENEMY, 2.30),
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.25, 3, f"{sid}_u", "공격력", is_ratio=True)),
              _stat_eff(TargetType.ALL_ALLY,
-                _sb('cri_dmg_ratio', 0.20, 3, f"{sid}_u", "크리피해", is_ratio=False))],
+                _sb('cri_dmg_ratio', 0.20, 3, f"{sid}_u", "크리피해", is_ratio=False)),
+             _debuff_immune(TargetType.ALL_ALLY, 1)],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "사탕의 보호",
+            [_buff_turn_inc(TargetType.ALL_ALLY, 1)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 0),  # ON_BATTLE_START 제거 (M04 과도 버프 스택 방지)
     )
 
@@ -1262,13 +1694,20 @@ def make_mona() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 2.00)]),
         active_skill=_active(f"{sid}_a", "트릭스타",
             [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.20),
-             _stat_eff(TargetType.ALLY_LOWEST_HP,
-                _sb('spd', 15.0, 2, f"{sid}_a", "속도", is_ratio=False))]),
+             _barrier_ratio(TargetType.ALL_ALLY, 0.06)]),
         ultimate_skill=_ult(f"{sid}_u", "사랑을 담아",
             [_stat_eff(TargetType.ALL_ALLY,
                 _sb('spd', 15.0, 3, f"{sid}_u", "속도", is_ratio=False)),
-             _heal_ratio(TargetType.ALL_ALLY, 0.10)],
+             _heal_ratio(TargetType.ALL_ALLY, 0.10),
+             _active_cd_change(TargetType.ALL_ALLY, -2)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "달빛 보호막",
+            [_barrier_ratio(TargetType.ALL_ALLY, 0.05), _heal_ratio(TargetType.ALLY_LOWEST_HP, 0.10)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 2),
     )
 
@@ -1283,13 +1722,21 @@ def make_semele() -> CharacterData:
         normal_skill=_normal(f"{sid}_n", "신성 강타",
             [_dmg(TargetType.ENEMY_NEAR, 2.00, hit_count=2)]),  # ★ 2연타 (화상 2회 적용 → 미리암 burn_bonus 시너지)
         active_skill=_active(f"{sid}_a", "제우스의 불꽃",
-            [_dot_eff(TargetType.ENEMY_NEAR, _burn(f"{sid}_a")),
+            [_debuff_immune(TargetType.SELF, 1),
              _stat_eff(TargetType.ENEMY_NEAR,
                 _sb('atk', 0.20, 2, f"{sid}_a", "공격력", is_debuff=True, is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "신의 번개",
             [_dmg(TargetType.ALL_ENEMY, 6.00),
-             _dot_eff(TargetType.ALL_ENEMY, _burn(f"{sid}_u"))],
+             _barrier_ratio(TargetType.ALL_ALLY, 0.08),
+             _debuff_turn_inc(TargetType.ALL_ENEMY, 1)],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "신성 보호",
+            [_barrier_ratio(TargetType.SELF, 0.08), _debuff_immune(TargetType.SELF, 1)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 2),
     )
 
@@ -1304,12 +1751,19 @@ def make_tiwaz() -> CharacterData:
         normal_skill=_normal(f"{sid}_n", "전쟁신의 검",
             [_dmg(TargetType.ENEMY_NEAR, 4.00)]),
         active_skill=_active(f"{sid}_a", "관통 공격",
-            [_dmg(TargetType.ENEMY_SAME_COL, 5.00)]),
+            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.20),
+             _remove_debuff_eff(TargetType.ALLY_LOWEST_HP)]),
         ultimate_skill=_ult(f"{sid}_u", "신의 선언",
             [_dmg(TargetType.ALL_ENEMY, 3.00),
-             _stat_eff(TargetType.ALL_ENEMY,
-                _sb('def_', 0.25, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True))],
+             _debuff_immune(TargetType.ALL_ALLY, 1)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "전쟁신의 가호",
+            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.15), _remove_debuff_eff(TargetType.ALLY_LOWEST_HP)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 1),
     )
 
@@ -1331,9 +1785,15 @@ def make_titania() -> CharacterData:
             [_heal_ratio(TargetType.ALL_ALLY, 0.20),
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.20, 3, f"{sid}_u", "공격력", is_ratio=True)),
-             _stat_eff(TargetType.ALL_ALLY,
-                _sb('spd', 10.0, 3, f"{sid}_u", "속도", is_ratio=False))],
+             _debuff_immune(TargetType.ALL_ALLY, 2)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "요정의 보호",
+            [_stat_eff(TargetType.ALL_ALLY, _sb("def_", 0.10, 2, f"{sid}_p", "패시브 방어", is_ratio=True)), _debuff_immune(TargetType.SELF, 1)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 1),
     )
 
@@ -1351,11 +1811,19 @@ def make_oneiroi() -> CharacterData:
             [_dmg(TargetType.ENEMY_RANDOM, 5.00),
              _cc(CCType.SLEEP, 1, f"{sid}_a", TargetType.ENEMY_RANDOM),
              _stat_eff(TargetType.ENEMY_RANDOM,
-                _sb('def_', 0.15, 2, f"{sid}_a", "꿈의 침식", is_debuff=True, is_ratio=True))]),  # ★ 수면+방깎 (DPS 셋업)
+                _sb('def_', 0.15, 2, f"{sid}_a", "꿈의 침식", is_debuff=True, is_ratio=True)),
+             _active_cd_change(TargetType.SELF, -1)]),  # ★ 수면+방깎 (DPS 셋업)
         ultimate_skill=_ult(f"{sid}_u", "영원한 꿈",
             [_dmg(TargetType.ALL_ENEMY, 3.00),
-             _cc(CCType.SLEEP, 2, f"{sid}_u", TargetType.ALL_ENEMY)],
+             _cc(CCType.SLEEP, 1, f"{sid}_u", TargetType.ALL_ENEMY)],  # v7.1 너프: 2→1턴 (M12 과도 CC 억제)
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "꿈의 잔향",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _cc(CCType.SLEEP, 1, f"{sid}_p", TargetType.ENEMY_NEAR)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(1, 2),
     )
 
@@ -1377,7 +1845,8 @@ def make_c600() -> CharacterData:
                 _sb('atk', 0.15, 2, f"{sid}_a", "공격력", is_ratio=True)),
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('spd', 15.0, 2, f"{sid}_a", "속도", is_ratio=False)),
-             _remove_debuff_eff(TargetType.ALL_ALLY)]),  # REMOVE_BUFF 제거 (M04 과도 우위 방지)
+             _remove_debuff_eff(TargetType.ALL_ALLY),
+             _buff_turn_inc(TargetType.ALL_ALLY, 1)]),  # REMOVE_BUFF 제거 (M04 과도 우위 방지)
         ultimate_skill=_ult(f"{sid}_u", "성역의 은총",
             [_heal_ratio(TargetType.ALL_ALLY, 0.25),
              _stat_eff(TargetType.ALL_ALLY,
@@ -1385,6 +1854,13 @@ def make_c600() -> CharacterData:
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('cri_dmg_ratio', 0.30, 3, f"{sid}_u", "크리피해", is_ratio=False))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "성광의 반격",
+            [_heal_ratio(TargetType.ALL_ALLY, 0.08), _buff_turn_inc(TargetType.ALL_ALLY, 1)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 0),
     )
 
@@ -1409,6 +1885,12 @@ def make_dana() -> CharacterData:
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.20, 3, f"{sid}_u", "공격력", is_ratio=True))],
             sp=3),
+        passive_skill=_passive(f"{sid}_p", "빛의 치유",
+            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.15)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 1),
     )
 
@@ -1428,12 +1910,17 @@ def make_hildr() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 4.50)]),
         active_skill=_active(f"{sid}_a", "섬광 베기",
             [_dmg(TargetType.ENEMY_NEAR, 0.80),
-             _stat_eff(TargetType.ENEMY_NEAR,
-                _sb('acc', 20.0, 2, f"{sid}_a", "명중", is_debuff=True, is_ratio=False))]),
+             _barrier_ratio(TargetType.ALLY_LOWEST_HP, 0.08)]),
         ultimate_skill=_ult(f"{sid}_u", "발키리의 심판",
             [_dmg(TargetType.ENEMY_NEAR_ROW, 6.40),
              _sp_gain(1.0, TargetType.SELF)],
             sp=6),
+        passive_skill=_passive(f"{sid}_p", "발키리의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 2.00), _barrier_ratio(TargetType.SELF, 0.05)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 1),
     )
 
@@ -1452,14 +1939,19 @@ def make_charlotte() -> CharacterData:
         normal_skill=_normal(f"{sid}_n", "빛의 방패",
             [_dmg(TargetType.ENEMY_NEAR, 2.40)]),
         active_skill=_active(f"{sid}_a", "성벽",
-            [_shield(TargetType.ALL_ALLY, 1.00)]),
+            [_shield(TargetType.ALL_ALLY, 1.00),
+             _barrier_ratio(TargetType.ALL_ALLY, 0.10)]),
         ultimate_skill=_ult(f"{sid}_u", "수호의 빛",
             [_dmg(TargetType.ENEMY_NEAR_ROW, 4.00),
              _heal_ratio(TargetType.ALL_ALLY, 0.50),
              _shield(TargetType.ALL_ALLY, 1.00)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "빛의 장벽",
+            [_barrier_ratio(TargetType.ALL_ALLY, 0.08)]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_a"),  # ★ 전투 시작 시 팀 배리어 60% 선배치
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=False),
         ],
         tile_pos=(1, 0),
     )
@@ -1485,6 +1977,12 @@ def make_leda() -> CharacterData:
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('def_', 0.20, 2, f"{sid}_u", "빛의 보호", is_ratio=True))],
             sp=4),
+        passive_skill=_passive(f"{sid}_p", "성광의 선물",
+            [_stat_eff(TargetType.ALL_ALLY, _sb("atk", 0.10, 2, f"{sid}_p", "패시브 공격", is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 2),
     )
 
@@ -1500,11 +1998,16 @@ def make_yana() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 3.60)]),
         active_skill=_active(f"{sid}_a", "섬광 일격",
             [_dmg(TargetType.ENEMY_NEAR, 4.40),
-             _stat_eff(TargetType.ENEMY_NEAR,
-                _sb('def_', 0.15, 2, f"{sid}_a", "방어 감소", is_debuff=True, is_ratio=True))]),
+             _barrier_ratio(TargetType.SELF, 0.10)]),
         ultimate_skill=_ult(f"{sid}_u", "광폭발",
             [_dmg(TargetType.ALL_ENEMY, 3.60)],
             sp=6),
+        passive_skill=_passive(f"{sid}_p", "광폭의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _barrier_ratio(TargetType.SELF, 0.05)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 2),
     )
 
@@ -1520,14 +2023,21 @@ def make_mafdet() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 2.40)]),
         active_skill=_active(f"{sid}_a", "심판의 사슬",
             [_cc(CCType.STUN, 1, f"{sid}_a", TargetType.ENEMY_NEAR),
-             _stat_eff(TargetType.ENEMY_NEAR,
-                _sb('spd', 0.20, 2, f"{sid}_a", "구속", is_debuff=True, is_ratio=True))]),
+             _debuff_immune(TargetType.SELF, 1),
+             _active_cd_change(TargetType.ALL_ALLY, -1)]),
         ultimate_skill=_ult(f"{sid}_u", "정의의 심판",
             [_dmg(TargetType.ALL_ENEMY, 7.50),  # AoE 2.50→2.80 (CC창 킬파워 보강)
-             _cc(CCType.STUN, 2, f"{sid}_u", TargetType.ALL_ENEMY),
+             _cc(CCType.STUN, 1, f"{sid}_u", TargetType.ALL_ENEMY),  # v7.1 너프: 2→1턴 (M12 과도 CC 억제)
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('atk', 0.20, 2, f"{sid}_u", "약화", is_debuff=True, is_ratio=True))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "정의의 카운터",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _debuff_immune(TargetType.SELF, 1)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(1, 2),
     )
 
@@ -1544,7 +2054,7 @@ def make_frey() -> CharacterData:
         side="ally",
         stats=StatBlock(atk=500, def_=600, hp=6000, spd=110),
         normal_skill=_normal(f"{sid}_n", "그림 리퍼",
-            [_dmg(TargetType.ENEMY_NEAR, 3.00)]),
+            [_dmg_pen(TargetType.ENEMY_NEAR, 2.20)]),
         active_skill=_active(f"{sid}_a", "사신의 잔상",
             [_stat_eff(TargetType.SELF,
                 _sb('atk', 0.25, 2, f"{sid}_a", "공격력", is_ratio=True)),
@@ -1556,9 +2066,12 @@ def make_frey() -> CharacterData:
              _stat_eff(TargetType.ENEMY_NEAR_ROW,
                 _sb('def_', 0.25, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True))],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "사신의 카운터",
+            [_dmg_pen(TargetType.ENEMY_NEAR, 1.50)]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_n",
-                        once_per_battle=True),  # ★ 피격 시 Normal 반격 1회 (카운터 탱커)
+            TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
+                        once_per_battle=True),
         ],
         tile_pos=(0, 1),
     )
@@ -1581,6 +2094,12 @@ def make_banshee() -> CharacterData:
         ultimate_skill=_ult(f"{sid}_u", "뱅시의 절규",
             [_dmg(TargetType.ALL_ENEMY, 3.00)],
             sp=4),
+        passive_skill=_passive(f"{sid}_p", "절규의 메아리",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50, hit_count=2)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 0),
     )
 
@@ -1595,7 +2114,8 @@ def make_artemis() -> CharacterData:
         normal_skill=_normal(f"{sid}_n", "나이트메어 이블",
             [_dmg(TargetType.ENEMY_RANDOM, 4.00, hit_count=4)]),
         active_skill=_active(f"{sid}_a", "광포한 분노",
-            [_dmg(TargetType.ENEMY_NEAR, 3.00),
+            [_ignore_element(TargetType.SELF, 2),
+             _dmg(TargetType.ENEMY_NEAR, 3.00),
              _stat_eff(TargetType.ENEMY_NEAR,
                 _sb('def_', 0.25, 2, f"{sid}_a", "방어력", is_debuff=True, is_ratio=True)),
              _remove_buff_eff(TargetType.ENEMY_NEAR)]),  # ★ 방깎+버프스트립 (디버프 전문)
@@ -1604,6 +2124,13 @@ def make_artemis() -> CharacterData:
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "침식의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _stat_eff(TargetType.ENEMY_NEAR, _sb("def_", 0.10, 2, f"{sid}_p", "패시브 방깎", is_debuff=True, is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 2),
     )
 
@@ -1627,6 +2154,13 @@ def make_mircalla() -> CharacterData:
             [_dmg(TargetType.ALL_ENEMY, 3.60),
              _dot_eff(TargetType.ALL_ENEMY, _bleed(f"{sid}_u"))],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "흡혈의 본능",
+            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.15), _dot_eff(TargetType.ENEMY_NEAR, _bleed(f"{sid}_p", 0.10, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(1, 0),
     )
 
@@ -1645,13 +2179,22 @@ def make_yuna() -> CharacterData:
              _stat_eff(TargetType.ALLY_LOWEST_HP,
                 _sb('def_', 0.20, 2, f"{sid}_a", "방어력", is_ratio=True)),
              _stat_eff(TargetType.ALL_ENEMY,
-                _sb('spd', 15.0, 2, f"{sid}_a", "어둠 감속", is_debuff=True, is_ratio=False))]),  # ★ 적 SPD-15 (카운터 유도)
+                _sb('spd', 15.0, 2, f"{sid}_a", "어둠 감속", is_debuff=True, is_ratio=False)),
+             _dot_eff(TargetType.ENEMY_NEAR, _bleed(f"{sid}_a", 0.10, 2))]),  # ★ 적 SPD-15 + 출혈 (암속 공격 테마)
         ultimate_skill=_ult(f"{sid}_u", "달의 수호",
-            [_stat_eff(TargetType.ALL_ALLY,
+            [_dmg_buff_scale_target(TargetType.ALL_ENEMY, 1.50, 0.15),
+             _stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.20, 2, f"{sid}_u", "공격력", is_ratio=True)),
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_ratio=True))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "어둠의 침식",
+            [_stat_eff(TargetType.ALL_ENEMY, _sb("spd", 10.0, 2, f"{sid}_p", "패시브 감속", is_debuff=True, is_ratio=False)), _dot_eff(TargetType.ENEMY_NEAR, _bleed(f"{sid}_p", 0.08, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 2),
     )
 
@@ -1670,10 +2213,14 @@ def make_kubaba() -> CharacterData:
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.20, 2, f"{sid}_a", "방어력", is_debuff=True, is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "데스 스키드 마크",
-            [_dmg(TargetType.ENEMY_NEAR, 7.00)],  # 3.80→3.50 (M04 원킬 억제)
+            [_dmg_buff_scale(TargetType.ENEMY_NEAR, 5.00, 0.12)],  # 3.80→3.50 (M04 원킬 억제)
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "질주의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 2.00), _remove_buff_eff(TargetType.ENEMY_NEAR)]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_n"),  # ★ 처치 시 Normal 추격 (킬 스노우볼)
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=False),
         ],
         tile_pos=(0, 0),
     )
@@ -1691,10 +2238,14 @@ def make_anubis() -> CharacterData:
         active_skill=_active(f"{sid}_a", "직선 심판",
             [_dmg(TargetType.ENEMY_SAME_COL, 4.00, hit_count=3)]),  # 2.50×3→2.00×3 (관통 유지, 총합 6.00x)
         ultimate_skill=_ult(f"{sid}_u", "심판의 저울",
-            [_dmg(TargetType.ENEMY_LOWEST_HP, 6.00)],
+            [_dmg_cri(TargetType.ENEMY_LOWEST_HP, 4.50)],
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "사자의 추격",
+            [_dmg_cri(TargetType.ENEMY_LOWEST_HP, 2.00)]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_n"),  # ★ 처치 시 Normal 추격 (반격요새 딜러)
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=False),
         ],
         tile_pos=(0, 1),
     )
@@ -1715,7 +2266,8 @@ def make_c601() -> CharacterData:
         active_skill=_active(f"{sid}_a", "종결자의 일격",
             [_dmg(TargetType.ENEMY_LOWEST_HP, 5.00),  # 기본 배율 5.00→3.50→2.80→2.50 (4차 너프)
              SkillEffect(logic_type=LogicType.DAMAGE, target_type=TargetType.ENEMY_LOWEST_HP,
-                         multiplier=2.40, condition={'target_hp_below': 0.50}),  # 처형 배율 2.00→1.50→1.20
+                         multiplier=1.80, condition={'target_hp_below': 0.50}),  # 처형 배율 2.00→1.50→1.20
+             _dot_eff(TargetType.ENEMY_LOWEST_HP, _poison(f"{sid}_a", 0.20, 2)),
              _stat_eff(TargetType.ENEMY_LOWEST_HP,
                 _sb('def_', 0.25, 2, f"{sid}_a", "방어력", is_debuff=True, is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "심판의 심연",
@@ -1723,11 +2275,14 @@ def make_c601() -> CharacterData:
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.15, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True)),
              _dot_eff(TargetType.ALL_ENEMY,
-                _bleed(f"{sid}_u", dot_ratio=0.20, duration=3))],
+                _poison(f"{sid}_u", dot_ratio=0.20, duration=3))],
             sp=4),
+
+        passive_skill=_passive(f"{sid}_p", "심연의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 2.00), _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_p", 0.15, 2))]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_n",
-                        once_per_battle=True),  # ★ AoE 처치 시 Normal 추격 1회 (무한체인 방지)
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
         ],
         tile_pos=(0, 2),
     )
@@ -1749,11 +2304,17 @@ def make_cain() -> CharacterData:
         active_skill=_active(f"{sid}_a", "광기의 힘",
             [_stat_eff(TargetType.SELF,
                 _sb('atk', 0.30, 2, f"{sid}_a", "공격력", is_ratio=True)),
-             _stat_eff(TargetType.SELF,
-                _sb('cri_ratio', 0.20, 2, f"{sid}_a", "크리율", is_ratio=False))]),
+             _dot_eff(TargetType.ALL_ENEMY, _burn(f"{sid}_a", dot_ratio=0.10, duration=2))]),
         ultimate_skill=_ult(f"{sid}_u", "어둠의 폭풍",
-            [_dmg(TargetType.ALL_ENEMY, 2.60)],
+            [_dmg(TargetType.ALL_ENEMY, 2.60, burn_bonus=0.30)],
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "광기의 불꽃",
+            [_dmg(TargetType.ENEMY_NEAR, 2.00), _dot_eff(TargetType.ENEMY_NEAR, _burn(f"{sid}_p", 0.10, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 0),
     )
 
@@ -1770,7 +2331,7 @@ def make_elizabeth() -> CharacterData:
         side="ally",
         stats=StatBlock(atk=640, def_=320, hp=3200, spd=80),
         normal_skill=_normal(f"{sid}_n", "피의 채찍",
-            [_dmg(TargetType.ENEMY_NEAR, 7.50, hit_count=2)]),  # ★ 2연타 3.25→3.75 (CC창 킬파워 강화)
+            [_dmg_cri(TargetType.ENEMY_NEAR, 3.75), _dmg_cri(TargetType.ENEMY_NEAR, 3.75)]),  # ★ 2연타 3.25→3.75 (CC창 킬파워 강화)
         active_skill=_active(f"{sid}_a", "선혈의 창",
             [_dmg(TargetType.ENEMY_NEAR, 8.00),
              _stat_eff(TargetType.SELF,
@@ -1779,11 +2340,14 @@ def make_elizabeth() -> CharacterData:
                 _sb('atk', 0.30, 2, f"{sid}_a", "피의 광기", is_ratio=True))]),
         ultimate_skill=_ult(f"{sid}_u", "핏빛 향연",
             [_dmg(TargetType.ALL_ENEMY, 2.00),
-             _dot_eff(TargetType.ALL_ENEMY,
-                _poison(f"{sid}_u", dot_ratio=0.30, duration=2))],
+             _dmg_hp_ratio(TargetType.ALL_ENEMY, 0.08)],
             sp=6),
+
+        passive_skill=_passive(f"{sid}_p", "피의 추격",
+            [_dmg_cri(TargetType.ENEMY_NEAR, 2.00)]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_n"),  # ★ 처치 시 Normal 추격 (CC창 킬체인)
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=False),
         ],
         tile_pos=(0, 1),
     )
@@ -1809,6 +2373,12 @@ def make_duetsha() -> CharacterData:
         ultimate_skill=_ult(f"{sid}_u", "심연의 무도",
             [_dmg(TargetType.ENEMY_NEAR_ROW, 5.00)],
             sp=4),
+        passive_skill=_passive(f"{sid}_p", "그림자 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 2),
     )
 
@@ -1830,6 +2400,12 @@ def make_mona_dark() -> CharacterData:
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('atk', 0.20, 2, f"{sid}_u", "어둠 약화", is_debuff=True, is_ratio=True))],
             sp=3),
+        passive_skill=_passive(f"{sid}_p", "암흑 방벽",
+            [_shield(TargetType.SELF, 0.10), _stat_eff(TargetType.SELF, _sb("def_", 0.10, 2, f"{sid}_p", "패시브 방어", is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 0),
     )
 
@@ -1853,6 +2429,12 @@ def make_persephone() -> CharacterData:
                 _sb('atk', 0.25, 2, f"{sid}_u", "꽃의 힘", is_ratio=True)),
              _heal_ratio(TargetType.ALL_ALLY, 0.15)],
             sp=4),
+        passive_skill=_passive(f"{sid}_p", "명계의 선물",
+            [_stat_eff(TargetType.ALL_ALLY, _sb("atk", 0.10, 2, f"{sid}_p", "패시브 공격", is_ratio=True))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 1),
     )
 
@@ -1868,12 +2450,20 @@ def make_nevan() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 2.00)]),
         active_skill=_active(f"{sid}_a", "암흑 치유",
             [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.65),
+             _heal_loss(TargetType.ALLY_LOWEST_HP, 0.30),
              _remove_debuff_eff(TargetType.ALLY_LOWEST_HP),
-             _shield(TargetType.ALLY_LOWEST_HP, 0.35)]),  # ★ 힐+정화+배리어 콤보 (철벽요새 시너지)
+             _dot_eff(TargetType.ENEMY_NEAR, _bleed(f"{sid}_a", 0.15, 2))]),  # ★ 힐+정화+출혈 (암속 흡혈 힐러)
         ultimate_skill=_ult(f"{sid}_u", "명계의 은혜",
             [_heal_ratio(TargetType.ALL_ALLY, 0.75),
-             _shield(TargetType.ALL_ALLY, 0.55)],
+             _remove_buff_eff(TargetType.ALL_ENEMY)],
             sp=3),
+
+        passive_skill=_passive(f"{sid}_p", "암흑 치유력",
+            [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.15), _dot_eff(TargetType.ENEMY_NEAR, _bleed(f"{sid}_p", 0.08, 2))]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(2, 2),
     )
 
@@ -1894,6 +2484,12 @@ def make_medusa() -> CharacterData:
             [_dmg(TargetType.ALL_ENEMY, 3.20),
              _cc(CCType.STONE, 1, f"{sid}_u", TargetType.ALL_ENEMY)],
             sp=6),
+        passive_skill=_passive(f"{sid}_p", "석화의 추격",
+            [_dmg(TargetType.ENEMY_NEAR, 1.50), _cc(CCType.STONE, 1, f"{sid}_p", TargetType.ENEMY_NEAR)]),
+        triggers=[
+            TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
+                        once_per_battle=True),
+        ],
         tile_pos=(0, 1),
     )
 
@@ -2041,63 +2637,139 @@ def get_enemies_5():
 
 
 # ════════════════════════════════════════════════════════════════
-# ─── 메타 조합 (8개) ────────────────────────────────────────────
+# ─── 메타 조합 (12개) — v7.0 속성 기믹 정렬 버전 ────────────────
 # ════════════════════════════════════════════════════════════════
+#
+# 속성별 기믹 정체성:
+#   🔥화: 화상 DoT + burn_bonus 비례딜 + debuff_turn_increase
+#   💧수: CC(FREEZE/STUN) + SPD디버프 + SP_LOCK/STEAL + CD변경
+#   🌿목: 독 DoT + HoT 지속회복 + 보호막 + 흡수전
+#   ✨광: 배리어 + 디버프면역 + 불사/부활 + 버프턴증가
+#   🌙암: 관통 + 처형(HP비례) + 크리 + 출혈 + 버프제거
+#
 
-def get_meta_burst():
-    """1. 극딜 버스트: 루미나, 이브, 쿠바바, 엘리시온, 아우로라
-    루미나 OP 버프(ATK+30%, CRI_DMG+0.50) → 이브(ATK545)+쿠바바 극딜 → 힐+서포트.
+def get_meta_burn_inferno():
+    """M01. 🔥 화상연소 — 화속 순수 (Burn Inferno)
+    카라라트리(burn_bonus 0.30) + 다비(화상확산) + 드미테르(화상+감속)
+    + 살마키스(debuff_turn_inc → 화상 연장!) + 지바(힐+ATK버프+HoT)
+    핵심: 3소스 화상 중첩 → 살마키스 디버프턴 연장 → 카라라트리 burn_bonus 폭딜
     """
-    return [make_c600(), make_eve(), make_kubaba(), make_elysion(), make_aurora()]
+    return [make_kararatri(), make_dabi(), make_demeter(), make_salmakis(), make_jiva()]
 
 
-def get_meta_op_duo():
-    """2. OP 듀오: 루미나, 에레보스, 시트리, 아르테미스, 다누
-    OP 2명(루미나 SPD125 버프 + 에레보스 ATK530) + 시트리 버프 중첩 + 아르테미스 CRI48% 보조딜 + 다누 힐.
+def get_meta_freeze_prison():
+    """M02. 🧊 빙결감옥 — 수속 CC 특화 (Freeze Prison)
+    바리(전스킬 FREEZE+감속) + 도계화(STUN+FREEZE+CD변경) + 마야우엘(FREEZE+SP잠금+크리불가)
+    + 상아(감속+방깎+버프스트립+SP잠금) + 에우로스(힐+정화)
+    핵심: 3 MAG CC체인 + 이중 SP_LOCK = 적 행동 완전 봉쇄
     """
-    return [make_c600(), make_c601(), make_sitri(), make_artemis(), make_danu()]
+    return [make_bari(), make_dogyehwa(), make_mayahuel(), make_sangah(), make_euros()]
 
 
-def get_meta_fire_burn():
-    """3. 화상 시너지: 카라라트리, 다비, 라가라자, 데레사, 지바
-    화속 단일, 화상 스택 누적 → 스택 비례 추가 데미지. 지바 힐로 지구전.
+def get_meta_poison_garden():
+    """M03. 🌿 독정원 — 목속 지속전 (Poison Garden)
+    에레보스(독+처형) + 판(독+수면) + 그릴라(CRI/ATK버프+독, 전투시작 자동발동)
+    + 메티스(DEF버프+버프스트립+HoT) + 브라우니(HoT+정화+SP)
+    핵심: 독 3중첩 + 이중 HoT 지속회복 → 독으로 깎고 회복으로 버티는 소모전
     """
-    return [make_kararatri(), make_dabi(), make_ragaraja(), make_deresa(), make_jiva()]
+    return [make_c601(), make_pan(), make_grilla(), make_metis(), make_brownie()]
 
 
-def get_meta_cc_control():
-    """4. CC 컨트롤: 오네이로이, 판, 미리암, 그릴라, 브라우니
-    CC(기절/수면/공포) 체인으로 적 행동 봉쇄. 미리암 ATK478 피니시.
+def get_meta_hyper_carry():
+    """M04. 💎 하이퍼캐리 — 버프 집중 폭딜 (Hyper Carry)
+    쿠바바(dmg_buff_scale 캐리, ON_KILL) + 루미나(ATK+SPD+CRI_DMG+버프턴증가)
+    + 시트리(ATK+CRI_DMG+버프턴증가+디버프면역) + 엘리시온(힐+쉴드+DEF버프)
+    + 아우로라(ATK버프+HoT)
+    핵심: 트리플 버퍼 → 쿠바바 버프수 비례 데미지 극대화 (버프 7~8개 = +96% 추가딜)
     """
-    return [make_oneiroi(), make_pan(), make_miriam(), make_grilla(), make_brownie()]
+    return [make_kubaba(), make_c600(), make_sitri(), make_elysion(), make_aurora()]
 
 
-def get_meta_water_tempo():
-    """5. 수속 템포: 이브, 상아, 티스베, 도계화, 엘리시온
-    수속 단일 + 고SPD 서포터 3명(상아·티스베·엘리시온) → SP 빠른 충전 → 이브 Ult 선제.
+def get_meta_iron_fortress():
+    """M05. 🛡️ 철벽요새 — 방어덱 생존 (Iron Fortress)
+    다누(힐+부활+보호막) + 세멜레(디버프면역+배리어+ATK디버프)
+    + 티타니아(디버프면역+힐+CRI버프) + 샤를(쉴드+배리어, 전투시작 자동배리어)
+    + 네반(힐+정화+출혈+버프제거)
+    핵심: 배리어+디버프면역+부활 → 적 공격 무력화, 출혈 칩데미지로 역습
     """
-    return [make_eve(), make_sangah(), make_thisbe(), make_dogyehwa(), make_elysion()]
+    return [make_danu(), make_semele(), make_titania(), make_charlotte(), make_nevan()]
+
+
+def get_meta_counter_bruiser():
+    """M06. ⚔️ 반격요새 — 반격 연쇄 (Counter Bruiser)
+    프레이(관통+반격+ON_HIT) + 데레사(반격+도발+반격불가)
+    + 라가라자(burn_bonus+화상+AoE) + 맘몬(기절+ON_HIT반격)
+    + 미르칼라(출혈+힐)
+    핵심: 도발→피격→반격 연쇄 (프레이 관통, 맘몬 반격) + 화상/출혈 칩데미지
+    """
+    return [make_frey(), make_deresa(), make_ragaraja(), make_mammon(), make_mircalla()]
+
+
+def get_meta_speed_execute():
+    """M07. ⚡ 속도처형 — 수속 템포 (Speed Execute)
+    이브(처형+ON_KILL+FREEZE) + 니르티(고배율+힐) + 아라한(고배율+방깎)
+    + 티스베(SPD버프) + 엘리시온(탱크+힐+SPD+DEF버프)
+    핵심: SPD 우위(아군 가속+적 감속) → 턴 수 우위 → 이브 처형 마무리 → ON_KILL 연쇄
+    """
+    return [make_eve(), make_nirrti(), make_arhat(), make_thisbe(), make_elysion()]
 
 
 def get_meta_dark_assault():
-    """6. 암속 강공: 아르테미스, 쿠바바, 아누비스, 유나, 프레이
-    암속 순수 — ATK 3명(아르테미스 CRI48%, 쿠바바, 아누비스) + 유나 서포트 + 프레이 탱킹.
-    광속성 상대 속성 우위.
+    """M08. 🌙 암속강공 — 암속 순수 (Dark Assault)
+    아누비스(확정크리+ON_KILL, 3.5★) + 아르테미스(속성무시+방깎+버프스트립)
+    + 유나(감속+출혈+버프수비례딜) + 바토리(관통+버프제거)
+    + 프레이(관통+반격+방깎)
+    핵심: 관통으로 방어 무시 + 버프스트립으로 보호막 제거 + 출혈 DoT + ON_KILL 체인
     """
-    return [make_artemis(), make_kubaba(), make_anubis(), make_yuna(), make_frey()]
+    return [make_anubis(), make_artemis(), make_yuna(), make_batory(), make_frey()]
 
 
-def get_meta_light_holy():
-    """7. 광속 순수: 아슈토레스, 시트리, 티와즈, 티타니아, 모나
-    광속 단일 — 아슈토레스(ATK465 CRI27% PEN25%) 에이스 + 3 서포터 버프 + 모나 힐.
-    암속성 상대 속성 우위.
+def get_meta_aoe_cleave():
+    """M09. 💥 전멸폭격 — AoE 클리브 (AoE Cleave)
+    에레보스(AoE+방깎+독) + 라가라자(AoE 4.40×) + 구미호(AoE+공포+방깎)
+    + 아우로라(ATK버프+HoT) + 지바(힐+ATK버프)
+    핵심: 방깎 선행 → AoE 연속 폭격 + 공포 CC + 독 DoT = 전멸 압살
+    """
+    return [make_c601(), make_ragaraja(), make_gumiho(), make_aurora(), make_jiva()]
+
+
+def get_meta_berserker():
+    """M10. ⚔️ 광전사 — 자기강화 폭딜 (Berserker Rush)
+    아슈토레스(USE_SKILL 체인+배리어) + 에르제베트(확정크리2연타+ATK자버프+ON_KILL)
+    + 카인(ATK자버프+화상+burn_bonus) + 그릴라(CRI+ATK전체버프, 전투시작발동)
+    + 지바(힐+ATK버프+HoT → 카인 화상 시너지)
+    핵심: 그릴라 ON_BATTLE_START → 전체 CRI+ATK → 에르제베트 확정크리 연사 → ON_KILL 연쇄
+    v7.1: 다나(2★)→지바(3★) 교체 — 생존력+ATK버프 대폭 강화
+    """
+    return [make_ashtoreth(), make_elizabeth(), make_cain(), make_grilla(), make_jiva()]
+
+
+def get_meta_holy_bastion():
+    """M11. ✨ 광속성벽 — 광속 보호 (Holy Bastion)
+    아슈토레스(딜+배리어) + 시트리(ATK+CRI_DMG+버프턴증가+디버프면역)
+    + 티와즈(힐+정화+전체디버프면역) + 티타니아(디버프면역+힐+CRI버프)
+    + 모나(힐+배리어+SPD+CD감소)
+    핵심: 3중 디버프면역 + 배리어 → CC/DoT 완전 차단, 버프턴증가로 영구 유지
     """
     return [make_ashtoreth(), make_sitri(), make_tiwaz(), make_titania(), make_mona()]
 
 
-def get_meta_forest_rush():
-    """8. 목속 돌격: 에레보스, 미리암, 바토리, 아우로라, 메티스
-    목속 순수 — 에레보스(ATK530 OP) + 미리암(ATK478) 쌍두 딜 + 바토리 CRI18% 보조딜.
-    아우로라·메티스 서포트. 수속성 상대 속성 우위.
+def get_meta_cc_kill_chain():
+    """M12. 🎭 CC킬체인 — CC+처형 (CC Kill Chain)
+    오네이로이(SLEEP+방깎+CD감소) + 마프데트(STUN+디버프면역+CD감소)
+    + 미리암(AoE+독+공포, 자버프ATK+30%) + 미다스(DEF-20% 디버프+AoE 딜)
+    + 자청비(ATK/DEF버프+버프스트립+배리어)
+    핵심: CC 3인 릴레이(수면→기절→공포) + 미다스 방깎 → 미리암 AoE 피니시
+    v7.1: 다이아나(4th CC)→미다스(딜+방깎) 교체 — CC 과잉 억제, 킬프레셔 전환
     """
-    return [make_c601(), make_miriam(), make_batory(), make_aurora(), make_metis()]
+    return [make_oneiroi(), make_mafdet(), make_miriam(), make_midas(), make_jacheongbi()]
+
+
+# ─── 레거시 호환 별칭 ────────────────────────────────────────────
+get_meta_burst = get_meta_hyper_carry
+get_meta_op_duo = get_meta_poison_garden
+get_meta_fire_burn = get_meta_burn_inferno
+get_meta_cc_control = get_meta_cc_kill_chain
+get_meta_water_tempo = get_meta_speed_execute
+get_meta_forest_rush = get_meta_aoe_cleave
+get_meta_light_holy = get_meta_holy_bastion

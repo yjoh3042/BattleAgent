@@ -32,12 +32,18 @@ def make_enemy_team(team_fn):
         ec = copy.deepcopy(c)
         ec.id = ec.id + "_e"
         ec.side = "enemy"
-        for skill in [ec.normal_skill, ec.active_skill, ec.ultimate_skill]:
+        skills = [ec.normal_skill, ec.active_skill, ec.ultimate_skill]
+        if ec.passive_skill:
+            skills.append(ec.passive_skill)
+        for skill in skills:
             skill.id = skill.id + "_e"
             for eff in skill.effects:
                 if eff.buff_data:
                     eff.buff_data.id = eff.buff_data.id + "_e"
                     eff.buff_data.source_skill_id = eff.buff_data.source_skill_id + "_e"
+        for trigger in ec.triggers:
+            if trigger.skill_id:
+                trigger.skill_id = trigger.skill_id + "_e"
         enemy_chars.append(ec)
     return enemy_chars
 

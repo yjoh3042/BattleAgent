@@ -159,14 +159,14 @@ class TriggerSystem:
     # ─── 스킬/버프 조회 ───────────────────────────────────────────
     def _find_skill(self, unit: BattleUnit, skill_id: str):
         """유닛의 스킬 중 ID로 검색"""
-        for skill in (unit.data.normal_skill, unit.data.active_skill, unit.data.ultimate_skill):
+        for skill in (unit.data.normal_skill, unit.data.active_skill, unit.data.ultimate_skill, unit.data.passive_skill):
             if skill and skill.id == skill_id:
                 return skill
         return None
 
     def _find_buff(self, unit: BattleUnit, buff_id: str):
         """유닛의 스킬 효과 중 버프 ID로 검색"""
-        for skill in (unit.data.normal_skill, unit.data.active_skill, unit.data.ultimate_skill):
+        for skill in (unit.data.normal_skill, unit.data.active_skill, unit.data.ultimate_skill, unit.data.passive_skill):
             if not skill:
                 continue
             for effect in skill.effects:

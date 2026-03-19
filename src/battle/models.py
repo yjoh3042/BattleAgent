@@ -85,6 +85,7 @@ class CharacterData:
     normal_skill: SkillData
     active_skill: SkillData
     ultimate_skill: SkillData
+    passive_skill: Optional[SkillData] = None   # 패시브 스킬 (트리거/전투시작 자동 발동)
     sp_cost: int = 5               # 얼티밋 SP 비용 (4~6)
     triggers: List[TriggerData] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)   # 기본 태그 (e.g. 'burn_synergy')

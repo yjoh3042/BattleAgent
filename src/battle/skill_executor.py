@@ -572,8 +572,8 @@ class SkillExecutor:
             if skill_id:
                 # 시전자의 스킬에서 해당 ID 찾기
                 target_skill = None
-                for sk in [caster.data.normal_skill, caster.data.active_skill, caster.data.ultimate_skill]:
-                    if sk.id == skill_id:
+                for sk in [caster.data.normal_skill, caster.data.active_skill, caster.data.ultimate_skill, caster.data.passive_skill]:
+                    if sk and sk.id == skill_id:
                         target_skill = sk
                         break
                 if target_skill:

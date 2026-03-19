@@ -26,6 +26,7 @@ class SkillType(Enum):
     NORMAL = "normal"      # 기본 공격, 쿨타임 없음
     ACTIVE = "active"      # 액티브 스킬, 사용 후 2턴 쿨타임
     ULTIMATE = "ultimate"  # 얼티밋, SP 소모 + 엑스트라 턴
+    PASSIVE = "passive"    # 패시브, 트리거/전투시작 시 자동 발동
 
 
 class LogicType(Enum):

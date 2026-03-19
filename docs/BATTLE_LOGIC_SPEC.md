@@ -1,6 +1,6 @@
 # 전투 로직 명세서 (Battle Logic Specification)
 
-> **버전**: 1.0
+> **버전**: 2.0 (21종 LogicType + CONFUSED CCType 추가)
 > **기준 소스**: `src/battle/` 모듈 전체
 > **작성 기준**: 실제 구현 코드 역추적 (rules.py, battle_engine.py 등)
 
@@ -14,7 +14,7 @@
 4. [스킬 시스템](#4-스킬-시스템)
 5. [데미지 공식 (damage_calc)](#5-데미지-공식-damage_calc)
 6. [힐 공식](#6-힐-공식)
-7. [14종 LogicType 상세](#7-14종-logictype-상세)
+7. [35종 LogicType 상세](#7-35종-logictype-상세)
 8. [상태이상 (CC) 시스템](#8-상태이상-cc-시스템)
 9. [DoT (지속 피해) 시스템](#9-dot-지속-피해-시스템)
 10. [버프/디버프 생명주기 (BuffManager)](#10-버프디버프-생명주기-buffmanager)
@@ -640,7 +640,7 @@ def heal(self, amount: float) -> float:
 
 ---
 
-## 7. 14종 LogicType 상세
+## 7. 35종 LogicType 상세
 
 > 소스: `src/battle/enums.py`, `src/battle/skill_executor.py`
 
@@ -871,8 +871,271 @@ ctx.buff_manager.apply_buff(target, counter_marker, caster.id)
 
 ### 7.15 ABSORB
 
-**동작**: 피해 흡수 (미구현).
+**동작**: 피해 흡수 (열거형 정의만 존재).
 현재 코드에서 `LogicType.ABSORB`는 열거형에 정의되어 있으나 `skill_executor.py`에 처리 분기 없음.
+향후 흡혈/생명력 흡수 계열 스킬에 사용될 수 있는 예약 타입이다.
+
+### 7.16 DAMAGE_PENETRATION (DEF 무시 대미지)
+
+**동작**: DEF 계산을 완전히 건너뛰고 ATK × 배율 만큼 피해를 입힌다.
+**파라미터**: `multiplier` (배율)
+
+```python
+def compute_damage_penetration(attacker, defender, skill_mult):
+    base = attacker.atk  # DEF 무시
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    is_crit = roll_crit(attacker.cri_ratio, defender.cri_resist)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    return final, is_crit, False
+```
+
+회피 판정, 속성 상성, 크리티컬은 정상 적용된다. `is_cri_unavailable` / `ignore_element` 플래그도 반영.
+
+### 7.17 DAMAGE_HP_RATIO (대상 HP% 대미지)
+
+**동작**: 대상 최대 HP의 일정 비율만큼 고정 피해 (DEF/속성/크리 무시).
+**파라미터**: `value` (비율, 예: 0.10 = 10% maxHP)
+
+```python
+def compute_damage_hp_ratio(target, ratio):
+    return max(1, floor(target.max_hp * ratio))
+```
+
+회피 불가. 보호막은 먼저 흡수. ON_HIT 트리거 발동.
+
+### 7.18 DAMAGE_CRI (무조건 크리 대미지)
+
+**동작**: `compute_damage`와 동일하지만 크리 판정 없이 무조건 크리티컬 적용.
+**파라미터**: `multiplier` (배율)
+
+```python
+def compute_damage_guaranteed_crit(attacker, defender, skill_mult):
+    base = calc_base_damage(attacker.atk, defender.def_, attacker.penetration)
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio, True)  # 무조건 크리
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    return final, True, False
+```
+
+DEF 경감, 속성 상성, 회피 판정은 정상 적용.
+
+### 7.19 DAMAGE_BUFF_SCALE (시전자 버프 수 비례 대미지)
+
+**동작**: 시전자에게 적용된 버프 수에 비례하여 추가 대미지 배율 적용.
+**파라미터**: `multiplier` (기본 배율), `value` (버프 1개당 추가 배율, 기본 0.1)
+
+```python
+buff_count = len([ab for ab in caster.active_buffs if not ab.buff_data.is_debuff])
+buff_bonus = 1.0 + buff_count * scale_per_buff
+final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, buff_bonus)
+```
+
+**예시**: 버프 5개 보유, scale 0.1 → 대미지 1.5배 증가
+
+### 7.20 DAMAGE_BUFF_SCALE_TARGET (타겟 버프 수 비례 대미지)
+
+**동작**: 타겟에게 적용된 **버프(is_debuff=False)** 수에 비례하여 추가 대미지.
+**파라미터**: `multiplier` (기본 배율), `value` (버프 1개당 추가 배율, 기본 0.1)
+
+버프가 많은 적을 상대로 강력한 안티-버프 공격. DAMAGE_BUFF_SCALE과 동일 공식이나 버프 수를 타겟에서 계산.
+
+### 7.21 DAMAGE_DEBUFF_SCALE_TARGET (타겟 디버프 수 비례 대미지)
+
+**동작**: 타겟에게 적용된 **디버프(is_debuff=True)** 수에 비례하여 추가 대미지.
+**파라미터**: `multiplier` (기본 배율), `value` (디버프 1개당 추가 배율, 기본 0.1)
+
+```python
+debuff_count = len([ab for ab in target.active_buffs if ab.buff_data.is_debuff])
+```
+
+디버프를 많이 쌓아둔 적에게 폭딜하는 "디버프 착취" 계열 스킬에 사용.
+
+### 7.22 HEAL_LOSS_SCALE (잃은 HP 비례 회복)
+
+**동작**: 대상이 잃은 HP(maxHP - currentHP)에 비례하여 회복.
+**파라미터**: `value` (비율, 예: 0.5 = 잃은 HP의 50% 회복)
+
+```python
+lost_hp = target.max_hp - target.current_hp
+amount = lost_hp * effect.value
+actual = target.heal(amount)
+```
+
+HP가 낮을수록 회복량이 커지는 "위기 회복" 계열 힐.
+
+### 7.23 BARRIER_RATIO (대상 HP% 보호막)
+
+**동작**: 대상 최대 HP의 일정 비율만큼 보호막 부여.
+**파라미터**: `value` (비율, 예: 0.20 = maxHP의 20%)
+
+```python
+barrier_amount = target.max_hp * effect.value
+target.add_barrier(barrier_amount)
+```
+
+기존 BARRIER(시전자 ATK 기반)와 달리, 대상의 HP를 기준으로 보호막 크기가 결정된다.
+
+### 7.24 INVINCIBILITY (무적)
+
+**동작**: 대상에게 무적 상태를 부여. 무적 동안 모든 피해가 0으로 처리된다.
+**파라미터**: `value` (지속 턴)
+
+```python
+# 마커 버프로 관리 (tags=["invincibility"])
+target.is_invincible = True
+
+# take_damage에서 체크
+if self.is_invincible:
+    return 0.0  # 모든 피해 무효
+```
+
+마커 버프 만료 시 `sync_marker_flags()`에 의해 `is_invincible = False`로 자동 해제.
+
+### 7.25 UNDYING (불사)
+
+**동작**: 대상이 HP 1 미만으로 떨어지지 않는 불사 상태 부여.
+**파라미터**: `value` (지속 턴)
+
+```python
+# take_damage에서 체크
+if self.is_undying and self.current_hp < 1.0 and actual > 0:
+    self.current_hp = 1.0  # HP 1 유지
+```
+
+무적과 달리 피해 자체는 받지만, 사망하지 않는다. 마커 버프 만료 후 해제.
+
+### 7.26 DEBUFF_IMMUNE (디버프 면역)
+
+**동작**: 대상에게 디버프 면역 상태 부여. 면역 동안 모든 디버프(is_debuff=True) 적용이 거부된다.
+**파라미터**: `value` (지속 턴)
+
+```python
+# buff_manager.apply_buff에서 체크
+if buff_data.is_debuff and getattr(unit, 'is_debuff_immune', False):
+    return  # 디버프 면역 → 적용 거부
+```
+
+DoT(화상/독), 스탯 감소, CC 등 is_debuff=True인 모든 버프가 차단된다.
+
+### 7.27 SP_STEAL (SP 강탈)
+
+**동작**: 적 진영의 SP를 빼앗아 아군 진영에 추가.
+**파라미터**: `value` (강탈량)
+
+```python
+current_target_sp = ctx.sp_manager.get_sp(target_side)
+stolen = min(amount, current_target_sp)  # 보유량 이상 강탈 불가
+ctx.sp_manager.add_sp(target_side, -stolen)
+ctx.sp_manager.add_sp(caster_side, stolen)
+```
+
+적의 얼티밋 사용을 방해하면서 아군의 SP를 충전하는 이중 효과.
+
+### 7.28 SP_LOCK (SP 충전 잠금)
+
+**동작**: 대상에게 SP 충전 잠금 상태 부여. 잠금 동안 라운드 시작 시 SP 자동 충전이 차단된다.
+**파라미터**: `value` (지속 턴)
+
+```python
+# battle_engine.py의 라운드 시작 시 SP 충전에서 체크
+if any(u.is_sp_locked for u in side_units if u.is_alive):
+    pass  # SP 충전 스킵
+```
+
+마커 버프(tags=["sp_lock"], is_debuff=True)로 관리.
+
+### 7.29 BUFF_TURN_INCREASE (버프 턴 증가)
+
+**동작**: 대상에게 적용된 모든 **버프(is_debuff=False)**의 남은 턴을 증가.
+**파라미터**: `value` (증가 턴 수, 기본 1)
+
+```python
+for ab in target.active_buffs:
+    if not ab.buff_data.is_debuff:
+        ab.remaining_turns += amount
+```
+
+아군 서포터가 버프 지속시간을 연장하는 "버프 유지" 계열 스킬에 사용.
+
+### 7.30 DEBUFF_TURN_INCREASE (디버프 턴 증가)
+
+**동작**: 대상에게 적용된 모든 **디버프(is_debuff=True)**의 남은 턴을 증가.
+**파라미터**: `value` (증가 턴 수, 기본 1)
+
+```python
+for ab in target.active_buffs:
+    if ab.buff_data.is_debuff:
+        ab.remaining_turns += amount
+```
+
+적의 디버프를 연장하여 고통을 지속시키는 공격적 서포트 스킬.
+
+### 7.31 CRI_UNAVAILABLE (크리 불가)
+
+**동작**: 대상의 크리티컬 발동을 일정 턴간 봉쇄.
+**파라미터**: `value` (지속 턴)
+
+```python
+# compute_damage에서 체크
+if getattr(attacker, 'is_cri_unavailable', False):
+    is_crit = False
+```
+
+마커 버프(tags=["cri_unavailable"], is_debuff=True)로 관리. 만료 시 `sync_marker_flags()`로 해제.
+
+### 7.32 COUNTER_UNAVAILABLE (반격 불가)
+
+**동작**: 대상의 반격(화상반격 등) 발동을 일정 턴간 봉쇄.
+**파라미터**: `value` (지속 턴)
+
+```python
+# DAMAGE 처리에서 반격 체크 시
+if not getattr(target, 'is_counter_unavailable', False) and has_counter_marker:
+    # 반격 발동
+```
+
+마커 버프(tags=["counter_unavailable"], is_debuff=True)로 관리.
+
+### 7.33 USE_SKILL (스킬 발동)
+
+**동작**: 효과 발동 시 시전자의 다른 스킬을 즉시 체인 발동.
+**파라미터**: `condition.skill_id` (발동할 스킬 ID)
+
+```python
+if effect.condition and 'skill_id' in effect.condition:
+    skill_id = effect.condition['skill_id']
+    for sk in [caster.data.normal_skill, caster.data.active_skill, caster.data.ultimate_skill]:
+        if sk.id == skill_id:
+            sub_killed = self.execute(caster, sk, ctx)  # 재귀 실행
+```
+
+트리거 시스템의 `ON_KILL` 후속 공격과 유사하나, 스킬 효과 체인으로 발동하는 점이 다르다.
+
+### 7.34 IGNORE_ELEMENT (속성 상성 무시)
+
+**동작**: 대상에게 속성 상성 무시 상태 부여. 상성 배율이 항상 1.0으로 처리된다.
+**파라미터**: `value` (지속 턴)
+
+```python
+# compute_damage에서 체크
+if getattr(attacker, 'ignore_element', False):
+    elem_mult = 1.0  # 상성 배율 무시
+```
+
+불리한 상성 매치업을 무시하거나, 유리 상성 보너스를 포기하는 대신 안정적 피해를 주는 전략적 스킬.
+마커 버프(tags=["ignore_element"], is_debuff=False)로 관리.
+
+### 7.35 ACTIVE_CD_CHANGE (액티브 쿨타임 변경)
+
+**동작**: 대상의 액티브 스킬 쿨타임을 즉시 변경 (증가 또는 감소).
+**파라미터**: `value` (변경량, 양수=증가, 음수=감소)
+
+```python
+change = int(effect.value)
+target.active_skill_cooldown = max(0, target.active_skill_cooldown + change)
+```
+
+**예시**: `value=-99` → 아군의 액티브 스킬 쿨타임 즉시 초기화 (서포터용)
+**예시**: `value=3` → 적의 액티브 스킬 사용을 3턴간 지연 (방해용)
 
 ---
 
@@ -933,10 +1196,30 @@ if unit.soft_cc:
 | `POISON` | "poison" | 중독 — DoT 효과 (LogicType.DOT와 별개) |
 | `BURN` | "burn" | 화상 — DoT 효과 |
 | `BLIND` | "blind" | 실명 — 명중률 감소 |
-| `SILENCE` | "silence" | 침묵 — 스킬 사용 불가 |
+| `SILENCE` | "silence" | 침묵 — 액티브/얼티밋 사용 불가, 노멀만 허용 |
+| `CONFUSED` | "confused" | 혼란 — 적군 타겟이 랜덤으로 변경, 액티브 스킬 사용 불가 |
 
 > **주의**: `CCType.BURN/POISON`은 열거형 정의에 있으나, 실제 DoT 처리는
 > `LogicType.DOT + dot_type="burn"/"poison"`으로 구현된다.
+
+#### CONFUSED (혼란) 상세 동작
+
+혼란 상태의 유닛은 다음 두 가지 제약을 받는다:
+
+1. **타겟 랜덤화**: 적군 대상 스킬의 타겟이 `ENEMY_RANDOM`으로 강제 변경된다. 아군 대상 스킬(힐, 버프 등)은 정상 작동.
+2. **액티브 스킬 제한**: 침묵과 동일하게 액티브 스킬 사용 불가. 노멀 스킬만 허용.
+
+```python
+# skill_executor.py: 혼란 타겟 랜덤화
+if getattr(caster, 'is_confused', False) and target_type not in ALLY_TARGET_TYPES:
+    effective_target_type = TargetType.ENEMY_RANDOM
+
+# battle_engine.py: 혼란/침묵 시 스킬 제한
+if unit.is_confused or unit.is_silenced:
+    chosen_skill = unit.data.normal_skill  # 노멀만 허용
+```
+
+Soft CC로 분류되며, `tick_cc()` 만료 시 `is_confused = False`로 해제된다.
 
 ### 8.4 CC 부여 규칙
 
@@ -1972,36 +2255,36 @@ ELEMENT_TABLE: dict[tuple, float] = {
 | LogicUndying | `apply_buff(UNDYING)` | **완전 구현** | |
 | LogicTaunt | `apply_taunt()` | **완전 구현** | |
 | LogicRevive | `apply_revive()` | **부분 구현** | 빈칸 체크 미구현 |
-| LogicBarrierRatio | - | **미구현** | HP 비례 보호막 |
+| LogicBarrierRatio | `BARRIER_RATIO` | **완전 구현** | 대상 HP% 보호막 |
 | LogicRemoveBuffCount | - | **미구현** | 버프/디버프 수량 제거 |
-| UseSkill | - | **미구현** | 스킬 체인 발동 |
-| LogicDamageBuffScale | - | **미구현** | 버프 수 비례 대미지 |
-| LogicDamageBuffScaleTarget | - | **미구현** | 타겟 버프 수 비례 대미지 |
-| LogicDamageDebuffScaleTarget | - | **미구현** | 타겟 디버프 수 비례 대미지 |
-| LogicSpSteal | - | **미구현** | SP 강탈 |
-| LogicSpIncrease | - | **미구현** | SP 즉시 충전 |
-| LogicBuffTurnIncrease | - | **미구현** | 버프 턴 연장 |
-| LogicDeBuffTurnIncrease | - | **미구현** | 디버프 턴 연장 |
-| LogicHealLossScaleHp | - | **미구현** | 잃은 HP 비례 힐 |
+| UseSkill | `USE_SKILL` | **완전 구현** | 스킬 체인 발동 (재귀 실행) |
+| LogicDamageBuffScale | `DAMAGE_BUFF_SCALE` | **완전 구현** | 시전자 버프 수 비례 대미지 |
+| LogicDamageBuffScaleTarget | `DAMAGE_BUFF_SCALE_TARGET` | **완전 구현** | 타겟 버프 수 비례 대미지 |
+| LogicDamageDebuffScaleTarget | `DAMAGE_DEBUFF_SCALE_TARGET` | **완전 구현** | 타겟 디버프 수 비례 대미지 |
+| LogicSpSteal | `SP_STEAL` | **완전 구현** | SP 강탈 (적→아군 이동) |
+| LogicSpIncrease | `SP_INCREASE` | **완전 구현** | SP 즉시 충전 |
+| LogicBuffTurnIncrease | `BUFF_TURN_INCREASE` | **완전 구현** | 버프 턴 연장 |
+| LogicDeBuffTurnIncrease | `DEBUFF_TURN_INCREASE` | **완전 구현** | 디버프 턴 연장 |
+| LogicHealLossScaleHp | `HEAL_LOSS_SCALE` | **완전 구현** | 잃은 HP 비례 힐 |
 | LogicAllyScaleHeal | - | **미구현** | 파티 구성 비례 힐 |
-| LogicStone | - | **미구현** | Freeze와 유사 |
-| LogicElectricshock | - | **미구현** | 30% 스킬 취소 |
-| LogicPanic | - | **미구현** | 30% 스킬 취소 |
-| LogicAbnormalSkill | - | **미구현** | 전체 스킬 봉인 |
-| LogicConfused | - | **미구현** | 혼란 상태 |
-| LogicBlind | - | **미구현** | 실명 (적중 0) |
-| LogicSilence | - | **미구현** | Normal 스킬만 허용 |
-| LogicSpLock | - | **미구현** | SP 충전 봉인 |
-| LogicDebuffImmune | - | **미구현** | 디버프 면역 |
-| LogicCounterUnavailable | - | **미구현** | 반격 확률 0 고정 |
-| LogicCriUnavailable | - | **미구현** | 크리 확률 0 고정 |
-| LogicStop | - | **미구현** | 애니 정지 |
+| LogicStone | `CC(STONE)` | **완전 구현** | Hard CC (기존 CC 시스템) |
+| LogicElectricshock | `CC(ELECTRIC_SHOCK)` | **완전 구현** | Soft CC 30% 행동 실패 |
+| LogicPanic | `CC(PANIC)` | **완전 구현** | Soft CC 30% 행동 실패 |
+| LogicAbnormalSkill | `CC(ABNORMAL_SKILL)` | **완전 구현** | Hard CC (전체 스킬 봉인) |
+| LogicConfused | `CC(CONFUSED)` | **완전 구현** | 혼란 (타겟 랜덤 + 액티브 불가) |
+| LogicBlind | `CC(BLIND)` | **완전 구현** | Soft CC (명중률 감소) |
+| LogicSilence | `CC(SILENCE)` | **완전 구현** | 침묵 (노멀만 허용) |
+| LogicSpLock | `SP_LOCK` | **완전 구현** | SP 충전 잠금 (마커 디버프) |
+| LogicDebuffImmune | `DEBUFF_IMMUNE` | **완전 구현** | 디버프 면역 (마커 버프) |
+| LogicCounterUnavailable | `COUNTER_UNAVAILABLE` | **완전 구현** | 반격 불가 (마커 디버프) |
+| LogicCriUnavailable | `CRI_UNAVAILABLE` | **완전 구현** | 크리 불가 (마커 디버프) |
+| LogicStop | - | **미구현** | 애니 정지 (시뮬레이터 불필요) |
 | LogicNormalIgnoreCounter | - | **미구현** | Normal 반격 무시 |
 | LogicActiveIgnoreCounter | - | **미구현** | Active 반격 무시 |
 | LogicUltimateIgnoreCounter | - | **미구현** | Ultimate 반격 무시 |
 | LogicAllyScaleStatusChange | - | **미구현** | 파티 비례 스탯 |
 | LogicStatusChangeApplyAnotherStatusRate | - | **미구현** | 타 스탯 비율 적용 |
-| LogicActiveSkillTurnChangeOnce | - | **미구현** | 쿨타임 즉시 변경 |
+| LogicActiveSkillTurnChangeOnce | `ACTIVE_CD_CHANGE` | **완전 구현** | 쿨타임 즉시 변경 |
 | LogicSpdTwist | - | **미구현** | 전체 속도 반전 |
 | LogicDamageCriApplyDebuff | - | **미구현** | Tag 조건 강제 크리 |
 | LogicStatusChangeEveryTurn | - | **미구현** | 매 턴 스탯 변경 |
@@ -2009,9 +2292,15 @@ ELEMENT_TABLE: dict[tuple, float] = {
 | LogicStatusChangeRemainingHpPercent | - | **미구현** | HP 높을수록 강화 |
 | LogicStatusChangeMissingHpPercent | - | **미구현** | HP 낮을수록 강화 |
 | LogicHealTargetCount | - | **미구현** | 타겟 수 비례 힐 |
-| LogicIgnoreElementUpper | - | **미구현** | 속성 상성 무시 |
+| LogicIgnoreElementUpper | `IGNORE_ELEMENT` | **완전 구현** | 속성 상성 무시 |
 
-> **요약**: 완전 구현 15종 / 부분 구현 1종 / 미구현 40종
+> **요약**: 완전 구현 35종 / 부분 구현 1종 / 미구현 20종
+>
+> v2.0 추가 구현 (21종): DAMAGE_PENETRATION, DAMAGE_HP_RATIO, DAMAGE_CRI, DAMAGE_BUFF_SCALE,
+> DAMAGE_BUFF_SCALE_TARGET, DAMAGE_DEBUFF_SCALE_TARGET, HEAL_LOSS_SCALE, BARRIER_RATIO,
+> INVINCIBILITY, UNDYING, DEBUFF_IMMUNE, SP_STEAL, SP_LOCK, BUFF_TURN_INCREASE,
+> DEBUFF_TURN_INCREASE, CRI_UNAVAILABLE, COUNTER_UNAVAILABLE, USE_SKILL, IGNORE_ELEMENT,
+> ACTIVE_CD_CHANGE + CCType.CONFUSED
 
 ---
 
