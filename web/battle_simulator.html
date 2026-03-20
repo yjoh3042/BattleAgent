@@ -2,923 +2,1845 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Battle Scenario Simulator</title>
+<title>배틀 시뮬레이터</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0c14;--sf:#12151f;--sf2:#1a1e2c;--sf3:#222738;--bd:#2a3048;--tx:#e8eaf4;--tx2:#7b82a0;--tx3:#525878;
---fire:#ff6b4a;--water:#4a9eff;--forest:#4aff8b;--light:#ffd84a;--dark:#b34aff;
---ts:#ff4a6a;--ta:#ff8c4a;--tb:#ffd84a;--tc:#4a9eff;--td:#8b8fa8;
---accent:#6c5ce7;--grad1:linear-gradient(135deg,#ff4a6a,#b34aff)}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+/* ─── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --bg:     #0a0c14;
+  --sf:     #12151f;
+  --sf2:    #1a1e2c;
+  --sf3:    #222738;
+  --bd:     #2a3048;
+  --bd2:    #353c58;
+  --tx:     #e8eaf4;
+  --tx2:    #7b82a0;
+  --tx3:    #525878;
+  --fire:   #ff6b4a;
+  --water:  #4a9eff;
+  --forest: #4aff8b;
+  --light:  #ffd84a;
+  --dark:   #b34aff;
+  --accent: #6c5ce7;
+  --win:    #4aff8b;
+  --lose:   #ff4a6a;
+  --grad1:  linear-gradient(135deg, #ff4a6a, #b34aff);
+  --font-heading: 'Noto Serif KR', serif;
+  --font-body:    'Noto Sans KR', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+}
 
-/* Layout */
-.top-bar{background:var(--sf);border-bottom:1px solid var(--bd);padding:10px 20px;text-align:center;position:sticky;top:0;z-index:10}
-.top-bar h1{font-size:18px;background:var(--grad1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:inline}
-.top-bar .sub{color:var(--tx2);font-size:11px;margin-top:2px}
-.layout{display:flex;max-width:1400px;margin:0 auto;min-height:calc(100vh - 56px)}
+/* ─── Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--tx); min-height: 100vh; overflow-x: hidden; }
+button { font-family: inherit; cursor: pointer; }
+input  { font-family: inherit; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 3px; }
 
-/* Left Panel */
-.left{width:400px;min-width:400px;border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;max-height:calc(100vh - 56px);position:sticky;top:56px}
+/* ─── Top Bar ────────────────────────────────────────────────────── */
+.topbar {
+  background: var(--sf);
+  border-bottom: 1px solid var(--bd);
+  padding: 0 20px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-brand {
+  display: flex; align-items: center; gap: 10px;
+}
+.topbar-brand h1 {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 700;
+  background: var(--grad1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
+}
+.topbar-brand .sub {
+  font-size: 10px;
+  color: var(--tx3);
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+}
+.topbar-status {
+  display: flex; align-items: center; gap: 8px;
+}
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--tx3);
+  transition: background .3s;
+}
+.status-dot.online { background: var(--win); box-shadow: 0 0 6px var(--win); }
+.status-dot.loading { background: var(--light); animation: pulse-dot .8s ease-in-out infinite alternate; }
+@keyframes pulse-dot { to { opacity: .3; } }
+.status-label { font-size: 10px; color: var(--tx3); font-family: var(--font-mono); }
 
-/* Deck Tabs */
-.deck-tabs{display:flex;border-bottom:1px solid var(--bd)}
-.deck-tab{flex:1;padding:10px 8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--tx2);background:var(--sf);border-bottom:2px solid transparent;transition:all .2s}
-.deck-tab.active{color:var(--tx);border-bottom-color:var(--accent);background:var(--sf2)}
-.deck-tab:hover:not(.active){background:var(--sf3);color:var(--tx)}
+/* ─── Layout ─────────────────────────────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr 340px;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
 
-/* Selected Deck Display */
-.deck-area{padding:10px 12px;border-bottom:1px solid var(--bd)}
-.deck-slots{display:flex;gap:6px;flex-wrap:wrap;min-height:54px}
-.deck-slot{background:var(--sf3);border:1px dashed var(--bd);border-radius:8px;width:66px;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;color:var(--tx3);cursor:default;position:relative;overflow:hidden;flex-shrink:0}
-.deck-slot.filled{border-style:solid;border-color:var(--bd);background:var(--sf2);cursor:pointer}
-.deck-slot.filled:hover{border-color:var(--ts)}
-.deck-slot .el-dot{width:6px;height:6px;border-radius:50%;margin-bottom:3px}
-.deck-slot .slot-name{font-size:9px;font-weight:600;color:var(--tx);text-align:center;line-height:1.2;max-width:60px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.deck-slot .slot-role{font-size:8px;color:var(--tx2)}
-.deck-slot .slot-x{position:absolute;top:2px;right:3px;font-size:9px;color:var(--tx3);line-height:1}
-.deck-slot.filled:hover .slot-x{color:var(--ts)}
+/* ─── Panel Base ─────────────────────────────────────────────────── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+.panel-left  { border-right: 1px solid var(--bd); background: var(--sf); }
+.panel-right { border-left:  1px solid var(--bd); background: var(--sf); }
+.panel-center { background: var(--bg); }
 
-/* Battle Button */
-.battle-section{padding:10px 12px;border-bottom:1px solid var(--bd)}
-.btn-battle{width:100%;padding:11px;border-radius:8px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:var(--grad1);color:#fff;transition:opacity .2s;letter-spacing:0.5px}
-.btn-battle:disabled{opacity:0.35;cursor:not-allowed}
-.btn-battle:not(:disabled):hover{opacity:0.85}
+.panel-section {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bd);
+  flex-shrink: 0;
+}
+.section-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--tx3);
+  margin-bottom: 7px;
+  font-family: var(--font-mono);
+}
 
-/* Settings */
-.settings-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.settings-label{font-size:11px;color:var(--tx2);white-space:nowrap}
-.seed-input{background:var(--sf3);border:1px solid var(--bd);border-radius:6px;color:var(--tx);padding:5px 8px;font-size:11px;width:90px;outline:none}
-.seed-input:focus{border-color:var(--accent)}
-.radio-group{display:flex;gap:4px}
-.radio-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--bd);background:var(--sf3);color:var(--tx2);font-size:10px;cursor:pointer;transition:all .15s}
-.radio-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+/* ─── Deck Tabs ─────────────────────────────────────────────────── */
+.deck-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--bd);
+  flex-shrink: 0;
+}
+.deck-tab {
+  flex: 1;
+  padding: 11px 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--tx3);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  transition: all .18s;
+  font-family: var(--font-heading);
+}
+.deck-tab:hover { color: var(--tx2); background: var(--sf2); }
+.deck-tab.active { color: var(--tx); border-bottom-color: var(--accent); background: var(--sf2); }
+.deck-tab.ally.active  { border-bottom-color: var(--win); }
+.deck-tab.enemy.active { border-bottom-color: var(--lose); }
 
-/* Filters */
-.filter-area{padding:8px 12px;border-bottom:1px solid var(--bd);display:flex;flex-direction:column;gap:6px}
-.filter-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
-.filter-label{font-size:10px;color:var(--tx3);width:28px;flex-shrink:0}
-.fbtn{padding:3px 8px;border-radius:5px;border:1px solid var(--bd);background:var(--sf3);color:var(--tx2);font-size:10px;cursor:pointer;transition:all .15s}
-.fbtn.active{border-color:currentColor}
-.fbtn.f-fire{color:var(--fire)}.fbtn.f-fire.active{background:rgba(255,107,74,.15)}
-.fbtn.f-water{color:var(--water)}.fbtn.f-water.active{background:rgba(74,158,255,.15)}
-.fbtn.f-forest{color:var(--forest)}.fbtn.f-forest.active{background:rgba(74,255,139,.15)}
-.fbtn.f-light{color:var(--light)}.fbtn.f-light.active{background:rgba(255,216,74,.15)}
-.fbtn.f-dark{color:var(--dark)}.fbtn.f-dark.active{background:rgba(179,74,255,.15)}
-.fbtn.f-role.active{background:rgba(108,92,231,.2);border-color:var(--accent);color:var(--tx)}
-.search-input{flex:1;background:var(--sf3);border:1px solid var(--bd);border-radius:6px;color:var(--tx);padding:4px 8px;font-size:11px;outline:none;min-width:0}
-.search-input:focus{border-color:var(--accent)}
+/* ─── Meta Presets ─────────────────────────────────────────────── */
+.meta-select {
+  width: 100%;
+  background: var(--sf3);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  color: var(--tx);
+  padding: 6px 10px;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.meta-select:focus { border-color: var(--accent); }
+.meta-select option { background: var(--sf2); }
 
-/* Character List */
-.char-list{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:4px}
-.char-card{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;user-select:none}
-.char-card:hover{background:var(--sf3);border-color:var(--accent)}
-.char-card.in-active{border-color:var(--accent);background:rgba(108,92,231,.15)}
-.char-card.in-active:hover{border-color:var(--ts);background:rgba(255,74,106,.1)}
-.char-card.in-other{position:relative}
-.char-card.in-other::after{content:'';position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--tx3)}
-.char-el{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
-.char-el.fire{background:rgba(255,107,74,.2)}
-.char-el.water{background:rgba(74,158,255,.2)}
-.char-el.forest{background:rgba(74,255,139,.2)}
-.char-el.light{background:rgba(255,216,74,.2)}
-.char-el.dark{background:rgba(179,74,255,.2)}
-.char-info{flex:1;min-width:0}
-.char-name{font-size:12px;font-weight:600;color:var(--tx);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.char-meta{font-size:10px;color:var(--tx2);display:flex;gap:6px;margin-top:1px}
-.char-atk{font-size:11px;color:var(--tx2);font-weight:500;flex-shrink:0}
-.grade-stars{font-size:9px;color:var(--tb);letter-spacing:-1px}
+/* ─── Deck Slots ─────────────────────────────────────────────────── */
+.deck-slots {
+  display: flex;
+  gap: 5px;
+  min-height: 60px;
+  flex-wrap: nowrap;
+}
+.deck-slot {
+  flex: 1;
+  min-width: 0;
+  height: 60px;
+  background: var(--sf3);
+  border: 1px dashed var(--bd2);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: var(--tx3);
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: border-color .15s;
+}
+.deck-slot.filled {
+  border-style: solid;
+  cursor: pointer;
+  background: var(--sf2);
+}
+.deck-slot.filled:hover { border-color: var(--lose); }
+.deck-slot .el-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.deck-slot .slot-name {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--tx);
+  text-align: center;
+  line-height: 1.3;
+  max-width: 52px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin-top: 4px;
+}
+.deck-slot .slot-role {
+  font-size: 8px;
+  color: var(--tx3);
+  font-family: var(--font-mono);
+}
+.deck-slot .slot-x {
+  position: absolute;
+  top: 2px; right: 3px;
+  font-size: 10px;
+  color: var(--tx3);
+  line-height: 1;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity .1s;
+}
+.deck-slot.filled:hover .slot-x { opacity: 1; color: var(--lose); }
 
-/* Right Panel */
-.right{flex:1;padding:16px 20px;overflow-y:auto;min-width:0}
-.placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:16px;opacity:.4}
-.placeholder .ph-icon{font-size:64px}
-.placeholder p{color:var(--tx2);font-size:14px}
+/* ─── Battle Settings ─────────────────────────────────────────────── */
+.settings-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.settings-label { font-size: 10px; color: var(--tx3); white-space: nowrap; font-family: var(--font-mono); }
+.seed-input {
+  background: var(--sf3);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  color: var(--tx);
+  padding: 5px 8px;
+  font-size: 11px;
+  width: 80px;
+  outline: none;
+  font-family: var(--font-mono);
+}
+.seed-input:focus { border-color: var(--accent); }
+.radio-group { display: flex; gap: 3px; }
+.radio-btn {
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--bd);
+  background: var(--sf3);
+  color: var(--tx2);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: var(--font-mono);
+}
+.radio-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-/* Results */
-.result-summary{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:16px 20px;margin-bottom:16px}
-.result-winner{font-size:22px;font-weight:800;margin-bottom:6px}
-.result-winner.ally-win{color:var(--tc)}
-.result-winner.enemy-win{color:var(--ts)}
-.result-meta{display:flex;gap:16px;flex-wrap:wrap}
-.result-meta-item{font-size:12px;color:var(--tx2)}
-.result-meta-item span{color:var(--tx);font-weight:600}
+/* ─── Battle Button ─────────────────────────────────────────────── */
+.btn-battle {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--grad1);
+  color: #fff;
+  font-family: var(--font-heading);
+  letter-spacing: 0.5px;
+  transition: opacity .2s, transform .1s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-battle:disabled { opacity: .35; cursor: not-allowed; }
+.btn-battle:not(:disabled):hover { opacity: .88; transform: translateY(-1px); }
+.btn-battle:not(:disabled):active { transform: translateY(0); }
+.btn-battle .spinner {
+  display: none;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  margin: 0 auto;
+}
+.btn-battle.loading .btn-label { display: none; }
+.btn-battle.loading .spinner { display: block; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* Team HP bars */
-.hp-section{margin-bottom:16px}
-.section-title{font-size:13px;font-weight:700;color:var(--tx2);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.section-title::before{content:'';display:inline-block;width:3px;height:14px;border-radius:2px;background:var(--accent)}
-.hp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.hp-team{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
-.hp-team-title{font-size:11px;font-weight:700;margin-bottom:8px;color:var(--tx2)}
-.hp-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
-.hp-name{font-size:11px;font-weight:600;width:70px;flex-shrink:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.hp-bar-wrap{flex:1;background:var(--sf3);border-radius:3px;height:8px;overflow:hidden;position:relative}
-.hp-bar-fill{height:100%;border-radius:3px;transition:width .3s}
-.hp-pct{font-size:10px;color:var(--tx2);width:36px;text-align:right;flex-shrink:0}
-.hp-dead{font-size:12px;width:36px;text-align:right;flex-shrink:0}
+/* ─── Filters ─────────────────────────────────────────────────────── */
+.filter-row { display: flex; gap: 3px; flex-wrap: wrap; align-items: center; margin-bottom: 5px; }
+.filter-row:last-child { margin-bottom: 0; }
+.filter-label { font-size: 9px; color: var(--tx3); width: 24px; flex-shrink: 0; font-family: var(--font-mono); }
+.fbtn {
+  padding: 3px 7px;
+  border-radius: 5px;
+  border: 1px solid var(--bd);
+  background: var(--sf3);
+  color: var(--tx2);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all .12s;
+  font-family: var(--font-mono);
+}
+.fbtn:hover { border-color: currentColor; }
+.fbtn.active { border-color: currentColor; }
+.fbtn.f-fire   { color: var(--fire);   } .fbtn.f-fire.active   { background: rgba(255,107,74,.18); }
+.fbtn.f-water  { color: var(--water);  } .fbtn.f-water.active  { background: rgba(74,158,255,.18); }
+.fbtn.f-forest { color: var(--forest); } .fbtn.f-forest.active { background: rgba(74,255,139,.18); }
+.fbtn.f-light  { color: var(--light);  } .fbtn.f-light.active  { background: rgba(255,216,74,.18); }
+.fbtn.f-dark   { color: var(--dark);   } .fbtn.f-dark.active   { background: rgba(179,74,255,.18); }
+.fbtn.f-role.active { background: rgba(108,92,231,.2); border-color: var(--accent); color: var(--tx); }
+.fbtn.f-star { color: var(--light); }
+.fbtn.f-star.active { background: rgba(255,216,74,.15); border-color: var(--light); }
+.btn-clear { padding: 4px 12px; border-radius: 6px; border: 1px solid var(--bd); background: var(--sf3); color: var(--lose); font-size: 11px; transition: all .15s; margin-left: auto; }
+.btn-clear:hover { background: rgba(255,74,106,.15); border-color: var(--lose); }
+.search-input {
+  width: 100%;
+  background: var(--sf3);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  color: var(--tx);
+  padding: 5px 9px;
+  font-size: 11px;
+  outline: none;
+  font-family: var(--font-body);
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--tx3); }
 
-/* Damage Meter */
-.dmg-section{margin-bottom:16px}
-.dmg-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.dmg-name{font-size:11px;font-weight:600;width:80px;flex-shrink:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.dmg-bar-wrap{flex:1;background:var(--sf3);border-radius:3px;height:10px;overflow:hidden}
-.dmg-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--ts))}
-.dmg-pct{font-size:10px;color:var(--tx2);width:42px;text-align:right;flex-shrink:0}
+/* ─── Character List ─────────────────────────────────────────────── */
+.char-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.char-card {
+  background: var(--sf2);
+  border: 1px solid var(--bd);
+  border-radius: 7px;
+  padding: 6px 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .12s;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+.char-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+.char-card.fire::before   { background: var(--fire);   }
+.char-card.water::before  { background: var(--water);  }
+.char-card.forest::before { background: var(--forest); }
+.char-card.light::before  { background: var(--light);  }
+.char-card.dark::before   { background: var(--dark);   }
+.char-card:hover { background: var(--sf3); border-color: var(--bd2); }
+.char-card.in-active {
+  border-color: var(--accent);
+  background: rgba(108,92,231,.12);
+}
+.char-card.in-active:hover { border-color: var(--lose); background: rgba(255,74,106,.08); }
+.char-card.in-other { opacity: .5; pointer-events: none; }
+.char-el {
+  width: 20px; height: 20px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.char-el.fire   { background: rgba(255,107,74,.2); }
+.char-el.water  { background: rgba(74,158,255,.2); }
+.char-el.forest { background: rgba(74,255,139,.2); }
+.char-el.light  { background: rgba(255,216,74,.2); }
+.char-el.dark   { background: rgba(179,74,255,.2); }
+.char-info { flex: 1; min-width: 0; }
+.char-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-heading);
+}
+.char-meta { font-size: 9px; color: var(--tx2); display: flex; gap: 5px; margin-top: 1px; font-family: var(--font-mono); }
+.char-role { font-size: 10px; color: var(--tx2); font-family: var(--font-mono); flex-shrink: 0; }
+.char-count {
+  position: absolute;
+  top: 4px; right: 6px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  opacity: 0;
+}
+.char-card.in-active .char-count { opacity: 1; }
+.no-results { color: var(--tx3); font-size: 12px; text-align: center; padding: 24px; }
 
-/* Battle Log */
-.log-section{margin-bottom:16px}
-.log-container{background:var(--sf);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
-.log-scroll{max-height:520px;overflow-y:auto;padding:8px}
-.log-entry{padding:5px 8px;border-radius:5px;margin-bottom:2px;font-size:11px;line-height:1.5}
-.log-ally{background:rgba(108,92,231,.12);border-left:2px solid var(--accent)}
-.log-enemy{background:rgba(255,140,74,.1);border-left:2px solid var(--ta)}
-.log-ult{background:rgba(74,255,139,.1);border-left:2px solid #4aff8b}
-.log-kill{background:rgba(255,74,106,.15);border-left:2px solid var(--ts)}
-.log-round{background:rgba(255,216,74,.08);border-left:2px solid var(--tb);color:var(--tb);font-weight:600;text-align:center}
-.log-time{color:var(--tx3);margin-right:4px;font-family:monospace}
-.log-char{font-weight:700}
-.log-skill{color:var(--tx2)}
-.log-dmg{font-weight:600}
-.log-dmg.crit{color:var(--ts)}
-.log-hp{color:var(--tx3);font-size:10px}
-.log-sp{color:var(--tb);font-size:10px}
-.el-fire{color:var(--fire)}
-.el-water{color:var(--water)}
-.el-forest{color:var(--forest)}
-.el-light{color:var(--light)}
-.el-dark{color:var(--dark)}
+/* ─── Center Panel ─────────────────────────────────────────────── */
+.center-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
-/* Responsive */
-@media(max-width:900px){
-  .layout{flex-direction:column}
-  .left{width:100%;min-width:0;max-height:none;position:static}
-  .hp-grid{grid-template-columns:1fr}
+/* Result Banner */
+.result-banner {
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--bd);
+  animation: slide-down .3s ease-out;
+}
+@keyframes slide-down { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+.result-banner.win  { background: rgba(74,255,139,.08); border-color: rgba(74,255,139,.3); }
+.result-banner.lose { background: rgba(255,74,106,.08); border-color: rgba(255,74,106,.3); }
+.result-banner.time { background: rgba(255,216,74,.08); border-color: rgba(255,216,74,.3); }
+.result-label {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+}
+.result-banner.win  .result-label { color: var(--win);  }
+.result-banner.lose .result-label { color: var(--lose); }
+.result-banner.time .result-label { color: var(--light); }
+.result-meta { font-size: 11px; color: var(--tx2); font-family: var(--font-mono); }
+.result-meta span { color: var(--tx); font-weight: 600; }
+
+/* Battlefield */
+.battlefield {
+  background: var(--sf);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bf-row-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--tx3);
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+}
+.bf-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Unit Card */
+.unit-card {
+  background: var(--sf2);
+  border: 1px solid var(--bd);
+  border-radius: 9px;
+  padding: 9px 10px;
+  width: 148px;
+  min-width: 0;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color .2s, box-shadow .2s, opacity .3s;
+  animation: unit-appear .35s ease-out both;
+}
+@keyframes unit-appear {
+  from { opacity:0; transform:scale(.92) translateY(6px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+.unit-card.dead {
+  opacity: .38;
+  filter: grayscale(.8);
+}
+.unit-card.active {
+  border-color: var(--light) !important;
+  box-shadow: 0 0 0 2px rgba(255,216,74,.18), 0 0 16px rgba(255,216,74,.12);
+  animation: unit-appear .35s ease-out both, active-pulse 1.8s ease-in-out infinite;
+}
+@keyframes active-pulse {
+  0%,100% { box-shadow: 0 0 0 2px rgba(255,216,74,.18), 0 0 16px rgba(255,216,74,.12); }
+  50%      { box-shadow: 0 0 0 3px rgba(255,216,74,.35), 0 0 24px rgba(255,216,74,.22); }
+}
+.unit-card.fire   { border-color: rgba(255,107,74,.25);   }
+.unit-card.water  { border-color: rgba(74,158,255,.25);   }
+.unit-card.forest { border-color: rgba(74,255,139,.25);   }
+.unit-card.light  { border-color: rgba(255,216,74,.25);   }
+.unit-card.dark   { border-color: rgba(179,74,255,.25);   }
+
+.unit-el-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 9px 9px 0 0;
+}
+.fire   .unit-el-bar { background: var(--fire);   }
+.water  .unit-el-bar { background: var(--water);  }
+.forest .unit-el-bar { background: var(--forest); }
+.light  .unit-el-bar { background: var(--light);  }
+.dark   .unit-el-bar { background: var(--dark);   }
+
+.unit-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+  margin-top: 4px;
+}
+.unit-el-icon { font-size: 12px; }
+.unit-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--tx);
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-heading);
+}
+.unit-dead-icon { font-size: 12px; }
+
+/* HP Bar */
+.hp-track {
+  background: var(--sf3);
+  border-radius: 3px;
+  height: 6px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 2px;
+}
+.hp-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .5s ease;
+  background: var(--win);
+}
+.hp-fill.mid  { background: var(--light); }
+.hp-fill.low  { background: var(--lose); }
+.hp-fill.dead { background: var(--tx3); }
+
+/* Barrier Bar */
+.barrier-track {
+  background: var(--sf3);
+  border-radius: 3px;
+  height: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.barrier-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--water);
+  transition: width .5s ease;
+  opacity: .8;
+}
+
+.hp-text {
+  font-size: 9px;
+  color: var(--tx2);
+  font-family: var(--font-mono);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+/* Buff Dots */
+.buff-row {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  min-height: 8px;
+}
+.buff-dot {
+  width: 7px; height: 7px;
+  border-radius: 2px;
+  title: '';
+  cursor: default;
+}
+.buff-dot.is-buff    { background: rgba(74,255,139,.7); }
+.buff-dot.is-debuff  { background: rgba(255,74,106,.7); }
+.buff-dot.is-barrier { background: rgba(74,158,255,.7); }
+.buff-dot.is-cc      { background: rgba(255,216,74,.7); }
+
+/* SP Bar */
+.sp-bar-section {
+  background: var(--sf);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.sp-label { font-size: 9px; color: var(--tx3); font-family: var(--font-mono); letter-spacing: 1px; margin-bottom: 6px; }
+.sp-row { display: flex; align-items: center; gap: 8px; }
+.sp-side { flex: 1; min-width: 0; }
+.sp-name { font-size: 10px; color: var(--tx2); margin-bottom: 3px; font-family: var(--font-mono); }
+.sp-track {
+  height: 8px;
+  background: var(--sf3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.sp-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .4s ease;
+}
+.sp-fill.ally  { background: linear-gradient(90deg, var(--accent), #8b7cf8); }
+.sp-fill.enemy { background: linear-gradient(90deg, var(--lose), var(--fire)); }
+.sp-val {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--tx);
+  min-width: 20px;
+  text-align: center;
+}
+.sp-divider { font-size: 10px; color: var(--tx3); }
+
+/* ─── Timeline ─────────────────────────────────────────────────── */
+.timeline-section {
+  background: var(--sf);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.timeline-turn {
+  font-size: 11px;
+  color: var(--tx2);
+  font-family: var(--font-mono);
+}
+.timeline-turn span { color: var(--tx); font-weight: 600; }
+.timeline-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--sf3);
+  outline: none;
+  cursor: pointer;
+  margin-bottom: 8px;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-size: 0% 100%;
+  background-repeat: no-repeat;
+}
+.timeline-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--tx);
+  border: 2px solid var(--accent);
+  cursor: pointer;
+  transition: transform .1s;
+}
+.timeline-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.playback-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.pb-btn {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--bd2);
+  background: var(--sf3);
+  color: var(--tx2);
+  font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .12s;
+}
+.pb-btn:hover { border-color: var(--accent); color: var(--tx); background: var(--sf2); }
+.pb-btn.play  { width: 36px; height: 36px; background: var(--accent); border-color: var(--accent); color: #fff; font-size: 14px; }
+.pb-btn.play:hover { background: #7d6eee; }
+.speed-btns { display: flex; gap: 3px; margin-left: 6px; }
+.speed-btn {
+  padding: 3px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--bd);
+  background: var(--sf3);
+  color: var(--tx3);
+  font-size: 9px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all .12s;
+}
+.speed-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ─── Placeholder ─────────────────────────────────────────────── */
+.placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+}
+.ph-icon { font-size: 52px; opacity: .25; }
+.ph-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  color: var(--tx2);
+  font-weight: 600;
+}
+.ph-sub { font-size: 12px; color: var(--tx3); text-align: center; line-height: 1.6; }
+
+/* ─── Right Panel ─────────────────────────────────────────────── */
+.right-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.log-turn-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bd);
+  flex-shrink: 0;
+}
+.log-turn-label {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx);
+  margin-bottom: 2px;
+}
+.log-skill-meta {
+  font-size: 10px;
+  color: var(--tx2);
+  font-family: var(--font-mono);
+}
+.log-skill-meta .stype {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  margin-left: 5px;
+  letter-spacing: .5px;
+}
+.stype.normal   { background: rgba(108,92,231,.2); color: var(--accent); }
+.stype.active   { background: rgba(74,158,255,.2); color: var(--water); }
+.stype.ultimate { background: rgba(255,74,106,.2); color: var(--lose); }
+.stype.passive  { background: rgba(74,255,139,.15); color: var(--forest); }
+
+.log-sp-row {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--bd);
+  font-size: 10px;
+  color: var(--tx3);
+  font-family: var(--font-mono);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.sp-ally-val  { color: #8b7cf8; font-weight: 600; }
+.sp-enemy-val { color: var(--fire); font-weight: 600; }
+
+.log-events {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.log-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  font-size: 11px;
+  line-height: 1.4;
+  animation: evt-appear .15s ease-out;
+}
+@keyframes evt-appear { from { opacity:0; transform:translateX(-4px); } to { opacity:1; transform:translateX(0); } }
+.log-event:hover { background: var(--sf3); }
+.evt-icon { flex-shrink: 0; font-size: 12px; }
+.evt-text { flex: 1; min-width: 0; }
+.evt-damage .evt-text { color: #ff8080; }
+.evt-heal   .evt-text { color: var(--forest); }
+.evt-buff   .evt-text { color: var(--water); }
+.evt-debuff .evt-text { color: var(--fire); }
+.evt-death  .evt-text { color: var(--tx3); }
+.evt-revive .evt-text { color: var(--light); }
+.evt-ultimate .evt-text { color: var(--dark); }
+.crit-tag {
+  display: inline-block;
+  font-size: 8px;
+  font-weight: 700;
+  background: var(--lose);
+  color: #fff;
+  padding: 0 4px;
+  border-radius: 3px;
+  letter-spacing: .5px;
+  margin-left: 3px;
+  font-family: var(--font-mono);
+  vertical-align: middle;
+}
+.evt-val {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 10px;
+  color: var(--tx3);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Log Lines */
+.log-lines-section {
+  border-top: 1px solid var(--bd);
+  flex-shrink: 0;
+}
+.log-lines-toggle {
+  width: 100%;
+  padding: 7px 12px;
+  background: transparent;
+  border: none;
+  color: var(--tx3);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color .12s;
+}
+.log-lines-toggle:hover { color: var(--tx2); }
+.log-lines-toggle .toggle-arrow { transition: transform .2s; }
+.log-lines-toggle.open .toggle-arrow { transform: rotate(90deg); }
+.log-lines-body {
+  display: none;
+  padding: 0 10px 8px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+.log-lines-body.open { display: block; }
+.log-line {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--tx3);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Battle Summary */
+.summary-section {
+  border-top: 1px solid var(--bd);
+  padding: 10px 12px;
+  flex-shrink: 0;
+}
+.summary-title {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx2);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(42,48,72,.5);
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-row .sname { color: var(--tx2); font-family: var(--font-heading); }
+.summary-row .sval  { color: var(--tx);  font-family: var(--font-mono); font-weight: 600; }
+.survivor-list { display: flex; flex-direction: column; gap: 3px; }
+.survivor-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+.survivor-side-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.survivor-side-dot.ally  { background: var(--win);  }
+.survivor-side-dot.enemy { background: var(--lose); }
+
+/* ─── Toast ─────────────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 9999;
+}
+.toast {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  max-width: 280px;
+  animation: toast-in .25s ease-out;
+  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+}
+.toast.error { background: #2a1520; border: 1px solid rgba(255,74,106,.4); color: var(--lose); }
+.toast.info  { background: #151a28; border: 1px solid var(--bd2); color: var(--tx); }
+@keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ─── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 300px 1fr; }
+  .panel-right { display: none; }
+}
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .panel-left { height: auto; max-height: 45vh; }
 }
 </style>
 </head>
 <body>
-<div class="top-bar">
-  <h1>⚔️ 전투 시나리오 시뮬레이터</h1>
-  <div class="sub">5 vs 5 CTB 전투 시뮬레이션 — 오프라인 동작</div>
+
+<!-- ─── Top Bar ─────────────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <h1>배틀 시뮬레이터</h1>
+    <span class="sub">v2.0 · BattleAgent</span>
+  </div>
+  <div class="topbar-status">
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-label" id="statusLabel">연결 중...</span>
+  </div>
 </div>
+
+<!-- ─── Layout ─────────────────────────────────────────────────── -->
 <div class="layout">
-  <!-- LEFT PANEL -->
-  <div class="left">
+
+  <!-- ══ LEFT PANEL ══════════════════════════════════════════════ -->
+  <div class="panel panel-left">
+
     <!-- Deck Tabs -->
     <div class="deck-tabs">
-      <div class="deck-tab active" id="tab-ally" onclick="switchTab('ally')">⚔️ 공격덱 (<span id="cnt-ally">0</span>/5)</div>
-      <div class="deck-tab" id="tab-enemy" onclick="switchTab('enemy')">🛡️ 방어덱 (<span id="cnt-enemy">0</span>/5)</div>
+      <button class="deck-tab ally active" id="tabAlly" onclick="switchDeckTab('ally')">아군 (Ally)</button>
+      <button class="deck-tab enemy" id="tabEnemy" onclick="switchDeckTab('enemy')">적군 (Enemy)</button>
     </div>
 
-    <!-- Active Deck Display -->
-    <div class="deck-area">
-      <div class="deck-slots" id="deck-slots"></div>
+    <!-- Meta Presets -->
+    <div class="panel-section">
+      <div class="section-label">메타 프리셋</div>
+      <select class="meta-select" id="metaSelect" onchange="applyMetaPreset(this.value)">
+        <option value="">— 메타팀 선택 —</option>
+      </select>
     </div>
 
-    <!-- Battle Button + Settings -->
-    <div class="battle-section">
-      <button class="btn-battle" id="btn-battle" onclick="startBattle()" disabled>⚔️ 전투 시작</button>
-      <div style="margin-top:10px" class="settings-row">
-        <span class="settings-label">시드:</span>
-        <input class="seed-input" type="number" id="seed-input" placeholder="랜덤" min="1" max="999999">
-        <span class="settings-label">덱 타입:</span>
-        <div class="radio-group">
-          <div class="radio-btn active" id="dtype-offense" onclick="setDeckType('offense')">공격</div>
-          <div class="radio-btn" id="dtype-defense" onclick="setDeckType('defense')">방어</div>
-        </div>
+    <!-- Deck Slots -->
+    <div class="panel-section">
+      <div class="section-label">덱 슬롯 (<span id="deckCount">0</span>/5)</div>
+      <div class="deck-slots" id="deckSlots">
+        <!-- filled by JS -->
       </div>
+    </div>
+
+    <!-- Battle Settings -->
+    <div class="panel-section">
+      <div class="settings-row">
+        <span class="settings-label">시드</span>
+        <input class="seed-input" type="number" id="seedInput" placeholder="42" value="42">
+        <button class="btn-clear" onclick="clearDeck()" title="현재 덱 초기화">🗑 초기화</button>
+      </div>
+    </div>
+
+    <!-- Battle Button -->
+    <div class="panel-section">
+      <button class="btn-battle" id="btnBattle" onclick="runBattle()">
+        <span class="btn-label">⚔ 배틀 시작</span>
+        <div class="spinner"></div>
+      </button>
     </div>
 
     <!-- Filters -->
-    <div class="filter-area">
+    <div class="panel-section">
       <div class="filter-row">
         <span class="filter-label">속성</span>
-        <button class="fbtn f-fire active" data-el="fire" onclick="toggleElFilter('fire')">🔥화</button>
-        <button class="fbtn f-water active" data-el="water" onclick="toggleElFilter('water')">💧수</button>
-        <button class="fbtn f-forest active" data-el="forest" onclick="toggleElFilter('forest')">🌿목</button>
-        <button class="fbtn f-light active" data-el="light" onclick="toggleElFilter('light')">☀️광</button>
-        <button class="fbtn f-dark active" data-el="dark" onclick="toggleElFilter('dark')">🌙암</button>
+        <button class="fbtn f-fire"   data-el="fire"   onclick="toggleFilter(this,'el')">🔥 화</button>
+        <button class="fbtn f-water"  data-el="water"  onclick="toggleFilter(this,'el')">💧 수</button>
+        <button class="fbtn f-forest" data-el="forest" onclick="toggleFilter(this,'el')">🌿 목</button>
+        <button class="fbtn f-light"  data-el="light"  onclick="toggleFilter(this,'el')">✨ 광</button>
+        <button class="fbtn f-dark"   data-el="dark"   onclick="toggleFilter(this,'el')">🌙 암</button>
       </div>
       <div class="filter-row">
         <span class="filter-label">역할</span>
-        <button class="fbtn f-role active" data-role="attacker" onclick="toggleRoleFilter('attacker')">딜러</button>
-        <button class="fbtn f-role active" data-role="magician" onclick="toggleRoleFilter('magician')">마법</button>
-        <button class="fbtn f-role active" data-role="defender" onclick="toggleRoleFilter('defender')">탱커</button>
-        <button class="fbtn f-role active" data-role="healer" onclick="toggleRoleFilter('healer')">힐러</button>
-        <button class="fbtn f-role active" data-role="supporter" onclick="toggleRoleFilter('supporter')">서폿</button>
+        <button class="fbtn f-role" data-role="attacker"  onclick="toggleFilter(this,'role')">ATK</button>
+        <button class="fbtn f-role" data-role="defender"  onclick="toggleFilter(this,'role')">DEF</button>
+        <button class="fbtn f-role" data-role="magician"  onclick="toggleFilter(this,'role')">MAG</button>
+        <button class="fbtn f-role" data-role="supporter" onclick="toggleFilter(this,'role')">SUP</button>
+        <button class="fbtn f-role" data-role="healer"    onclick="toggleFilter(this,'role')">HLR</button>
       </div>
       <div class="filter-row">
-        <span class="filter-label">검색</span>
-        <input class="search-input" type="text" id="search-input" placeholder="이름 검색..." oninput="renderCharList()">
+        <span class="filter-label">성급</span>
+        <button class="fbtn f-star" data-star="1"   onclick="toggleFilter(this,'star')">1★</button>
+        <button class="fbtn f-star" data-star="2"   onclick="toggleFilter(this,'star')">2★</button>
+        <button class="fbtn f-star" data-star="3"   onclick="toggleFilter(this,'star')">3★</button>
+        <button class="fbtn f-star" data-star="3.5" onclick="toggleFilter(this,'star')">3.5★</button>
       </div>
+      <input class="search-input" type="text" id="searchInput" placeholder="캐릭터 검색..." oninput="renderCharList()">
     </div>
 
     <!-- Character List -->
-    <div class="char-list" id="char-list"></div>
-  </div>
+    <div class="char-list" id="charList">
+      <div class="no-results">캐릭터 로딩 중...</div>
+    </div>
 
-  <!-- RIGHT PANEL -->
-  <div class="right" id="right-panel">
-    <div class="placeholder">
-      <div class="ph-icon">⚔️</div>
-      <p>공격덱과 방어덱 각 5명을 선택한 후<br>전투 시작 버튼을 눌러주세요.</p>
+  </div>
+  <!-- ══ END LEFT ═════════════════════════════════════════════════ -->
+
+  <!-- ══ CENTER PANEL ════════════════════════════════════════════ -->
+  <div class="panel panel-center">
+    <div class="center-scroll" id="centerScroll">
+      <div class="placeholder" id="placeholder">
+        <div class="ph-icon">⚔</div>
+        <div class="ph-title">전투 준비 완료</div>
+        <div class="ph-sub">아군과 적군 각 5명을 선택한 후<br>배틀 시작 버튼을 눌러주세요</div>
+      </div>
+      <!-- battle content injected here by JS -->
     </div>
   </div>
+  <!-- ══ END CENTER ════════════════════════════════════════════════ -->
+
+  <!-- ══ RIGHT PANEL ═════════════════════════════════════════════ -->
+  <div class="panel panel-right">
+    <div class="right-scroll" id="rightPanel">
+      <div class="placeholder">
+        <div class="ph-icon">📜</div>
+        <div class="ph-title">이벤트 로그</div>
+        <div class="ph-sub">배틀을 실행하면<br>턴별 이벤트가 표시됩니다</div>
+      </div>
+    </div>
+  </div>
+  <!-- ══ END RIGHT ════════════════════════════════════════════════ -->
+
 </div>
 
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
 <script>
-// ─── Character Data ───
-var CHARS = JSON.parse('[{"id":"c083","name":"네이드","element":"FIRE","role":"ATTACKER","atk":240,"def":120,"hp":2400,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c412","name":"카인","element":"FIRE","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c445","name":"카라라트리","element":"FIRE","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c501","name":"라가라자","element":"FIRE","role":"ATTACKER","atk":460,"def":230,"hp":4600,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c003","name":"다비","element":"FIRE","role":"MAGICIAN","atk":240,"def":160,"hp":4000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c283","name":"모건","element":"FIRE","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c339","name":"다비2","element":"FIRE","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4,"displayName":"다비(각성)"},{"id":"c417","name":"구미호","element":"FIRE","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c286","name":"베르들레","element":"FIRE","role":"HEALER","atk":120,"def":120,"hp":2400,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c429","name":"지바","element":"FIRE","role":"HEALER","atk":200,"def":200,"hp":4000,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c037","name":"유다","element":"FIRE","role":"DEFENDER","atk":150,"def":180,"hp":3600,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c462","name":"데레사","element":"FIRE","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c354","name":"드미테르","element":"FIRE","role":"SUPPORTER","atk":200,"def":160,"hp":4000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c562","name":"살마키스","element":"FIRE","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c002","name":"리자","element":"WATER","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c124","name":"이브","element":"WATER","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c193","name":"비루파","element":"WATER","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c442","name":"니르티","element":"WATER","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c022","name":"마야우엘","element":"WATER","role":"MAGICIAN","atk":180,"def":120,"hp":3000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c318","name":"바리","element":"WATER","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c502","name":"도계화","element":"WATER","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c281","name":"티스베","element":"WATER","role":"HEALER","atk":200,"def":200,"hp":4000,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c437","name":"에우로스","element":"WATER","role":"HEALER","atk":160,"def":160,"hp":3200,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c366","name":"데이노","element":"WATER","role":"DEFENDER","atk":150,"def":180,"hp":3600,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c537","name":"엘리시온","element":"WATER","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c167","name":"상아","element":"WATER","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c362","name":"레오","element":"WATER","role":"SUPPORTER","atk":150,"def":120,"hp":3000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c464","name":"아라한","element":"WATER","role":"SUPPORTER","atk":287,"def":230,"hp":5750,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c062","name":"에우로페","element":"FOREST","role":"ATTACKER","atk":240,"def":120,"hp":2400,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c132","name":"미다스","element":"FOREST","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c447","name":"미리암","element":"FOREST","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c549","name":"다누","element":"FOREST","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c033","name":"다이아나","element":"FOREST","role":"MAGICIAN","atk":180,"def":120,"hp":3000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c336","name":"판","element":"FOREST","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c601","name":"에레보스","element":"FOREST","role":"MAGICIAN","atk":345,"def":230,"hp":5750,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c031","name":"프레이야","element":"FOREST","role":"HEALER","atk":120,"def":120,"hp":2400,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c229","name":"브라우니","element":"FOREST","role":"HEALER","atk":200,"def":200,"hp":4000,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c180","name":"맘몬","element":"FOREST","role":"DEFENDER","atk":200,"def":240,"hp":4800,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c468","name":"메티스","element":"FOREST","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c398","name":"자청비","element":"FOREST","role":"SUPPORTER","atk":200,"def":160,"hp":4000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c461","name":"아우로라","element":"FOREST","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c525","name":"그릴라","element":"FOREST","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c194","name":"아슈토레스","element":"LIGHT","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c221","name":"야나","element":"LIGHT","role":"ATTACKER","atk":240,"def":120,"hp":2400,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c296","name":"힐드","element":"LIGHT","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c227","name":"마프데트","element":"LIGHT","role":"MAGICIAN","atk":240,"def":160,"hp":4000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c438","name":"세멜레","element":"LIGHT","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c600","name":"루미나","element":"LIGHT","role":"MAGICIAN","atk":345,"def":230,"hp":5750,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c183","name":"다나","element":"LIGHT","role":"HEALER","atk":160,"def":160,"hp":3200,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c455","name":"티와즈","element":"LIGHT","role":"HEALER","atk":200,"def":200,"hp":4000,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c353","name":"샤를","element":"LIGHT","role":"DEFENDER","atk":150,"def":180,"hp":3600,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c393","name":"모나","element":"LIGHT","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":100,"cri":0.15,"pen":0.0,"sp":3},{"id":"c473","name":"티타니아","element":"LIGHT","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c028","name":"레다","element":"LIGHT","role":"SUPPORTER","atk":150,"def":120,"hp":3000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c364","name":"시트리","element":"LIGHT","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c533","name":"오네이로이","element":"LIGHT","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c064","name":"메두사","element":"DARK","role":"ATTACKER","atk":240,"def":120,"hp":2400,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c156","name":"에르제베트","element":"DARK","role":"ATTACKER","atk":320,"def":160,"hp":3200,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c486","name":"쿠바바","element":"DARK","role":"ATTACKER","atk":400,"def":200,"hp":4000,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c532","name":"아누비스","element":"DARK","role":"ATTACKER","atk":460,"def":230,"hp":4600,"spd":80,"cri":0.15,"pen":0.0,"sp":6},{"id":"c400","name":"반시","element":"DARK","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c432","name":"아르테미스","element":"DARK","role":"MAGICIAN","atk":300,"def":200,"hp":5000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c514","name":"두엣샤","element":"DARK","role":"MAGICIAN","atk":240,"def":160,"hp":4000,"spd":100,"cri":0.15,"pen":0.0,"sp":4},{"id":"c048","name":"네반","element":"DARK","role":"HEALER","atk":120,"def":120,"hp":2400,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c448","name":"미르칼라","element":"DARK","role":"HEALER","atk":200,"def":200,"hp":4000,"spd":90,"cri":0.15,"pen":0.0,"sp":3},{"id":"c001","name":"모나","element":"DARK","role":"DEFENDER","atk":200,"def":240,"hp":4800,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c051","name":"프레이","element":"DARK","role":"DEFENDER","atk":250,"def":300,"hp":6000,"spd":110,"cri":0.15,"pen":0.0,"sp":3},{"id":"c035","name":"페르세포네","element":"DARK","role":"SUPPORTER","atk":150,"def":120,"hp":3000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c294","name":"바토리","element":"DARK","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4},{"id":"c485","name":"유나","element":"DARK","role":"SUPPORTER","atk":250,"def":200,"hp":5000,"spd":120,"cri":0.15,"pen":0.0,"sp":4}]');
-
-// Normalize element/role to lowercase for engine
-CHARS.forEach(function(c){
-  c.element = c.element.toLowerCase();
-  c.role = c.role.toLowerCase();
-  c.def_ = c.def;
-  // displayName fallback
-  if(!c.displayName) c.displayName = c.name;
-  // grade based on atk tiers
-  c.grade = c.atk >= 400 ? (c.atk >= 450 ? 3.5 : 3) : c.atk >= 280 ? 2 : 1;
-});
-
-// ─── UI State ───
-var activeTab = 'ally'; // 'ally' or 'enemy'
-var allyDeck = []; // array of char ids
+'use strict';
+// ═══════════════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════════════
+var allChars = [];
+var metaTeams = [];
+var allyDeck  = [];   // array of char objects
 var enemyDeck = [];
+var activeDeckTab = 'ally';  // 'ally' | 'enemy'
 var deckType = 'offense';
-var elFilters = {fire:true,water:true,forest:true,light:true,dark:true};
-var roleFilters = {attacker:true,magician:true,defender:true,healer:true,supporter:true};
+var activeFilters = { el: new Set(), role: new Set(), star: new Set() };
 
-// ─── UI Helpers ───
-var EL_EMOJI = {fire:'🔥',water:'💧',forest:'🌿',light:'☀️',dark:'🌙'};
-var EL_KR = {fire:'화',water:'수',forest:'목',light:'광',dark:'암'};
-var ROLE_KR = {attacker:'딜러',magician:'마법',defender:'탱커',healer:'힐러',supporter:'서폿'};
+var battleData = null;   // raw API response
+var currentTurnIdx = 0;
+var isPlaying = false;
+var playInterval = null;
+var playSpeed = 1;       // 0.5 | 1 | 2
+var PLAY_BASE_MS = 700;
 
-function gradeStars(g){
-  if(g>=3.5) return '★★★✦';
-  if(g>=3) return '★★★';
-  if(g>=2) return '★★';
-  return '★';
+// ═══════════════════════════════════════════════════════════════════
+// Element helpers
+// ═══════════════════════════════════════════════════════════════════
+var EL_ICON  = { fire:'🔥', water:'💧', forest:'🌿', light:'✨', dark:'🌙' };
+var EL_CLASS = { fire:'fire', water:'water', forest:'forest', light:'light', dark:'dark' };
+var ROLE_ABBR = { attacker:'ATK', defender:'DEF', magician:'MAG', supporter:'SUP', healer:'HLR' };
+
+function elClass(el) { return EL_CLASS[el] || ''; }
+function elIcon(el)  { return EL_ICON[el]  || '?'; }
+function roleAbbr(r) { return ROLE_ABBR[r] || r; }
+
+function fmtNum(n) {
+  if (n == null) return '0';
+  return Math.round(n).toLocaleString('ko-KR');
 }
 
-function elColor(el){
-  var m={fire:'var(--fire)',water:'var(--water)',forest:'var(--forest)',light:'var(--light)',dark:'var(--dark)'};
-  return m[el]||'var(--tx2)';
+// ═══════════════════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════════════════
+function setStatus(state, label) {
+  var dot = document.getElementById('statusDot');
+  var lbl = document.getElementById('statusLabel');
+  dot.className = 'status-dot ' + state;
+  lbl.textContent = label;
 }
 
-function hpColor(pct){
-  if(pct>0.5) return '#4aff8b';
-  if(pct>0.25) return '#ffd84a';
-  return '#ff4a6a';
-}
-
-// ─── Tab switching ───
-function switchTab(tab){
-  activeTab = tab;
-  document.getElementById('tab-ally').classList.toggle('active', tab==='ally');
-  document.getElementById('tab-enemy').classList.toggle('active', tab==='enemy');
-  renderDeckSlots();
-  renderCharList();
-}
-
-function setDeckType(t){
-  deckType = t;
-  document.getElementById('dtype-offense').classList.toggle('active', t==='offense');
-  document.getElementById('dtype-defense').classList.toggle('active', t==='defense');
-}
-
-// ─── Filter toggles ───
-function toggleElFilter(el){
-  elFilters[el] = !elFilters[el];
-  var btn = document.querySelector('[data-el="'+el+'"]');
-  btn.classList.toggle('active', elFilters[el]);
-  renderCharList();
-}
-function toggleRoleFilter(role){
-  roleFilters[role] = !roleFilters[role];
-  var btn = document.querySelector('[data-role="'+role+'"]');
-  btn.classList.toggle('active', roleFilters[role]);
-  renderCharList();
-}
-
-// ─── Deck management ───
-function getActiveDeck(){ return activeTab==='ally'?allyDeck:enemyDeck; }
-function getOtherDeck(){ return activeTab==='ally'?enemyDeck:allyDeck; }
-
-function toggleChar(id){
-  var deck = getActiveDeck();
-  var idx = deck.indexOf(id);
-  if(idx>=0){
-    deck.splice(idx,1);
-  } else {
-    if(deck.length>=5) return;
-    deck.push(id);
+async function loadInitialData() {
+  setStatus('loading', '서버 연결 중...');
+  try {
+    var [cRes, mRes] = await Promise.all([
+      fetch('/api/characters'),
+      fetch('/api/meta-teams')
+    ]);
+    if (!cRes.ok || !mRes.ok) throw new Error('서버 응답 오류');
+    allChars  = await cRes.json();
+    metaTeams = await mRes.json();
+    renderMetaSelect();
+    renderCharList();
+    setStatus('online', '온라인 (' + allChars.length + '캐릭터)');
+  } catch(e) {
+    setStatus('', '서버 오프라인');
+    showToast('서버에 연결할 수 없습니다. api_server.py가 실행 중인지 확인하세요.', 'error');
+    // Fallback: render empty
+    renderCharList();
   }
-  updateCounts();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Meta Select
+// ═══════════════════════════════════════════════════════════════════
+function renderMetaSelect() {
+  var sel = document.getElementById('metaSelect');
+  metaTeams.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.id + ' — ' + t.name + '  ' + (t.description || '');
+    sel.appendChild(opt);
+  });
+}
+
+function applyMetaPreset(teamId) {
+  if (!teamId) return;
+  var team = metaTeams.find(function(t) { return t.id === teamId; });
+  if (!team || !team.character_ids) return;
+  var deck = activeDeckTab === 'ally' ? allyDeck : enemyDeck;
+  // Clear and fill
+  deck.length = 0;
+  team.character_ids.slice(0, 5).forEach(function(cid) {
+    var c = allChars.find(function(x) { return x.id === cid; });
+    if (c) deck.push(c);
+  });
   renderDeckSlots();
   renderCharList();
-  updateBattleBtn();
+  // Reset select
+  document.getElementById('metaSelect').value = '';
 }
 
-function removeFromDeck(id, side){
-  var deck = side==='ally' ? allyDeck : enemyDeck;
-  var idx = deck.indexOf(id);
-  if(idx>=0) deck.splice(idx,1);
-  updateCounts();
+// ═══════════════════════════════════════════════════════════════════
+// Deck Tab
+// ═══════════════════════════════════════════════════════════════════
+function switchDeckTab(tab) {
+  activeDeckTab = tab;
+  document.getElementById('tabAlly').classList.toggle('active', tab === 'ally');
+  document.getElementById('tabEnemy').classList.toggle('active', tab === 'enemy');
   renderDeckSlots();
   renderCharList();
-  updateBattleBtn();
 }
 
-function updateCounts(){
-  document.getElementById('cnt-ally').textContent = allyDeck.length;
-  document.getElementById('cnt-enemy').textContent = enemyDeck.length;
+// ═══════════════════════════════════════════════════════════════════
+// Deck Slots
+// ═══════════════════════════════════════════════════════════════════
+function getCurrentDeck() {
+  return activeDeckTab === 'ally' ? allyDeck : enemyDeck;
 }
 
-function updateBattleBtn(){
-  document.getElementById('btn-battle').disabled = !(allyDeck.length===5 && enemyDeck.length===5);
-}
-
-// ─── Render deck slots ───
-function renderDeckSlots(){
-  var deck = getActiveDeck();
-  var side = activeTab;
-  var html = '';
-  for(var i=0;i<5;i++){
-    if(i<deck.length){
-      var c = CHARS.find(function(x){return x.id===deck[i];});
-      if(!c){html+='<div class="deck-slot"></div>';continue;}
-      var ec = elColor(c.element);
-      var cid = c.id;
-      html += '<div class="deck-slot filled" onclick="removeFromDeck(\''+cid+'\',\''+side+'\')" title="클릭하여 제거">'
-        +'<div class="slot-x">✕</div>'
-        +'<div class="el-dot" style="background:'+ec+'"></div>'
-        +'<div class="slot-name">'+c.displayName+'</div>'
-        +'<div class="slot-role">'+ROLE_KR[c.role]+'</div>'
-        +'</div>';
+function renderDeckSlots() {
+  var deck = getCurrentDeck();
+  var container = document.getElementById('deckSlots');
+  document.getElementById('deckCount').textContent = deck.length;
+  container.innerHTML = '';
+  for (var i = 0; i < 5; i++) {
+    var slot = document.createElement('div');
+    if (i < deck.length) {
+      var c = deck[i];
+      var ec = elClass(c.element);
+      slot.className = 'deck-slot filled';
+      slot.title = 'Click to remove';
+      slot.innerHTML =
+        '<div class="el-bar" style="background:var(--' + ec + ')"></div>' +
+        '<div class="slot-name">' + escHtml(c.name) + '</div>' +
+        '<div class="slot-role">' + roleAbbr(c.role) + '</div>' +
+        '<div class="slot-x">✕</div>';
+      (function(idx){ slot.onclick = function(){ removeFromDeck(idx); }; })(i);
     } else {
-      html += '<div class="deck-slot"><span style="font-size:18px;opacity:.3">+</span></div>';
+      slot.className = 'deck-slot';
+      slot.innerHTML = '<span style="font-size:9px;color:var(--tx3)">' + (i+1) + '</span>';
     }
+    container.appendChild(slot);
   }
-  document.getElementById('deck-slots').innerHTML = html;
 }
 
-// ─── Render character list ───
-function renderCharList(){
-  var search = document.getElementById('search-input').value.toLowerCase();
-  var activeDeck = getActiveDeck();
-  var otherDeck = getOtherDeck();
-  var html = '';
-  CHARS.forEach(function(c){
-    if(!elFilters[c.element]) return;
-    if(!roleFilters[c.role]) return;
-    if(search && c.displayName.toLowerCase().indexOf(search)<0 && c.name.toLowerCase().indexOf(search)<0) return;
-    var inActive = activeDeck.indexOf(c.id)>=0;
-    var inOther = otherDeck.indexOf(c.id)>=0;
-    var cls = 'char-card';
-    if(inActive) cls += ' in-active';
-    else if(inOther) cls += ' in-other';
-    var ec = elColor(c.element);
-    html += '<div class="'+cls+'" onclick="toggleChar(\''+c.id+'\')">'
-      +'<div class="char-el '+c.element+'">'+EL_EMOJI[c.element]+'</div>'
-      +'<div class="char-info">'
-        +'<div class="char-name">'+c.displayName+'</div>'
-        +'<div class="char-meta">'
-          +'<span style="color:'+ec+'">'+EL_KR[c.element]+'</span>'
-          +'<span>'+ROLE_KR[c.role]+'</span>'
-          +'<span class="grade-stars">'+gradeStars(c.grade)+'</span>'
-        +'</div>'
-      +'</div>'
-      +'<div class="char-atk">ATK '+c.atk+'</div>'
-      +'</div>';
+function removeFromDeck(idx) {
+  var deck = getCurrentDeck();
+  deck.splice(idx, 1);
+  renderDeckSlots();
+  renderCharList();
+}
+
+function addToDeck(charId) {
+  var deck = getCurrentDeck();
+  if (deck.length >= 5) { showToast('슬롯이 가득 찼습니다 (최대 5명)', 'info'); return; }
+  var c = allChars.find(function(x) { return x.id === charId; });
+  if (!c) return;
+  if (deck.find(function(x) { return x.id === charId; })) {
+    removeFromDeck(deck.findIndex(function(x) { return x.id === charId; }));
+    return;
+  }
+  deck.push(c);
+  renderDeckSlots();
+  renderCharList();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Filters
+// ═══════════════════════════════════════════════════════════════════
+function toggleFilter(btn, type) {
+  var key = type === 'el' ? btn.dataset.el : type === 'role' ? btn.dataset.role : btn.dataset.star;
+  if (activeFilters[type].has(key)) {
+    activeFilters[type].delete(key);
+    btn.classList.remove('active');
+  } else {
+    activeFilters[type].add(key);
+    btn.classList.add('active');
+  }
+  renderCharList();
+}
+
+function clearDeck() {
+  if (activeDeckTab === 'ally') {
+    allyDeck = [];
+  } else {
+    enemyDeck = [];
+  }
+  renderDeckSlots();
+  renderCharList();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Character List
+// ═══════════════════════════════════════════════════════════════════
+function renderCharList() {
+  var search = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  var filtered = allChars.filter(function(c) {
+    if (activeFilters.el.size   > 0 && !activeFilters.el.has(c.element))   return false;
+    if (activeFilters.role.size > 0 && !activeFilters.role.has(c.role))    return false;
+    if (activeFilters.star.size > 0 && !activeFilters.star.has(c.star))    return false;
+    if (search && !c.name.toLowerCase().includes(search))                  return false;
+    return true;
   });
-  document.getElementById('char-list').innerHTML = html || '<div style="color:var(--tx3);font-size:12px;text-align:center;padding:20px">결과 없음</div>';
+
+  var container = document.getElementById('charList');
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="no-results">검색 결과 없음</div>';
+    return;
+  }
+
+  var frag = document.createDocumentFragment();
+  filtered.forEach(function(c) {
+    var inAlly  = allyDeck.find(function(x) { return x.id === c.id; });
+    var inEnemy = enemyDeck.find(function(x) { return x.id === c.id; });
+    var isActive = activeDeckTab === 'ally' ? !!inAlly : !!inEnemy;
+    var isOther  = activeDeckTab === 'ally' ? !!inEnemy : !!inAlly;
+    var ec = elClass(c.element);
+
+    var card = document.createElement('div');
+    card.className = 'char-card ' + ec + (isActive ? ' in-active' : '') + (isOther ? ' in-other' : '');
+    card.onclick = function() { addToDeck(c.id); };
+
+    var st = c.stats || {};
+    card.innerHTML =
+      '<div class="char-el ' + ec + '">' + elIcon(c.element) + '</div>' +
+      '<div class="char-info">' +
+        '<div class="char-name">' + escHtml(c.name) + '</div>' +
+        '<div class="char-meta">' +
+          '<span>HP ' + fmtNum(st.hp) + '</span>' +
+          '<span>ATK ' + fmtNum(st.atk) + '</span>' +
+          '<span>SPD ' + (st.spd || 0) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="char-role">' + roleAbbr(c.role) + '</div>' +
+      '<div class="char-count">✓</div>';
+
+    frag.appendChild(card);
+  });
+  container.innerHTML = '';
+  container.appendChild(frag);
 }
 
-// ─────────────────────────────────────────
-// BATTLE ENGINE (copied from local_analyzer.html + log extension)
-// ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// Battle Execution
+// ═══════════════════════════════════════════════════════════════════
+async function runBattle() {
+  if (allyDeck.length === 0) { showToast('아군 덱을 선택해주세요', 'info'); return; }
+  if (enemyDeck.length === 0) { showToast('적군 덱을 선택해주세요', 'info'); return; }
 
-var EL_ADV={fire:{forest:1.2,water:0.8,fire:1,light:1,dark:1},water:{fire:1.2,forest:0.8,water:1,light:1,dark:1},
-forest:{water:1.2,fire:0.8,forest:1,light:1,dark:1},light:{dark:1.2,light:1,fire:1,water:1,forest:1},dark:{light:1.2,dark:1,fire:1,water:1,forest:1}};
+  var btn = document.getElementById('btnBattle');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  setStatus('loading', '전투 중...');
 
-var BATTLE_LENGTH=300,MAX_TURN_TIME=10,MAX_TURNS=200,MAX_TIME=300.0,MAX_SP=10,ULT_COOLDOWN=4;
-var ULT_SP_COST={attacker:6,healer:3,magician:4,defender:3,supporter:4};
+  stopPlayback();
 
-// ─── Seeded RNG ───
-function seededRandom(seed){
-  var s = (seed||Math.floor(Math.random()*2147483646))+1;
-  return function(){
-    s = (s*16807+0)%2147483647;
-    return s/2147483647;
+  try {
+    var seed = parseInt(document.getElementById('seedInput').value);
+    if (isNaN(seed)) seed = 42;
+
+    var res = await fetch('/api/battle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ally_ids:  allyDeck.map(function(c) { return c.id; }),
+        enemy_ids: enemyDeck.map(function(c) { return c.id; }),
+        seed:      seed,
+        deck_type: deckType
+      })
+    });
+
+    if (!res.ok) {
+      var err = await res.json().catch(function() { return {detail: res.statusText}; });
+      throw new Error(err.detail || '배틀 오류');
+    }
+
+    var data = await res.json();
+    battleData = data;
+    setStatus('online', '배틀 완료 — ' + (data.turn_count || 0) + '턴');
+    initReplay(data);
+
+  } catch(e) {
+    showToast('배틀 오류: ' + e.message, 'error');
+    setStatus('online', '오류');
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Replay Init
+// ═══════════════════════════════════════════════════════════════════
+function initReplay(data) {
+  var turns = (data.turns && data.turns.turns) ? data.turns.turns : (data.turns || []);
+  if (!turns || turns.length === 0) {
+    showToast('배틀 데이터가 없습니다', 'error');
+    return;
+  }
+
+  currentTurnIdx = 0;
+
+  // Build center
+  var center = document.getElementById('centerScroll');
+  center.innerHTML = buildCenterHTML(data, turns);
+
+  // Init slider
+  var slider = document.getElementById('timelineSlider');
+  slider.max = turns.length - 1;
+  slider.value = 0;
+  slider.oninput = function() {
+    currentTurnIdx = parseInt(this.value);
+    showTurn(currentTurnIdx, turns);
+    updateSliderFill(this);
   };
-}
 
-// ─── MinHeap ───
-function MinHeap(){this.data=[];}
-MinHeap.prototype.push=function(v){this.data.push(v);this._up(this.data.length-1);};
-MinHeap.prototype.pop=function(){var d=this.data,top=d[0],last=d.pop();if(d.length>0){d[0]=last;this._down(0);}return top;};
-MinHeap.prototype.size=function(){return this.data.length;};
-MinHeap.prototype._up=function(i){var d=this.data;while(i>0){var p=(i-1)>>1;if(d[p][0]>d[i][0]||(d[p][0]===d[i][0]&&d[p][1]>d[i][1])){var t=d[p];d[p]=d[i];d[i]=t;i=p;}else break;}};
-MinHeap.prototype._down=function(i){var d=this.data,n=d.length;while(true){var l=2*i+1,r=2*i+2,s=i;if(l<n&&(d[l][0]<d[s][0]||(d[l][0]===d[s][0]&&d[l][1]<d[s][1])))s=l;if(r<n&&(d[r][0]<d[s][0]||(d[r][0]===d[s][0]&&d[r][1]<d[s][1])))s=r;if(s!==i){var t=d[s];d[s]=d[i];d[i]=t;i=s;}else break;}};
-
-// ─── BattleUnit factory ───
-function makeBattleUnit(c,side,idx){
-  var hp=c.hp||5000;
-  return{
-    name:c.displayName||c.name,element:c.element,role:c.role,side:side,idx:idx,
-    atk:c.atk||0,def_:(c.def||c.def_||0),spd:c.spd||80,
-    max_hp:hp,current_hp:hp,
-    active_cd:0,ult_cd:0,used_ult_this_round:false,
-    sp_cost:ULT_SP_COST[c.role]||4,
-    dmgDealt:0,healDone:0,dmgTaken:0
-  };
-}
-
-// ─── Damage calc (accepts rng function) ───
-function calcDamage(attacker,defender,skillMult,elMult,rng){
-  var atk=attacker.atk,def=defender.def_;
-  var base=atk*(1-def/(atk+def));
-  var roll=rng();
-  var isCrit=roll<0.15;
-  var crit=isCrit?1.5:1.0;
-  return{dmg:Math.max(1,Math.floor(base*skillMult*elMult*crit)),crit:isCrit};
-}
-
-function getElMult(atkEl,defEl){
-  return(EL_ADV[atkEl]&&EL_ADV[atkEl][defEl]!==undefined)?EL_ADV[atkEl][defEl]:1.0;
-}
-
-// ─── Target selectors ───
-function aliveUnits(units){return units.filter(function(u){return u.current_hp>0;});}
-function lowestHpTarget(units){
-  var a=aliveUnits(units);if(a.length===0)return null;
-  var t=a[0];for(var i=1;i<a.length;i++)if(a[i].current_hp<t.current_hp)t=a[i];
-  return t;
-}
-function randomTarget(units,rng){
-  var a=aliveUnits(units);return a.length>0?a[Math.floor(rng()*a.length)]:null;
-}
-function lowestHpAlly(units){return lowestHpTarget(units);}
-
-// ─── Skill execution with log targets ───
-function executeNormalAttack(unit,enemies,allies,rng){
-  var target;
-  if(unit.role==='attacker'||unit.role==='magician') target=lowestHpTarget(enemies);
-  else target=randomTarget(enemies,rng);
-  if(!target)return[];
-  var mult=unit.role==='attacker'?1.2:unit.role==='magician'?0.7:unit.role==='defender'?0.5:unit.role==='healer'?0.3:0.6;
-  var elM=getElMult(unit.element,target.element);
-  var res=calcDamage(unit,target,mult,elM,rng);
-  target.current_hp=Math.max(0,target.current_hp-res.dmg);
-  unit.dmgDealt+=res.dmg;target.dmgTaken+=res.dmg;
-  return[{name:target.name,damage:res.dmg,crit:res.crit,hpAfter:target.current_hp,hpMax:target.max_hp,killed:target.current_hp<=0}];
-}
-
-function executeActiveSkill(unit,enemies,allies,rng){
-  unit.active_cd=2;
-  var targets=[];
-  if(unit.role==='attacker'){
-    var target=lowestHpTarget(enemies);
-    if(!target)return[];
-    var elM=getElMult(unit.element,target.element);
-    var res=calcDamage(unit,target,1.8,elM,rng);
-    target.current_hp=Math.max(0,target.current_hp-res.dmg);
-    unit.dmgDealt+=res.dmg;target.dmgTaken+=res.dmg;
-    targets.push({name:target.name,damage:res.dmg,crit:res.crit,hpAfter:target.current_hp,hpMax:target.max_hp,killed:target.current_hp<=0});
-  }else if(unit.role==='magician'){
-    var alive=aliveUnits(enemies);
-    for(var i=0;i<alive.length;i++){
-      var elM=getElMult(unit.element,alive[i].element);
-      var res=calcDamage(unit,alive[i],0.6,elM,rng);
-      alive[i].current_hp=Math.max(0,alive[i].current_hp-res.dmg);
-      unit.dmgDealt+=res.dmg;alive[i].dmgTaken+=res.dmg;
-      targets.push({name:alive[i].name,damage:res.dmg,crit:res.crit,hpAfter:alive[i].current_hp,hpMax:alive[i].max_hp,killed:alive[i].current_hp<=0});
-    }
-  }else if(unit.role==='defender'){
-    var alive=aliveUnits(enemies);
-    for(var i=0;i<alive.length;i++){
-      var elM=getElMult(unit.element,alive[i].element);
-      var res=calcDamage(unit,alive[i],0.35,elM,rng);
-      alive[i].current_hp=Math.max(0,alive[i].current_hp-res.dmg);
-      unit.dmgDealt+=res.dmg;alive[i].dmgTaken+=res.dmg;
-      targets.push({name:alive[i].name,damage:res.dmg,crit:res.crit,hpAfter:alive[i].current_hp,hpMax:alive[i].max_hp,killed:alive[i].current_hp<=0});
-    }
-    var heal=Math.floor(unit.max_hp*0.15);
-    unit.current_hp=Math.min(unit.max_hp,unit.current_hp+heal);
-    unit.healDone+=heal;
-  }else if(unit.role==='healer'){
-    var target=lowestHpAlly(allies);
-    if(!target)return[];
-    var heal=Math.floor(unit.atk*3*0.40);
-    var actual=Math.min(heal,target.max_hp-target.current_hp);
-    target.current_hp=Math.min(target.max_hp,target.current_hp+heal);
-    unit.healDone+=actual;
-    targets.push({name:target.name,damage:0,heal:actual,hpAfter:target.current_hp,hpMax:target.max_hp,killed:false,isHeal:true});
-  }else if(unit.role==='supporter'){
-    var target=randomTarget(enemies,rng);
-    if(target){
-      var elM=getElMult(unit.element,target.element);
-      var res=calcDamage(unit,target,0.7,elM,rng);
-      target.current_hp=Math.max(0,target.current_hp-res.dmg);
-      unit.dmgDealt+=res.dmg;target.dmgTaken+=res.dmg;
-      targets.push({name:target.name,damage:res.dmg,crit:res.crit,hpAfter:target.current_hp,hpMax:target.max_hp,killed:target.current_hp<=0});
-    }
-    var allyAlive=aliveUnits(allies);
-    for(var i=0;i<allyAlive.length;i++){
-      allyAlive[i]._atkBuff=(allyAlive[i]._atkBuff||0)+2;
-      allyAlive[i]._atkBuffAmt=Math.floor(allyAlive[i].atk*0.20);
-    }
-  }
-  return targets;
-}
-
-function executeUltimate(unit,enemies,allies,rng){
-  unit.ult_cd=ULT_COOLDOWN;
-  unit.used_ult_this_round=true;
-  var targets=[];
-  if(unit.role==='attacker'){
-    var target=lowestHpTarget(enemies);
-    if(!target)return[];
-    var elM=getElMult(unit.element,target.element);
-    var res=calcDamage(unit,target,3.0,elM,rng);
-    target.current_hp=Math.max(0,target.current_hp-res.dmg);
-    unit.dmgDealt+=res.dmg;target.dmgTaken+=res.dmg;
-    targets.push({name:target.name,damage:res.dmg,crit:res.crit,hpAfter:target.current_hp,hpMax:target.max_hp,killed:target.current_hp<=0});
-  }else if(unit.role==='magician'){
-    var alive=aliveUnits(enemies);
-    for(var i=0;i<alive.length;i++){
-      var elM=getElMult(unit.element,alive[i].element);
-      var res=calcDamage(unit,alive[i],1.0,elM,rng);
-      alive[i].current_hp=Math.max(0,alive[i].current_hp-res.dmg);
-      unit.dmgDealt+=res.dmg;alive[i].dmgTaken+=res.dmg;
-      targets.push({name:alive[i].name,damage:res.dmg,crit:res.crit,hpAfter:alive[i].current_hp,hpMax:alive[i].max_hp,killed:alive[i].current_hp<=0});
-    }
-  }else if(unit.role==='defender'){
-    var allyAlive=aliveUnits(allies);
-    for(var i=0;i<allyAlive.length;i++){
-      var heal=Math.floor(allyAlive[i].max_hp*0.20);
-      var actual=Math.min(heal,allyAlive[i].max_hp-allyAlive[i].current_hp);
-      allyAlive[i].current_hp=Math.min(allyAlive[i].max_hp,allyAlive[i].current_hp+heal);
-      unit.healDone+=actual;
-      targets.push({name:allyAlive[i].name,damage:0,heal:actual,hpAfter:allyAlive[i].current_hp,hpMax:allyAlive[i].max_hp,killed:false,isHeal:true});
-    }
-  }else if(unit.role==='healer'){
-    var allyAlive=aliveUnits(allies);
-    for(var i=0;i<allyAlive.length;i++){
-      var heal=Math.floor(allyAlive[i].max_hp*0.30);
-      var actual=Math.min(heal,allyAlive[i].max_hp-allyAlive[i].current_hp);
-      allyAlive[i].current_hp=Math.min(allyAlive[i].max_hp,allyAlive[i].current_hp+heal);
-      unit.healDone+=actual;
-      targets.push({name:allyAlive[i].name,damage:0,heal:actual,hpAfter:allyAlive[i].current_hp,hpMax:allyAlive[i].max_hp,killed:false,isHeal:true});
-    }
-  }else if(unit.role==='supporter'){
-    var allyAlive=aliveUnits(allies);
-    for(var i=0;i<allyAlive.length;i++){
-      allyAlive[i]._atkBuff=(allyAlive[i]._atkBuff||0)+2;
-      allyAlive[i]._atkBuffAmt=Math.floor(allyAlive[i].atk*0.30);
-    }
-    var target=randomTarget(enemies,rng);
-    if(target){
-      var elM=getElMult(unit.element,target.element);
-      var res=calcDamage(unit,target,0.8,elM,rng);
-      target.current_hp=Math.max(0,target.current_hp-res.dmg);
-      unit.dmgDealt+=res.dmg;target.dmgTaken+=res.dmg;
-      targets.push({name:target.name,damage:res.dmg,crit:res.crit,hpAfter:target.current_hp,hpMax:target.max_hp,killed:target.current_hp<=0});
-    }
-  }
-  return targets;
-}
-
-// ─── Main battle with log ───
-function runBattleWithLog(allyData,enemyData,deckType,seed){
-  var rng = seededRandom(seed);
-  var log = [];
-  var allyUnits=[],enemyUnits=[];
-  for(var i=0;i<allyData.length;i++) allyUnits.push(makeBattleUnit(allyData[i],'ally',i));
-  for(var i=0;i<enemyData.length;i++) enemyUnits.push(makeBattleUnit(enemyData[i],'enemy',i));
-  var allUnits=allyUnits.concat(enemyUnits);
-
-  function applyBuffs(unit){
-    if(unit._atkBuff&&unit._atkBuff>0&&unit._atkBuffAmt){
-      unit.atk+=unit._atkBuffAmt;
-      unit._atkBuffRestore=unit._atkBuffAmt;
-      unit._atkBuff--;
-    }else{unit._atkBuffRestore=0;}
-  }
-  function revertBuffs(unit){
-    if(unit._atkBuffRestore){unit.atk-=unit._atkBuffRestore;unit._atkBuffRestore=0;}
-  }
-
-  var allySp=0,enemySp=0;
-  var currentRound=0;
-  var heap=new MinHeap();
-  var tieCounter=0;
-  for(var i=0;i<allUnits.length;i++){
-    var t=BATTLE_LENGTH/allUnits[i].spd;
-    heap.push([t,tieCounter++,i,false]);
-  }
-
-  var turnCount=0;
-  var currentTime=0;
-
-  function pushLog(entry){ log.push(entry); }
-
-  while(heap.size()>0&&turnCount<MAX_TURNS){
-    var entry=heap.pop();
-    var actionTime=entry[0],unitIdx=entry[2],isExtra=entry[3];
-    currentTime=actionTime;
-
-    if(currentTime>MAX_TIME){break;}
-
-    var unit=allUnits[unitIdx];
-    if(unit.current_hp<=0)continue;
-
-    var allies=(unit.side==='ally')?allyUnits:enemyUnits;
-    var enemies=(unit.side==='ally')?enemyUnits:allyUnits;
-
-    // Check round transition
-    var newRound=Math.floor(currentTime/MAX_TURN_TIME);
-    if(newRound>currentRound){
-      currentRound=newRound;
-      pushLog({type:'round',turn:turnCount,time:currentTime.toFixed(2),round:currentRound,
-        events:['라운드 '+currentRound+' 시작 — SP 초기화'],allySp:allySp,enemySp:enemySp});
-      allySp=0;enemySp=0;
-      for(var i=0;i<allUnits.length;i++){allUnits[i].used_ult_this_round=false;}
-      heap=new MinHeap();
-      tieCounter=0;
-      var roundStart=currentRound*MAX_TURN_TIME;
-      for(var i=0;i<allUnits.length;i++){
-        if(allUnits[i].current_hp>0){
-          var nt=roundStart+BATTLE_LENGTH/allUnits[i].spd;
-          heap.push([nt,tieCounter++,i,false]);
-        }
-      }
-      continue;
-    }
-
-    turnCount++;
-
-    if(!isExtra){
-      allySp=Math.min(MAX_SP,allySp+1);
-      enemySp=Math.min(MAX_SP,enemySp+1);
-    }
-
-    applyBuffs(unit);
-
-    var logEntry = {
-      turn:turnCount,time:currentTime.toFixed(2),round:currentRound,
-      charName:unit.name,charSide:unit.side,charElement:unit.element,
-      skill:'Normal',skillType:'normal',
-      targets:[],spAlly:allySp,spEnemy:enemySp,isExtra:isExtra,events:[],type:'action'
+  // Speed buttons
+  document.querySelectorAll('.speed-btn').forEach(function(btn) {
+    btn.onclick = function() {
+      document.querySelectorAll('.speed-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      playSpeed = parseFloat(btn.dataset.speed);
+      if (isPlaying) { stopPlayback(); startPlayback(turns); }
     };
+  });
 
-    // Try ultimate
-    var didUlt = false;
-    if(!unit.used_ult_this_round&&unit.ult_cd<=0){
-      var sideSpRef=(unit.side==='ally');
-      var currentSideSp=sideSpRef?allySp:enemySp;
-      if(currentSideSp>=unit.sp_cost){
-        var spBefore = currentSideSp;
-        if(sideSpRef){allySp-=unit.sp_cost;}else{enemySp-=unit.sp_cost;}
-        var ultTargets=executeUltimate(unit,enemies,allies,rng);
-        logEntry.skill='궁극기';
-        logEntry.skillType='ultimate';
-        logEntry.spBefore=spBefore;
-        logEntry.spAfter=sideSpRef?allySp:enemySp;
-        logEntry.targets=ultTargets;
-        logEntry.spAlly=allySp;logEntry.spEnemy=enemySp;
-        didUlt=true;
-        // push ult log entry separately
-        pushLog(JSON.parse(JSON.stringify(logEntry)));
-        // check win
-        if(aliveUnits(enemies).length===0){
-          revertBuffs(unit);
-          return buildResultWithLog(unit.side==='ally'?'ally_win':'enemy_win',turnCount,currentTime,allyUnits,enemyUnits,log,deckType);
-        }
-        // reset for next action in same turn
-        logEntry = {
-          turn:turnCount,time:currentTime.toFixed(2),round:currentRound,
-          charName:unit.name,charSide:unit.side,charElement:unit.element,
-          skill:'Normal',skillType:'normal',
-          targets:[],spAlly:allySp,spEnemy:enemySp,isExtra:isExtra,events:[],type:'action'
-        };
-      }
-    }
-
-    // Active or normal
-    var skillTargets;
-    if(unit.active_cd<=0){
-      logEntry.skill='액티브';
-      logEntry.skillType='active';
-      skillTargets=executeActiveSkill(unit,enemies,allies,rng);
-    }else{
-      logEntry.skill='일반 공격';
-      logEntry.skillType='normal';
-      skillTargets=executeNormalAttack(unit,enemies,allies,rng);
-    }
-    logEntry.targets=skillTargets;
-    logEntry.spAlly=allySp;logEntry.spEnemy=enemySp;
-    pushLog(logEntry);
-
-    revertBuffs(unit);
-
-    if(unit.active_cd>0)unit.active_cd--;
-    if(unit.ult_cd>0)unit.ult_cd--;
-
-    var nextTime=currentTime+BATTLE_LENGTH/unit.spd;
-    heap.push([nextTime,tieCounter++,unitIdx,false]);
-
-    if(aliveUnits(enemyUnits).length===0){
-      return buildResultWithLog('ally_win',turnCount,currentTime,allyUnits,enemyUnits,log,deckType);
-    }
-    if(aliveUnits(allyUnits).length===0){
-      return buildResultWithLog('enemy_win',turnCount,currentTime,allyUnits,enemyUnits,log,deckType);
-    }
-  }
-
-  var timeoutResult=(deckType==='defense')?'ally_win':'enemy_win';
-  log.push({type:'timeout',events:['타임오버 — '+(deckType==='defense'?'방어덱 승리 (방어 성공)':'공격덱 패배 (공격 실패)')]});
-  return buildResultWithLog(timeoutResult,turnCount,currentTime,allyUnits,enemyUnits,log,deckType);
+  showTurn(0, turns);
+  updateSliderFill(slider);
 }
 
-function buildResultWithLog(result,turns,time,allyUnits,enemyUnits,log,deckType){
-  function mapStats(units){
-    return units.map(function(u){
-      return{name:u.name,element:u.element,role:u.role,
-        dmgDealt:u.dmgDealt,healDone:u.healDone,dmgTaken:u.dmgTaken,
-        alive:u.current_hp>0,hpRemain:u.current_hp,hpMax:u.max_hp};
+function buildCenterHTML(data, turns) {
+  // Determine result
+  var lastTurn = turns[turns.length - 1];
+  var resultVal = (lastTurn && lastTurn.result) ? lastTurn.result : (data.result || '');
+  var isWin  = resultVal === 'ally_win';
+  var isLose = resultVal === 'enemy_win';
+  var resultClass = isWin ? 'win' : (isLose ? 'lose' : 'time');
+  var resultText  = isWin ? '아군 승리' : (isLose ? '적군 승리' : '시간 초과');
+
+  // Collect unit IDs from first turn
+  var firstTurn = turns[0];
+  var unitIds = Object.keys(firstTurn.units || {});
+  var allyIds  = unitIds.filter(function(id) { return firstTurn.units[id].side === 'ally'; });
+  var enemyIds = unitIds.filter(function(id) { return firstTurn.units[id].side === 'enemy'; });
+
+  function buildUnitCard(uid, unit) {
+    var ec = elClass(unit.element);
+    return '<div class="unit-card ' + ec + '" id="uc_' + uid + '" data-uid="' + uid + '">' +
+      '<div class="unit-el-bar"></div>' +
+      '<div class="unit-header">' +
+        '<span class="unit-el-icon">' + elIcon(unit.element) + '</span>' +
+        '<span class="unit-name">' + escHtml(unit.name) + '</span>' +
+        '<span class="unit-dead-icon" id="dead_' + uid + '" style="display:none">☠</span>' +
+      '</div>' +
+      '<div class="hp-track"><div class="hp-fill" id="hpf_' + uid + '" style="width:100%"></div></div>' +
+      '<div class="barrier-track"><div class="barrier-fill" id="brf_' + uid + '" style="width:0%"></div></div>' +
+      '<div class="hp-text">' +
+        '<span id="hpv_' + uid + '">—</span>' +
+        '<span id="hppct_' + uid + '">100%</span>' +
+      '</div>' +
+      '<div class="buff-row" id="buffs_' + uid + '"></div>' +
+    '</div>';
+  }
+
+  var allyCards  = allyIds.map(function(id) { return buildUnitCard(id, firstTurn.units[id]); }).join('');
+  var enemyCards = enemyIds.map(function(id) { return buildUnitCard(id, firstTurn.units[id]); }).join('');
+
+  return '<div class="result-banner ' + resultClass + '" id="resultBanner">' +
+      '<div>' +
+        '<div class="result-label">' + resultText + '</div>' +
+        '<div class="result-meta">총 <span>' + turns.length + '</span>턴</div>' +
+      '</div>' +
+      '<div class="result-meta" style="text-align:right">' +
+        'Seed <span>' + (document.getElementById('seedInput').value || '42') + '</span><br>' +
+        (deckType === 'offense' ? '공격 덱' : '방어 덱') +
+      '</div>' +
+    '</div>' +
+
+    '<div class="battlefield" id="battlefield">' +
+      '<div>' +
+        '<div class="bf-row-label">🛡 적군 (Enemy)</div>' +
+        '<div class="bf-row" id="rowEnemy">' + enemyCards + '</div>' +
+      '</div>' +
+      '<div style="border-top:1px solid var(--bd);margin:0 -14px;opacity:.5"></div>' +
+      '<div>' +
+        '<div class="bf-row-label">⚔ 아군 (Ally)</div>' +
+        '<div class="bf-row" id="rowAlly">' + allyCards + '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="sp-bar-section">' +
+      '<div class="sp-label">SP 게이지</div>' +
+      '<div class="sp-row">' +
+        '<div class="sp-side">' +
+          '<div class="sp-name">아군</div>' +
+          '<div class="sp-track"><div class="sp-fill ally" id="spAlly" style="width:0%"></div></div>' +
+        '</div>' +
+        '<div class="sp-val" id="spAllyVal">0</div>' +
+        '<div class="sp-divider">/</div>' +
+        '<div class="sp-val" id="spEnemyVal">0</div>' +
+        '<div class="sp-side">' +
+          '<div class="sp-name" style="text-align:right">적군</div>' +
+          '<div class="sp-track"><div class="sp-fill enemy" id="spEnemy" style="width:0%"></div></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="timeline-section">' +
+      '<div class="timeline-header">' +
+        '<div class="timeline-turn" id="timelineTurnLabel">턴 <span>1</span> / ' + turns.length + '</div>' +
+        '<div class="timeline-turn" id="timelineTime">T=<span>0.0</span></div>' +
+      '</div>' +
+      '<input type="range" class="timeline-slider" id="timelineSlider" min="0" max="' + (turns.length-1) + '" value="0">' +
+      '<div class="playback-row">' +
+        '<button class="pb-btn" onclick="seekTurn(0, true)" title="처음">⏮</button>' +
+        '<button class="pb-btn" onclick="stepTurn(-1)" title="이전">◀</button>' +
+        '<button class="pb-btn play" id="btnPlay" onclick="togglePlayback()" title="재생/정지">▶</button>' +
+        '<button class="pb-btn" onclick="stepTurn(1)" title="다음">▶▶</button>' +
+        '<button class="pb-btn" onclick="seekTurn(-1, true)" title="마지막">⏭</button>' +
+        '<div class="speed-btns">' +
+          '<button class="speed-btn" data-speed="0.5">0.5×</button>' +
+          '<button class="speed-btn active" data-speed="1">1×</button>' +
+          '<button class="speed-btn" data-speed="2">2×</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Show Turn
+// ═══════════════════════════════════════════════════════════════════
+function showTurn(idx, turnsArg) {
+  var turns = turnsArg || ((battleData && battleData.turns && battleData.turns.turns) ? battleData.turns.turns : (battleData && battleData.turns) || []);
+  if (!turns || !turns[idx]) return;
+  var turn = turns[idx];
+
+  // Update slider label
+  var lblEl = document.getElementById('timelineTurnLabel');
+  if (lblEl) lblEl.innerHTML = '턴 <span>' + (idx+1) + '</span> / ' + turns.length;
+  var timeEl = document.getElementById('timelineTime');
+  if (timeEl) timeEl.innerHTML = 'T=<span>' + (turn.t || 0).toFixed(2) + '</span>';
+
+  var slider = document.getElementById('timelineSlider');
+  if (slider) { slider.value = idx; updateSliderFill(slider); }
+
+  // Update units
+  var units = turn.units || {};
+  Object.keys(units).forEach(function(uid) {
+    var u = units[uid];
+    var hpRatio = u.hp_ratio != null ? u.hp_ratio : (u.max_hp > 0 ? u.hp / u.max_hp : 0);
+    var hpPct = Math.max(0, Math.min(100, hpRatio * 100));
+
+    var hpFill = document.getElementById('hpf_' + uid);
+    var brFill = document.getElementById('brf_' + uid);
+    var hpVal  = document.getElementById('hpv_' + uid);
+    var hpPctEl = document.getElementById('hppct_' + uid);
+    var deadEl = document.getElementById('dead_' + uid);
+    var card   = document.getElementById('uc_' + uid);
+    var buffsEl = document.getElementById('buffs_' + uid);
+
+    if (hpFill) {
+      hpFill.style.width = hpPct.toFixed(1) + '%';
+      hpFill.className = 'hp-fill' + (hpPct <= 0 || !u.is_alive ? ' dead' : hpPct < 30 ? ' low' : hpPct < 60 ? ' mid' : '');
+    }
+    if (brFill) {
+      var brPct = u.max_hp > 0 ? Math.min(100, (u.barrier_hp / u.max_hp) * 100) : 0;
+      brFill.style.width = brPct.toFixed(1) + '%';
+    }
+    if (hpVal)  hpVal.textContent  = fmtNum(u.hp) + ' / ' + fmtNum(u.max_hp);
+    if (hpPctEl) hpPctEl.textContent = hpPct.toFixed(0) + '%';
+    if (deadEl) deadEl.style.display = u.is_alive ? 'none' : 'inline';
+    if (card) {
+      card.classList.toggle('dead', !u.is_alive);
+      card.classList.toggle('active', uid === turn.active);
+    }
+
+    // Buffs
+    if (buffsEl && u.buffs) {
+      buffsEl.innerHTML = u.buffs.map(function(b) {
+        var cls = b.is_debuff ? 'is-debuff' : (b.name && b.name.toLowerCase().includes('barrier') ? 'is-barrier' : 'is-buff');
+        return '<div class="buff-dot ' + cls + '" title="' + escHtml(b.name || '') + ' (' + b.remaining + '턴)"></div>';
+      }).join('');
+      // CC dot
+      if (u.cc) buffsEl.innerHTML += '<div class="buff-dot is-cc" title="행동불능"></div>';
+    }
+  });
+
+  // SP bars
+  var maxSP = 10;
+  var spAVal = turn.ally_sp || 0;
+  var spEVal = turn.enemy_sp || 0;
+  var spAllyEl = document.getElementById('spAlly');
+  var spEnemyEl = document.getElementById('spEnemy');
+  var spAVEl = document.getElementById('spAllyVal');
+  var spEVEl = document.getElementById('spEnemyVal');
+  if (spAllyEl)  spAllyEl.style.width  = Math.min(100, (spAVal/maxSP)*100) + '%';
+  if (spEnemyEl) spEnemyEl.style.width = Math.min(100, (spEVal/maxSP)*100) + '%';
+  if (spAVEl)    spAVEl.textContent    = spAVal;
+  if (spEVEl)    spEVEl.textContent    = spEVal;
+
+  // Right panel
+  renderTurnLog(turn, idx, turns.length);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Right Panel Log
+// ═══════════════════════════════════════════════════════════════════
+function renderTurnLog(turn, idx, totalTurns) {
+  var panel = document.getElementById('rightPanel');
+
+  // Skill type badge
+  var stypeClass = turn.skill_type || 'normal';
+  var stypeLabel = { normal:'일반', active:'액티브', ultimate:'궁극기', cc_skip:'CC', round_start:'라운드' }[stypeClass] || stypeClass;
+
+  // Events HTML
+  var eventsHTML = '';
+  var events = turn.events || [];
+  if (events.length === 0) {
+    eventsHTML = '<div class="no-results" style="padding:12px">이벤트 없음</div>';
+  } else {
+    events.forEach(function(ev) {
+      var icon, cls, txt;
+      switch(ev.type) {
+        case 'damage':
+          icon = '🗡'; cls = 'evt-damage';
+          txt = escHtml(ev.src || '?') + ' → ' + escHtml(ev.dst || '?') + ': <strong>' + fmtNum(ev.value) + ' dmg</strong>';
+          if (ev.is_crit) txt += '<span class="crit-tag">CRIT</span>';
+          break;
+        case 'heal':
+          icon = '💚'; cls = 'evt-heal';
+          txt = escHtml(ev.src || '?') + ' → ' + escHtml(ev.dst || '?') + ': <strong>' + fmtNum(ev.value) + ' 회복</strong>';
+          break;
+        case 'buff':
+          icon = '🔵'; cls = 'evt-buff';
+          txt = escHtml(ev.label || '버프') + (ev.dst ? ' → ' + escHtml(ev.dst) : '');
+          break;
+        case 'debuff':
+          icon = '🔴'; cls = 'evt-debuff';
+          txt = escHtml(ev.label || '디버프') + (ev.dst ? ' → ' + escHtml(ev.dst) : '');
+          break;
+        case 'death':
+          icon = '☠'; cls = 'evt-death';
+          txt = escHtml(ev.dst || ev.src || '?') + ' 사망';
+          break;
+        case 'revive':
+          icon = '✨'; cls = 'evt-revive';
+          txt = escHtml(ev.dst || ev.src || '?') + ' 부활 — HP ' + fmtNum(ev.value);
+          break;
+        case 'ultimate':
+          icon = '💥'; cls = 'evt-ultimate';
+          txt = escHtml(ev.src || '?') + ' 궁극기 사용';
+          break;
+        default:
+          icon = '·'; cls = '';
+          txt = escHtml(ev.label || ev.type || '');
+      }
+      eventsHTML += '<div class="log-event ' + cls + '">' +
+        '<span class="evt-icon">' + icon + '</span>' +
+        '<span class="evt-text">' + txt + '</span>' +
+        (ev.value && ev.type !== 'damage' && ev.type !== 'heal' ? '<span class="evt-val">' + fmtNum(ev.value) + '</span>' : '') +
+      '</div>';
     });
   }
-  return{result:result,turns:turns,time:Math.round(time*10)/10,deckType:deckType,
-    allyStats:mapStats(allyUnits),enemyStats:mapStats(enemyUnits),log:log};
-}
 
-// ─── Start Battle ───
-function startBattle(){
-  if(allyDeck.length!==5||enemyDeck.length!==5) return;
-  var seedVal = parseInt(document.getElementById('seed-input').value)||undefined;
-  var allyData = allyDeck.map(function(id){return CHARS.find(function(c){return c.id===id;});});
-  var enemyData = enemyDeck.map(function(id){return CHARS.find(function(c){return c.id===id;});});
-  var result = runBattleWithLog(allyData, enemyData, deckType, seedVal);
-  renderResults(result, allyData, enemyData);
-  document.getElementById('right-panel').scrollIntoView({behavior:'smooth'});
-}
+  // Log lines
+  var logLines = (turn.log || []).map(function(l) {
+    return '<div class="log-line">' + escHtml(l) + '</div>';
+  }).join('');
 
-// ─── Render Results ───
-function renderResults(result, allyData, enemyData){
-  var rp = document.getElementById('right-panel');
-  var isAllyWin = result.result==='ally_win';
-  var winnerLabel = isAllyWin ? '⚔️ 공격덱 승리!' : '🛡️ 방어덱 승리!';
-  var winCls = isAllyWin ? 'ally-win' : 'enemy-win';
-  var rounds = Math.floor(result.time/MAX_TURN_TIME)+1;
-
-  var html = '';
-
-  // Summary
-  html += '<div class="result-summary">'
-    +'<div class="result-winner '+winCls+'">'+winnerLabel+'</div>'
-    +'<div class="result-meta">'
-      +'<div class="result-meta-item">총 턴수: <span>'+result.turns+'</span></div>'
-      +'<div class="result-meta-item">전투 시간: <span>'+result.time+'</span></div>'
-      +'<div class="result-meta-item">라운드: <span>'+rounds+'</span></div>'
-      +'<div class="result-meta-item">덱 타입: <span>'+(result.deckType==='offense'?'공격덱':'방어덱')+'</span></div>'
-    +'</div>'
-  +'</div>';
-
-  // HP bars
-  html += '<div class="hp-section">';
-  html += '<div class="section-title">최종 HP 현황</div>';
-  html += '<div class="hp-grid">';
-
-  function renderHpTeam(stats, label){
-    var h = '<div class="hp-team"><div class="hp-team-title">'+label+'</div>';
-    stats.forEach(function(u){
-      var pct = u.hpMax>0 ? u.hpRemain/u.hpMax : 0;
-      var ec = elColor(u.element);
-      h += '<div class="hp-row">'
-        +'<div class="hp-name" style="color:'+ec+'">'+u.name+'</div>'
-        +'<div class="hp-bar-wrap"><div class="hp-bar-fill" style="width:'+Math.round(pct*100)+'%;background:'+hpColor(pct)+'"></div></div>';
-      if(u.alive){
-        h += '<div class="hp-pct">'+Math.round(pct*100)+'%</div>';
-      } else {
-        h += '<div class="hp-dead">💀</div>';
-      }
-      h += '</div>';
-    });
-    h += '</div>';
-    return h;
+  // Summary (last turn)
+  var summaryHTML = '';
+  if (idx === totalTurns - 1 && battleData) {
+    summaryHTML = buildSummaryHTML();
   }
-  html += renderHpTeam(result.allyStats, '⚔️ 공격덱');
-  html += renderHpTeam(result.enemyStats, '🛡️ 방어덱');
-  html += '</div></div>';
 
-  // Damage meter (ally team)
-  html += '<div class="dmg-section"><div class="section-title">공격덱 딜 기여도</div>';
-  var totalDmg = result.allyStats.reduce(function(s,u){return s+u.dmgDealt;},0);
-  if(totalDmg===0) totalDmg=1;
-  var maxDmg = Math.max.apply(null, result.allyStats.map(function(u){return u.dmgDealt;}));
-  if(maxDmg===0) maxDmg=1;
-  // sort by damage
-  var sortedAlly = result.allyStats.slice().sort(function(a,b){return b.dmgDealt-a.dmgDealt;});
-  sortedAlly.forEach(function(u){
-    var pct = Math.round(u.dmgDealt/totalDmg*1000)/10;
-    var barW = Math.round(u.dmgDealt/maxDmg*100);
-    var ec = elColor(u.element);
-    html += '<div class="dmg-row">'
-      +'<div class="dmg-name" style="color:'+ec+'">'+u.name+'</div>'
-      +'<div class="dmg-bar-wrap"><div class="dmg-bar-fill" style="width:'+barW+'%"></div></div>'
-      +'<div class="dmg-pct">'+pct+'%</div>'
-    +'</div>';
-  });
-  html += '</div>';
-
-  // Battle Log
-  html += '<div class="log-section"><div class="section-title">전투 로그</div>';
-  html += '<div class="log-container"><div class="log-scroll" id="battle-log">';
-  html += renderLog(result.log);
-  html += '</div></div></div>';
-
-  rp.innerHTML = html;
+  panel.innerHTML =
+    '<div class="log-turn-header">' +
+      '<div class="log-turn-label">턴 ' + (idx+1) + (turn.active ? ' — ' + escHtml(nameOf(turn.active)) : '') + '</div>' +
+      '<div class="log-skill-meta">' +
+        (turn.skill || '—') +
+        ' <span class="stype ' + stypeClass + '">' + stypeLabel + '</span>' +
+        (turn.extra ? ' <span style="color:var(--light);font-size:9px">+추가</span>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="log-sp-row">' +
+      'SP: 아군 <span class="sp-ally-val">' + (turn.ally_sp || 0) + '</span> / ' +
+      '적군 <span class="sp-enemy-val">' + (turn.enemy_sp || 0) + '</span>' +
+    '</div>' +
+    '<div class="log-events">' + eventsHTML + '</div>' +
+    (logLines ? '<div class="log-lines-section">' +
+      '<button class="log-lines-toggle" id="logToggle" onclick="toggleLogLines()">' +
+        '<span class="toggle-arrow">▶</span> 원시 로그 (' + (turn.log || []).length + '줄)' +
+      '</button>' +
+      '<div class="log-lines-body" id="logLinesBody">' + logLines + '</div>' +
+    '</div>' : '') +
+    summaryHTML;
 }
 
-function renderLog(log){
-  var html = '';
-  log.forEach(function(entry){
-    if(entry.type==='round'){
-      html += '<div class="log-entry log-round">'
-        +'── 라운드 '+entry.round+' 시작  |  SP 초기화  |  시간: '+entry.time+' ──'
-        +'</div>';
-      return;
-    }
-    if(entry.type==='timeout'){
-      html += '<div class="log-entry log-round">⏱️ '+entry.events[0]+'</div>';
-      return;
-    }
-
-    // Determine entry class
-    var hasKill = entry.targets && entry.targets.some(function(t){return t.killed;});
-    var cls = 'log-entry ';
-    if(hasKill) cls += 'log-kill';
-    else if(entry.skillType==='ultimate') cls += 'log-ult';
-    else if(entry.charSide==='ally') cls += 'log-ally';
-    else cls += 'log-enemy';
-
-    var elCls = 'el-'+entry.charElement;
-    var sideLabel = entry.charSide==='ally'?'[공]':'[적]';
-
-    var skillIcon = '';
-    if(entry.skillType==='ultimate') skillIcon = '✨';
-    else if(entry.skillType==='active') skillIcon = '🔷';
-    else skillIcon = '·';
-
-    html += '<div class="'+cls+'">';
-    html += '<span class="log-time">'+entry.time+'</span>';
-    html += '<span style="color:var(--tx3)">T'+entry.turn+' </span>';
-    html += '<span style="color:var(--tx3)">'+sideLabel+' </span>';
-    html += '<span class="log-char '+elCls+'">'+entry.charName+'</span>';
-    html += ' <span class="log-skill">'+skillIcon+' '+entry.skill+'</span>';
-
-    if(entry.skillType==='ultimate' && entry.spBefore!==undefined){
-      html += ' <span class="log-sp">[SP: '+entry.spBefore+'→'+entry.spAfter+']</span>';
-    }
-
-    if(entry.targets && entry.targets.length>0){
-      html += '<br>';
-      entry.targets.forEach(function(t,i){
-        if(i>0) html += ' ';
-        if(t.isHeal){
-          html += '&nbsp;&nbsp;→ <span class="'+elCls+'">'+t.name+'</span>';
-          html += ' <span style="color:#4aff8b">+'+t.heal+' HP</span>';
-          html += ' <span class="log-hp">('+Math.round(t.hpAfter/t.hpMax*100)+'%)</span>';
-        } else {
-          html += '&nbsp;&nbsp;→ <span class="log-char">'+t.name+'</span>';
-          var dmgCls = t.crit ? 'log-dmg crit' : 'log-dmg';
-          html += ' <span class="'+dmgCls+'">'+t.damage+(t.crit?' ★':'')+'</span>';
-          if(t.killed){
-            html += ' <span style="color:var(--ts)">💀 사망</span>';
-          } else {
-            html += ' <span class="log-hp">(HP: '+Math.round(t.hpAfter/t.hpMax*100)+'%)</span>';
-          }
-        }
-      });
-    }
-
-    // SP display on non-ult turns
-    if(entry.skillType!=='ultimate'){
-      html += ' <span class="log-sp">[공격SP:'+entry.spAlly+' 방어SP:'+entry.spEnemy+']</span>';
-    }
-
-    html += '</div>';
-  });
-  return html;
+function nameOf(unitId) {
+  if (!battleData || !battleData.turns) return unitId;
+  var turns = battleData.turns.turns || battleData.turns;
+  if (!turns || !turns[0]) return unitId;
+  var u = turns[0].units[unitId];
+  return u ? u.name : unitId;
 }
 
-// ─── Init ───
+function toggleLogLines() {
+  var btn  = document.getElementById('logToggle');
+  var body = document.getElementById('logLinesBody');
+  if (!btn || !body) return;
+  var open = body.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+function buildSummaryHTML() {
+  if (!battleData) return '';
+  var turns = (battleData.turns && battleData.turns.turns) ? battleData.turns.turns : (battleData.turns || []);
+  var lastTurn = turns[turns.length - 1];
+  var resultVal = (lastTurn && lastTurn.result) ? lastTurn.result : (battleData.result || '');
+  var isWin = resultVal === 'ally_win';
+
+  // Survivors
+  var survivors = [];
+  var allUnits = battleData.allies.concat(battleData.enemies);
+  allUnits.forEach(function(u) {
+    if (u.is_alive) {
+      survivors.push(u);
+    }
+  });
+
+  // Damage totals per unit from events
+  var dmgMap = {};
+  turns.forEach(function(t) {
+    (t.events || []).forEach(function(ev) {
+      if (ev.type === 'damage' && ev.src) {
+        dmgMap[ev.src] = (dmgMap[ev.src] || 0) + (ev.value || 0);
+      }
+    });
+  });
+  var dmgEntries = Object.keys(dmgMap).map(function(id) {
+    return { id: id, name: nameOf(id), dmg: dmgMap[id] };
+  }).sort(function(a,b) { return b.dmg - a.dmg; });
+
+  var survivorRows = survivors.map(function(u) {
+    var side = u.id.endsWith('_e') ? 'enemy' : 'ally';
+    var hpPct = u.max_hp > 0 ? Math.round(u.hp / u.max_hp * 100) : 0;
+    return '<div class="survivor-item">' +
+      '<div class="survivor-side-dot ' + side + '"></div>' +
+      '<span style="flex:1;color:var(--tx)">' + escHtml(u.name || u.id) + '</span>' +
+      '<span style="color:var(--tx2);font-size:9px">' + fmtNum(u.hp) + ' (' + hpPct + '%)</span>' +
+    '</div>';
+  }).join('');
+
+  var dmgRows = dmgEntries.slice(0, 8).map(function(e) {
+    return '<div class="summary-row">' +
+      '<span class="sname">' + escHtml(e.name) + '</span>' +
+      '<span class="sval">' + fmtNum(e.dmg) + '</span>' +
+    '</div>';
+  }).join('');
+
+  return '<div class="summary-section">' +
+    '<div class="summary-title">📊 배틀 요약</div>' +
+    '<div class="summary-row">' +
+      '<span class="sname">결과</span>' +
+      '<span class="sval" style="color:' + (isWin ? 'var(--win)' : 'var(--lose)') + '">' +
+        (isWin ? '아군 승리' : (resultVal === 'enemy_win' ? '적군 승리' : '시간 초과')) +
+      '</span>' +
+    '</div>' +
+    '<div class="summary-row"><span class="sname">총 턴수</span><span class="sval">' + turns.length + '</span></div>' +
+    '<div style="margin:6px 0 4px;font-size:9px;color:var(--tx3);font-family:var(--font-mono);letter-spacing:1px">생존자</div>' +
+    (survivorRows || '<div style="font-size:10px;color:var(--tx3)">없음</div>') +
+    '<div style="margin:8px 0 4px;font-size:9px;color:var(--tx3);font-family:var(--font-mono);letter-spacing:1px">딜량 순위</div>' +
+    dmgRows +
+  '</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Playback Controls
+// ═══════════════════════════════════════════════════════════════════
+function getTurns() {
+  if (!battleData) return [];
+  return (battleData.turns && battleData.turns.turns) ? battleData.turns.turns : (battleData.turns || []);
+}
+
+function seekTurn(idx, relEnd) {
+  var turns = getTurns();
+  if (turns.length === 0) return;
+  if (relEnd) {
+    currentTurnIdx = idx < 0 ? turns.length - 1 : 0;
+  } else {
+    currentTurnIdx = Math.max(0, Math.min(turns.length - 1, idx));
+  }
+  showTurn(currentTurnIdx, turns);
+}
+
+function stepTurn(delta) {
+  var turns = getTurns();
+  currentTurnIdx = Math.max(0, Math.min(turns.length - 1, currentTurnIdx + delta));
+  showTurn(currentTurnIdx, turns);
+}
+
+function togglePlayback() {
+  if (isPlaying) stopPlayback();
+  else startPlayback();
+}
+
+function startPlayback(turnsArg) {
+  var turns = turnsArg || getTurns();
+  if (turns.length === 0) return;
+  isPlaying = true;
+  var playBtn = document.getElementById('btnPlay');
+  if (playBtn) playBtn.textContent = '⏸';
+
+  var interval = Math.round(PLAY_BASE_MS / playSpeed);
+  if (currentTurnIdx >= turns.length - 1) currentTurnIdx = 0;
+
+  playInterval = setInterval(function() {
+    if (currentTurnIdx >= turns.length - 1) {
+      stopPlayback();
+      return;
+    }
+    currentTurnIdx++;
+    showTurn(currentTurnIdx, turns);
+  }, interval);
+}
+
+function stopPlayback() {
+  isPlaying = false;
+  if (playInterval) { clearInterval(playInterval); playInterval = null; }
+  var playBtn = document.getElementById('btnPlay');
+  if (playBtn) playBtn.textContent = '▶';
+}
+
+function updateSliderFill(slider) {
+  var pct = slider.max > 0 ? (slider.value / slider.max) * 100 : 0;
+  slider.style.backgroundSize = pct + '% 100%';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Toast
+// ═══════════════════════════════════════════════════════════════════
+function showToast(msg, type) {
+  var container = document.getElementById('toastContainer');
+  var toast = document.createElement('div');
+  toast.className = 'toast ' + (type || 'info');
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(function() {
+    toast.style.transition = 'opacity .3s';
+    toast.style.opacity = '0';
+    setTimeout(function() { container.removeChild(toast); }, 320);
+  }, 3500);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Utility
+// ═══════════════════════════════════════════════════════════════════
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════════════════
 renderDeckSlots();
-renderCharList();
+loadInitialData();
 </script>
 </body>
 </html>
