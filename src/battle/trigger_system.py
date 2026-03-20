@@ -117,6 +117,38 @@ class TriggerSystem:
             if unit.is_alive:
                 self.evaluate(TriggerEvent.ON_ROUND_START, unit, ctx)
 
+    def evaluate_on_critical_hit(
+        self,
+        attacker: BattleUnit,
+        target: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """치명타 적중 시 트리거"""
+        return self.evaluate(
+            TriggerEvent.ON_CRITICAL_HIT, attacker, ctx,
+            extra={'target': target}
+        )
+
+    def evaluate_on_ultimate_used(
+        self,
+        caster: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """얼티밋 스킬 사용 후 트리거"""
+        return self.evaluate(TriggerEvent.ON_ULTIMATE_USED, caster, ctx)
+
+    def evaluate_on_buff_gained(
+        self,
+        unit: BattleUnit,
+        buff_data,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """버프 획득 시 트리거"""
+        return self.evaluate(
+            TriggerEvent.ON_BUFF_GAINED, unit, ctx,
+            extra={'buff': buff_data}
+        )
+
     # ─── 조건 평가 ────────────────────────────────────────────────
     def _check_condition(
         self,

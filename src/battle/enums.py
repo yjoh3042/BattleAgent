@@ -67,6 +67,19 @@ class LogicType(Enum):
     USE_SKILL = "use_skill"                    # 스킬 발동
     IGNORE_ELEMENT = "ignore_element"          # 속성 상성 무시
     ACTIVE_CD_CHANGE = "active_cd_change"      # 액티브 쿨타임 변경
+    # ── 스킬 디자인 v2 추가 로직 ──────────────────────────────────────
+    DAMAGE_BURN_BONUS = "damage_burn_bonus"    # 화상 대상 2배 피해 + 강제 크리
+    DAMAGE_ESCALATE = "damage_escalate"        # 사용 횟수 비례 피해 증가 (전투 초기화)
+    DAMAGE_REPEAT_TARGET = "damage_repeat_target"  # 같은 적 반복공격 시 피해 증가
+    DAMAGE_MISSING_HP_SCALE = "damage_missing_hp_scale"  # 시전자 잃은 HP 비례 피해 증가
+    HEAL_PER_HIT = "heal_per_hit"              # 적중 수만큼 아군 회복
+    HEAL_CURRENT_HP_SCALE = "heal_current_hp_scale"  # 현재 HP 높을수록 회복량 증가
+    STAT_STEAL = "stat_steal"                  # 적 스탯 빼앗아 자신에게 부여
+    DEBUFF_SPREAD = "debuff_spread"            # 디버프 주변(십자) 전이
+    SELF_DAMAGE = "self_damage"                # 자신 HP 소모
+    EXTRA_TURN = "extra_turn"                  # 추가 행동 획득
+    TRICK_ROOM = "trick_room"                  # 속도 반전 필드
+    LINK_BUFF = "link_buff"                    # 연결 아군 버프 공유
 
 
 class CCType(Enum):
@@ -118,6 +131,12 @@ class TargetType(Enum):
     ENEMY_ADJACENT   = "enemy_adjacent"   # 시전자 기준 ±1행·±1열 인접 타일의 적
     ALLY_SAME_ROW    = "ally_same_row"    # 시전자와 동일 행(row)의 아군
     ALLY_BEHIND      = "ally_behind"      # 자신 바로 뒤 1칸 (6: 자신 뒤 1칸)
+    # ── 스킬 디자인 v2 추가 타겟 ──────────────────────────────────────
+    ALLY_LOWEST_HP_3   = "ally_lowest_hp_3"    # 체력 낮은 아군 3명
+    ALLY_SAME_ELEMENT  = "ally_same_element"   # 같은 속성 아군 전체
+    ALLY_ADJACENT      = "ally_adjacent"       # 자신 양옆 아군 (같은 행 ±1열)
+    ALLY_FRONT         = "ally_front"          # 자신 바로 앞 1칸 (row-1, 같은 col)
+    ENEMY_ELEMENT_WEAK = "enemy_element_weak"  # 상성 약점 적 우선 타겟
 
 
 class TriggerEvent(Enum):
@@ -133,6 +152,10 @@ class TriggerEvent(Enum):
     ON_HP_THRESHOLD = "on_hp_threshold"   # HP가 특정 % 이하
     ON_BURN_APPLIED = "on_burn_applied"   # 화상 부여 시
     ON_STATUS_APPLIED = "on_status_applied"
+    # ── 스킬 디자인 v2 추가 트리거 ──────────────────────────────────
+    ON_CRITICAL_HIT = "on_critical_hit"      # 치명타 적중 시
+    ON_ULTIMATE_USED = "on_ultimate_used"    # 얼티밋 스킬 사용 후
+    ON_BUFF_GAINED = "on_buff_gained"        # 버프 획득 시
 
 
 class Side(Enum):

@@ -144,6 +144,9 @@ class SkillExecutor:
             # ─── ON_HIT 트리거 (피격 패시브) ──────────────────────
             if target.is_alive and ctx.trigger_system:
                 ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            # ─── ON_CRITICAL_HIT 트리거 ──────────────────────────
+            if is_crit and caster.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_critical_hit(caster, target, ctx)
             if not target.is_alive:
                 self._killed_this_skill.append(target)
                 ctx.log.append(f"    💀 {target.name} 사망!")
@@ -196,6 +199,9 @@ class SkillExecutor:
                     f"    {caster.name} → {target.name}: "
                     f"{effect.buff_data.stat} {sign}{effect.buff_data.value:.0f} 버프 ({effect.buff_data.duration}턴)"
                 )
+                # ON_BUFF_GAINED 트리거 (버프만, 디버프 제외)
+                if not effect.buff_data.is_debuff and target.is_alive and ctx.trigger_system:
+                    ctx.trigger_system.evaluate_on_buff_gained(target, effect.buff_data, ctx)
 
         # ─── DoT (화상, 독) ───────────────────────────────────────
         elif logic == LogicType.DOT:
@@ -609,6 +615,271 @@ class SkillExecutor:
             ctx.log.append(
                 f"    {caster.name} → {target.name}: 액티브 쿨타임 {old_cd} → {target.active_skill_cooldown} ({change:+d})"
             )
+
+        # ─── 화상 대상 2배 + 강제 크리 ──────────────────────────────
+        elif logic == LogicType.DAMAGE_BURN_BONUS:
+            has_burn = target.get_tag_count('burn') > 0
+            if has_burn:
+                dmg, _, is_dodged = compute_damage_guaranteed_crit(
+                    caster, target, effect.multiplier * 2.0)
+            else:
+                dmg, _, is_dodged = compute_damage(caster, target, effect.multiplier)
+            if is_dodged:
+                ctx.log.append(f"    {caster.name} → {target.name}: {skill.name} 회피!")
+                return
+            actual = target.take_damage(dmg)
+            burn_str = " [화상 2배 크리!]" if has_burn else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{burn_str} "
+                f"(HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── 사용 횟수 비례 피해 증가 ──────────────────────────────
+        elif logic == LogicType.DAMAGE_ESCALATE:
+            tag_key = f"escalate_{skill.id}"
+            count = caster.get_tag_count(tag_key)
+            caster.add_tag(tag_key)
+            multiplier = effect.multiplier * (1.0 + 0.2 * count)
+            dmg, is_crit, is_dodged = compute_damage(caster, target, multiplier)
+            if is_dodged:
+                ctx.log.append(f"    {caster.name} → {target.name}: {skill.name} 회피!")
+                return
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
+                f"(누적 {count+1}회, HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── 같은 적 반복공격 시 피해 증가 ─────────────────────────
+        elif logic == LogicType.DAMAGE_REPEAT_TARGET:
+            tag_key = f"repeat_{skill.id}"
+            last_id = getattr(caster, '_last_repeat_target', None)
+            if last_id == target.id:
+                repeat_n = caster.get_tag_count(tag_key)
+                caster.add_tag(tag_key)
+            else:
+                # 타겟 바뀜 → 리셋
+                caster.remove_tag(tag_key)
+                caster.add_tag(tag_key)
+                repeat_n = 0
+            caster._last_repeat_target = target.id
+            multiplier = effect.multiplier * (1.0 + 0.3 * repeat_n)
+            dmg, is_crit, is_dodged = compute_damage(caster, target, multiplier)
+            if is_dodged:
+                ctx.log.append(f"    {caster.name} → {target.name}: {skill.name} 회피!")
+                return
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
+                f"(반복 {repeat_n+1}회, HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── 시전자 잃은 HP 비례 피해 증가 ─────────────────────────
+        elif logic == LogicType.DAMAGE_MISSING_HP_SCALE:
+            scale = effect.value if effect.value else 1.0
+            multiplier = effect.multiplier * (1.0 + (1.0 - caster.hp_ratio) * scale)
+            dmg, is_crit, is_dodged = compute_damage(caster, target, multiplier)
+            if is_dodged:
+                ctx.log.append(f"    {caster.name} → {target.name}: {skill.name} 회피!")
+                return
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
+                f"(잃은HP {(1-caster.hp_ratio)*100:.0f}% 비례, HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if target.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_hit(target, caster, int(actual), ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── 적중 수만큼 아군 회복 ─────────────────────────────────
+        elif logic == LogicType.HEAL_PER_HIT:
+            # target은 적 — 피해 적용
+            dmg, is_crit, is_dodged = compute_damage(caster, target, effect.multiplier)
+            if is_dodged:
+                ctx.log.append(f"    {caster.name} → {target.name}: {skill.name} 회피!")
+                return
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
+                f"(HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+            # 적중 성공 → 아군 최저HP 1명 회복
+            if actual > 0:
+                heal_val = effect.value if effect.value else 0.1
+                allies = ctx.get_allies_of(caster)
+                if allies:
+                    heal_target = min(allies, key=lambda u: u.hp_ratio)
+                    heal_amount = heal_target.max_hp * heal_val
+                    healed = heal_target.heal(heal_amount)
+                    ctx.log.append(
+                        f"    → {heal_target.name}: 적중 회복 {healed:.0f} "
+                        f"(HP {heal_target.current_hp:.0f}/{heal_target.max_hp:.0f})"
+                    )
+
+        # ─── 현재 HP 높을수록 회복량 증가 ──────────────────────────
+        elif logic == LogicType.HEAL_CURRENT_HP_SCALE:
+            base_heal = calc_heal(caster.atk, target.max_hp, effect.multiplier)
+            scaled_heal = base_heal * caster.hp_ratio
+            actual = target.heal(scaled_heal)
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 회복 "
+                f"(시전자 HP {caster.hp_ratio*100:.0f}% 비례, HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+
+        # ─── 스탯 빼앗기 ───────────────────────────────────────────
+        elif logic == LogicType.STAT_STEAL:
+            if effect.buff_data:
+                stat_name = effect.buff_data.stat or "def_"
+                steal_amount = abs(effect.buff_data.value)
+                # 적에게 디버프 (스탯 감소)
+                debuff = BuffData(
+                    id=f"stat_steal_debuff_{skill.id}",
+                    name=f"{stat_name} 강탈",
+                    source_skill_id=skill.id,
+                    logic_type=LogicType.STAT_CHANGE,
+                    stat=stat_name,
+                    value=-steal_amount,
+                    duration=effect.buff_data.duration,
+                    is_debuff=True,
+                )
+                ctx.buff_manager.apply_buff(target, debuff, caster.id)
+                # 자신에게 버프 (스탯 증가)
+                buff = BuffData(
+                    id=f"stat_steal_buff_{skill.id}",
+                    name=f"{stat_name} 흡수",
+                    source_skill_id=skill.id,
+                    logic_type=LogicType.STAT_CHANGE,
+                    stat=stat_name,
+                    value=steal_amount,
+                    duration=effect.buff_data.duration,
+                    is_debuff=False,
+                )
+                ctx.buff_manager.apply_buff(caster, buff, caster.id)
+                ctx.log.append(
+                    f"    {caster.name} → {target.name}: {stat_name} {steal_amount:.0f} 강탈!"
+                )
+
+        # ─── 디버프 십자 전이 ───────────────────────────────────────
+        elif logic == LogicType.DEBUFF_SPREAD:
+            # 대상의 디버프를 주변 십자 패턴 적에게 복제
+            debuffs_to_spread = [
+                ab.buff_data for ab in target.active_buffs if ab.buff_data.is_debuff
+            ]
+            if not debuffs_to_spread:
+                ctx.log.append(f"    {caster.name} → {target.name}: 전이할 디버프 없음")
+            else:
+                tr, tc = target.tile_row, target.tile_col
+                enemies = ctx.get_enemies_of(caster)
+                adjacent = [
+                    u for u in enemies
+                    if u.id != target.id and u.is_alive
+                    and ((abs(u.tile_row - tr) == 1 and u.tile_col == tc) or
+                         (u.tile_row == tr and abs(u.tile_col - tc) == 1))
+                ]
+                spread_count = 0
+                for adj_unit in adjacent:
+                    for bd in debuffs_to_spread:
+                        import copy
+                        spread_bd = copy.deepcopy(bd)
+                        spread_bd.id = f"{bd.id}_spread"
+                        ctx.buff_manager.apply_buff(adj_unit, spread_bd, caster.id)
+                        spread_count += 1
+                ctx.log.append(
+                    f"    {caster.name}: {target.name}의 디버프 {len(debuffs_to_spread)}개 → "
+                    f"인접 {len(adjacent)}명에게 전이 ({spread_count}건)"
+                )
+
+        # ─── 자신 HP 소모 ──────────────────────────────────────────
+        elif logic == LogicType.SELF_DAMAGE:
+            cost = effect.value if effect.value else 0.1
+            if cost < 1.0:
+                # 비율 기반
+                hp_cost = caster.max_hp * cost
+            else:
+                hp_cost = cost
+            caster.current_hp = max(1, caster.current_hp - hp_cost)
+            ctx.log.append(
+                f"    {caster.name}: 자해 {hp_cost:.0f} (HP {caster.current_hp:.0f}/{caster.max_hp:.0f})"
+            )
+
+        # ─── 추가 행동 획득 ────────────────────────────────────────
+        elif logic == LogicType.EXTRA_TURN:
+            ctx.turn_manager.add_extra_turn(caster)
+            ctx.log.append(f"    {caster.name}: 추가 행동 획득!")
+
+        # ─── 속도 반전 필드 (트릭룸) ───────────────────────────────
+        elif logic == LogicType.TRICK_ROOM:
+            duration = int(effect.value) if effect.value else 3
+            all_living = [u for u in list(ctx.allies) + list(ctx.enemies) if u.is_alive]
+            if all_living:
+                spd_values = [u.spd for u in all_living]
+                spd_max, spd_min = max(spd_values), min(spd_values)
+                for u in all_living:
+                    old_spd = u.spd
+                    new_spd = max(1, spd_max + spd_min - old_spd)
+                    diff = new_spd - old_spd
+                    trick_buff = BuffData(
+                        id=f"trick_room_{u.id}",
+                        name="트릭룸",
+                        source_skill_id=skill.id,
+                        logic_type=LogicType.STAT_CHANGE,
+                        stat="spd",
+                        value=diff,
+                        duration=duration,
+                        is_debuff=(diff < 0),
+                        tags=["trick_room"],
+                    )
+                    ctx.buff_manager.apply_buff(u, trick_buff, caster.id)
+                ctx.log.append(
+                    f"    {caster.name}: 트릭룸 발동! 속도 반전 ({duration}턴, "
+                    f"범위 {spd_min}~{spd_max})"
+                )
+
+        # ─── 연결 아군 버프 공유 ───────────────────────────────────
+        elif logic == LogicType.LINK_BUFF:
+            # target = 연결 대상 (ALLY_BEHIND 등으로 선택됨)
+            # 시전자의 버프를 타겟에게 복제
+            buffs_to_share = [
+                ab.buff_data for ab in caster.active_buffs
+                if not ab.buff_data.is_debuff
+                and 'link_buff' not in (ab.buff_data.tags or [])
+            ]
+            if not buffs_to_share:
+                ctx.log.append(f"    {caster.name} → {target.name}: 공유할 버프 없음")
+            else:
+                import copy
+                for bd in buffs_to_share:
+                    shared_bd = copy.deepcopy(bd)
+                    shared_bd.id = f"{bd.id}_linked"
+                    shared_bd.tags = list(shared_bd.tags or []) + ["link_buff"]
+                    ctx.buff_manager.apply_buff(target, shared_bd, caster.id)
+                ctx.log.append(
+                    f"    {caster.name} → {target.name}: 버프 {len(buffs_to_share)}개 공유 (링크)"
+                )
 
     # ─── 조건 체크 ────────────────────────────────────────────────
     def _check_condition(

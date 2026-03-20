@@ -226,6 +226,10 @@ class BattleEngine:
             killed = self.executor.execute(unit, skill, ctx)
             self._flush_buff_log()
 
+            # ─── 얼티밋 사용 트리거 ──────────────────────────────
+            if entry.is_extra and unit.is_alive:
+                self.trigger_system.evaluate_on_ultimate_used(unit, ctx)
+
             # ─── 킬 트리거 ────────────────────────────────────────
             for dead in killed:
                 self.turn_manager.remove_unit(dead.id)

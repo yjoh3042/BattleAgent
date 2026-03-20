@@ -47,18 +47,16 @@ for _name, _func in inspect.getmembers(td, inspect.isfunction):
 # ─── Meta team definitions ────────────────────────────────────────────────────
 
 META_TEAMS = {
-    "M01": {"name": "화상연소", "desc": "🔥 Burn Stack + debuff_turn_inc", "fn": td.get_meta_burn_inferno},
-    "M02": {"name": "빙결감옥", "desc": "🧊 FREEZE Chain + SP_LOCK",       "fn": td.get_meta_freeze_prison},
-    "M03": {"name": "독정원",   "desc": "🌿 Poison + HoT Sustain",         "fn": td.get_meta_poison_garden},
-    "M04": {"name": "하이퍼캐리","desc": "💎 Triple Buffer → Carry",        "fn": td.get_meta_hyper_carry},
-    "M05": {"name": "철벽요새", "desc": "🛡️ Barrier + Revive",             "fn": td.get_meta_iron_fortress},
-    "M06": {"name": "반격요새", "desc": "⚔️ Counter Cascade",              "fn": td.get_meta_counter_bruiser},
-    "M07": {"name": "속도처형", "desc": "⚡ Speed → Execute",              "fn": td.get_meta_speed_execute},
-    "M08": {"name": "암속강공", "desc": "🌙 Penetration + Bleed",          "fn": td.get_meta_dark_assault},
-    "M09": {"name": "전멸폭격", "desc": "💥 AoE Cleave + Poison",          "fn": td.get_meta_aoe_cleave},
-    "M10": {"name": "광전사",   "desc": "⚔️ Self-buff + ON_KILL",          "fn": td.get_meta_berserker},
-    "M11": {"name": "광속성벽", "desc": "✨ Debuff Immune + Barrier",      "fn": td.get_meta_holy_bastion},
-    "M12": {"name": "CC킬체인", "desc": "🎭 CC Relay → Kill",              "fn": td.get_meta_cc_kill_chain},
+    "M01": {"name": "화상폭발", "desc": "🔥 BURN_BONUS + DEBUFF_SPREAD",    "fn": td.get_meta_v8_burn_explosion},
+    "M02": {"name": "빙결처형", "desc": "🧊 CC Chain + EXTRA_TURN",         "fn": td.get_meta_v8_freeze_execute},
+    "M03": {"name": "독확산정원","desc": "🌿 DEBUFF_SPREAD + Poison/Sleep",  "fn": td.get_meta_v8_poison_spread},
+    "M04": {"name": "버프연쇄", "desc": "💎 ON_BUFF_GAINED + LINK_BUFF",    "fn": td.get_meta_v8_buff_chain},
+    "M05": {"name": "철벽요새", "desc": "🛡️ LINK_BUFF + HEAL_HP_SCALE",    "fn": td.get_meta_v8_iron_fortress},
+    "M06": {"name": "광전사",   "desc": "⚔️ SELF_DAMAGE + MISSING_HP",     "fn": td.get_meta_v8_berserker},
+    "M07": {"name": "속도학살", "desc": "⚡ EXTRA_TURN + REPEAT_TARGET",    "fn": td.get_meta_v8_speed_kill},
+    "M08": {"name": "크리연쇄", "desc": "💥 ON_CRITICAL_HIT + Crit Synergy","fn": td.get_meta_v8_crit_chain},
+    "M09": {"name": "암살침투", "desc": "🌙 STAT_STEAL + Penetration",      "fn": td.get_meta_v8_shadow_assault},
+    "M10": {"name": "성속결속", "desc": "✨ ALLY_SAME_ELEMENT + LINK_BUFF",  "fn": td.get_meta_v8_holy_bond},
 }
 
 # ─── Cached character list (from _all_chars.json + passive from test_data) ────

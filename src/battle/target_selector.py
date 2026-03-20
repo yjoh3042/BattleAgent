@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 from typing import List, Optional, TYPE_CHECKING
 
-from battle.enums import TargetType, Role
+from battle.enums import TargetType, Role, Element
 
 if TYPE_CHECKING:
     from battle.battle_unit import BattleUnit
@@ -23,6 +23,10 @@ _ALLY_TARGET_TYPES = frozenset({
     TargetType.ALLY_ROLE_DEFENDER,
     TargetType.ALLY_SAME_ROW,
     TargetType.ALLY_BEHIND,
+    TargetType.ALLY_LOWEST_HP_3,
+    TargetType.ALLY_SAME_ELEMENT,
+    TargetType.ALLY_ADJACENT,
+    TargetType.ALLY_FRONT,
 })
 
 
@@ -153,6 +157,32 @@ class TargetSelector:
                       and u.id != caster.id]
             return behind
 
+        elif target_type == TargetType.ALLY_LOWEST_HP_3:
+            # 체력 낮은 아군 3명
+            sorted_allies = sorted(alive_allies, key=lambda u: u.hp_ratio)
+            return sorted_allies[:3] if alive_allies else []
+
+        elif target_type == TargetType.ALLY_SAME_ELEMENT:
+            # 같은 속성 아군 전체 (자신 포함)
+            same_el = [u for u in alive_allies if u.data.element == caster.data.element]
+            return same_el if same_el else list(alive_allies)
+
+        elif target_type == TargetType.ALLY_ADJACENT:
+            # 자신 양옆 아군 (같은 행 ±1열, 자신 제외)
+            adj = [u for u in alive_allies
+                   if u.tile_row == caster.tile_row
+                   and abs(u.tile_col - caster.tile_col) == 1
+                   and u.id != caster.id]
+            return adj
+
+        elif target_type == TargetType.ALLY_FRONT:
+            # 자신 바로 앞 1칸 (row-1, 동일 col) — 없으면 []
+            front_row = caster.tile_row - 1
+            front = [u for u in alive_allies
+                     if u.tile_row == front_row and u.tile_col == caster.tile_col
+                     and u.id != caster.id]
+            return front
+
         # ── 적군 Near 계열 (타일 거리 기반) ───────────────────────
         elif target_type == TargetType.ENEMY_NEAR:
             # 가장 가까운 적 1명
@@ -233,6 +263,24 @@ class TargetSelector:
             ]
             return adjacent if adjacent else list(alive_enemies)
 
+        elif target_type == TargetType.ENEMY_ELEMENT_WEAK:
+            # 상성 약점 적 우선 타겟 (없으면 ENEMY_NEAR fallback)
+            weak_map = {
+                Element.FIRE: Element.FOREST,
+                Element.WATER: Element.FIRE,
+                Element.FOREST: Element.WATER,
+                Element.LIGHT: Element.DARK,
+                Element.DARK: Element.LIGHT,
+            }
+            weak_el = weak_map.get(caster.data.element)
+            if weak_el:
+                weak_targets = [u for u in alive_enemies if u.data.element == weak_el]
+                if weak_targets:
+                    return [min(weak_targets, key=lambda u: (self._tile_distance(caster, u), u.current_hp))]
+            # fallback: nearest enemy
+            near = self._nearest_enemy(caster, alive_enemies)
+            return [near] if near else []
+
         return []
 
     # ─── 도발 처리 ────────────────────────────────────────────────
@@ -267,6 +315,7 @@ class TargetSelector:
             TargetType.ENEMY_NEAR,
             TargetType.ENEMY_LOWEST_HP, TargetType.ENEMY_HIGHEST_HP,
             TargetType.ENEMY_HIGHEST_SPD, TargetType.ENEMY_RANDOM,
+            TargetType.ENEMY_ELEMENT_WEAK,
         ):
             return [taunter]
 
