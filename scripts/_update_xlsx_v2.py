@@ -43,15 +43,26 @@ TARGET_KR = {
     "enemy_near_row": "적 행",
     "enemy_near_cross": "적 십자",
     "enemy_back_row": "적 후열",
+    "enemy_front_row": "적 전열",
     "enemy_same_col": "적 같은 열",
+    "enemy_adjacent": "적 인접",
     "enemy_highest_spd": "적 최고SPD",
+    "enemy_highest_hp": "적 최고HP",
     "all_enemy": "적 전체",
+    "enemy_element_weak": "적 약점우선",
     "self": "자신",
     "ally_lowest_hp": "아군 최저HP",
     "ally_lowest_hp_2": "아군 최저HP 2인",
+    "ally_lowest_hp_3": "아군 최저HP 3인",
     "ally_highest_atk": "아군 최고ATK",
     "ally_same_row": "같은 행 아군",
+    "ally_same_element": "같은 속성 아군",
+    "ally_adjacent": "양옆 아군",
+    "ally_front": "앞칸 아군",
+    "ally_behind": "뒤칸 아군",
     "ally_dead_random": "사망 아군 1인",
+    "ally_role_attacker": "공격형 아군",
+    "ally_role_defender": "방어형 아군",
     "all_ally": "아군 전체",
 }
 
@@ -60,6 +71,16 @@ EVENT_KR = {
     "on_kill": "처치 시",
     "on_hit": "피격 시",
     "on_battle_start": "전투시작",
+    "on_round_start": "라운드시작",
+    "on_turn_start": "턴시작",
+    "on_turn_end": "턴종료",
+    "on_death": "사망 시",
+    "on_hp_threshold": "HP임계",
+    "on_burn_applied": "화상부여 시",
+    "on_status_applied": "상태부여 시",
+    "on_critical_hit": "치명타 시",
+    "on_ultimate_used": "얼티밋 후",
+    "on_buff_gained": "버프획득 시",
 }
 
 # ═══ Character 시트에서 성급 정보 ═══
@@ -174,6 +195,47 @@ def describe_effect(eff):
         return f"{tgt} 반격 {eff.value:.0f}턴"
     elif lt == "sp_increase":
         return f"{tgt} SP+{eff.value:.0f}"
+    elif lt == "damage_burn_bonus":
+        return f"{tgt} 화상2배크리 {eff.multiplier:.1f}x"
+    elif lt == "damage_escalate":
+        return f"{tgt} 누적피해 {eff.multiplier:.1f}x"
+    elif lt == "damage_repeat_target":
+        return f"{tgt} 반복공격 {eff.multiplier:.1f}x"
+    elif lt == "damage_missing_hp_scale":
+        s = f"{tgt} 잃은HP비례 {eff.multiplier:.1f}x"
+        if eff.value:
+            s += f"(배율{eff.value:.1f})"
+        return s
+    elif lt == "damage_buff_scale":
+        return f"{tgt} 버프비례 {eff.multiplier:.1f}x"
+    elif lt == "damage_debuff_scale_target":
+        return f"{tgt} 디버프비례 {eff.multiplier:.1f}x"
+    elif lt == "heal_per_hit":
+        return f"{tgt} 적중회복 {eff.multiplier:.1f}x(HP{eff.value*100:.0f}%)"
+    elif lt == "heal_current_hp_scale":
+        return f"{tgt} 현재HP비례회복 {eff.multiplier:.1f}x"
+    elif lt == "heal_loss_scale":
+        return f"{tgt} 잃은HP회복 {eff.value*100:.0f}%"
+    elif lt == "stat_steal":
+        if eff.buff_data:
+            return f"{tgt} {eff.buff_data.stat or ''} 강탈 {abs(eff.buff_data.value):.0f}"
+        return f"{tgt} 스탯강탈"
+    elif lt == "debuff_spread":
+        return f"{tgt} 디버프전이(십자)"
+    elif lt == "self_damage":
+        if eff.value and eff.value < 1:
+            return f"자해 HP{eff.value*100:.0f}%"
+        return f"자해 {eff.value:.0f}"
+    elif lt == "extra_turn":
+        return "추가행동"
+    elif lt == "link_buff":
+        return f"{tgt} 버프공유(링크)"
+    elif lt == "use_skill":
+        return f"스킬발동"
+    elif lt == "heal":
+        return f"{tgt} 회복 {eff.multiplier:.1f}x"
+    elif lt == "absorb":
+        return f"{tgt} 흡수"
     else:
         return lt
 
