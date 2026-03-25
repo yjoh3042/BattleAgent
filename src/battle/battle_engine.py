@@ -92,6 +92,9 @@ class BattleEngine:
         self._log.append("⚔️  전투 시작!")
         self._log.append("=" * 60)
 
+        # 3×3 그리드 배치 시각화
+        self._log_grid_layout()
+
         # 유닛 큐 초기화
         self.turn_manager.initialize(list(self.all_units.values()))
 
@@ -362,6 +365,42 @@ class BattleEngine:
         for line in self.trigger_system.flush_log():
             self._log.append(line)
 
+    # ─── 3×3 그리드 시각화 ─────────────────────────────────────────
+    def _log_grid_layout(self):
+        """양 진영의 3×3 그리드 배치를 로그에 출력"""
+        row_names = {0: "전열", 1: "중열", 2: "후열"}
+
+        def _build_grid(units: List[BattleUnit]) -> List[List[str]]:
+            grid = [["    ·    " for _ in range(3)] for _ in range(3)]
+            for u in units:
+                r, c = u.tile_row, u.tile_col
+                name = u.name[:6].ljust(6)
+                grid[r][c] = f" {name}  "
+            return grid
+
+        ally_grid = _build_grid(self.allies)
+        enemy_grid = _build_grid(self.enemies)
+
+        self._log.append("")
+        self._log.append("  📐 3×3 그리드 배치")
+        self._log.append("  ─────────────────────────────────────────────────")
+        self._log.append(f"  {'아군':^28s}    {'적군':^28s}")
+        self._log.append(f"  {'후열   중열   전열':^28s} ↔ {'전열   중열   후열':^28s}")
+        self._log.append("  ─────────────────────────────────────────────────")
+
+        for col in range(3):
+            col_label = ["좌", "중", "우"][col]
+            ally_row_str = " ".join(
+                ally_grid[row][col] for row in [2, 1, 0]
+            )
+            enemy_row_str = " ".join(
+                enemy_grid[row][col] for row in [0, 1, 2]
+            )
+            self._log.append(f"  {col_label} {ally_row_str}  ↔  {enemy_row_str}")
+
+        self._log.append("  ─────────────────────────────────────────────────")
+        self._log.append("")
+
     # ─── 로그 출력 ────────────────────────────────────────────────
     def print_log(self):
         print("\n".join(self._log))
@@ -371,6 +410,7 @@ class BattleEngine:
 
     # ─── 최종 상태 요약 ───────────────────────────────────────────
     def print_summary(self):
+        row_names = {0: "전열", 1: "중열", 2: "후열"}
         print("\n" + "=" * 60)
         print("📊 전투 결과 요약")
         print("=" * 60)
@@ -380,9 +420,11 @@ class BattleEngine:
         print(f"배틀 라운드: {self.turn_manager.battle_round}")
         print("\n아군 생존:")
         for u in self.allies:
+            pos = f"({row_names[u.tile_row]},{u.tile_col})"
             status = f"HP {u.current_hp:.0f}/{u.max_hp:.0f}" if u.is_alive else "💀 사망"
-            print(f"  {u.name}: {status}")
+            print(f"  {u.name} {pos}: {status}")
         print("\n적군 생존:")
         for u in self.enemies:
+            pos = f"({row_names[u.tile_row]},{u.tile_col})"
             status = f"HP {u.current_hp:.0f}/{u.max_hp:.0f}" if u.is_alive else "💀 사망"
-            print(f"  {u.name}: {status}")
+            print(f"  {u.name} {pos}: {status}")

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BattleAgent 전투 시뮬레이션 툴</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI','Malgun Gothic',sans-serif; background:#1a1a2e; color:#eee; min-height:100vh; }
+
+.header { background:linear-gradient(135deg,#16213e,#0f3460); padding:14px 24px; text-align:center; border-bottom:2px solid #e94560; }
+.header h1 { font-size:20px; color:#e94560; }
+.header p { font-size:12px; color:#aaa; margin-top:2px; }
+
+.main { display:flex; gap:10px; padding:10px; height:calc(100vh - 62px); }
+
+/* ── 좌측: 캐릭터 패널 ── */
+.char-panel { width:260px; background:#16213e; border-radius:10px; display:flex; flex-direction:column; overflow:hidden; flex-shrink:0; }
+.char-panel h2 { padding:10px 12px; font-size:14px; color:#e94560; border-bottom:1px solid #0f3460; }
+.char-filters { padding:6px 8px; display:flex; gap:4px; flex-wrap:wrap; }
+.char-filters input { flex:1; min-width:100px; padding:5px 8px; border-radius:6px; border:1px solid #0f3460; background:#1a1a2e; color:#eee; font-size:12px; }
+.char-filters select { padding:5px; border-radius:6px; border:1px solid #0f3460; background:#1a1a2e; color:#eee; font-size:11px; }
+.char-list { flex:1; overflow-y:auto; padding:2px 6px; }
+.char-item { display:flex; align-items:center; gap:6px; padding:5px 8px; margin:2px 0; border-radius:6px; cursor:grab; background:#1a1a2e; border:1px solid transparent; transition:all .15s; font-size:12px; }
+.char-item:hover { border-color:#e94560; background:#1f2845; }
+.char-item .elem { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.elem-fire { background:#ff5722; } .elem-water { background:#2196f3; }
+.elem-forest { background:#4caf50; } .elem-light { background:#ffc107; } .elem-dark { background:#9c27b0; }
+.char-item .role-tag { font-size:9px; padding:1px 4px; border-radius:3px; color:#fff; flex-shrink:0; }
+.role-attacker { background:#c62828; } .role-defender { background:#1565c0; }
+.role-magician { background:#6a1b9a; } .role-healer { background:#2e7d32; } .role-supporter { background:#e65100; }
+.char-item .name { flex:1; font-weight:600; }
+.char-item .stats { font-size:9px; color:#888; }
+.grade-tag { font-size:9px; padding:1px 4px; border-radius:3px; font-weight:700; flex-shrink:0; }
+.grade-35 { background:#ff6f00; color:#fff; }
+.grade-3 { background:#6a1b9a; color:#fff; }
+.grade-2 { background:#1565c0; color:#fff; }
+.grade-1 { background:#555; color:#ccc; }
+
+/* ── 우측: 전장 + 결과 ── */
+.battlefield { flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
+
+/* 프리셋 행 */
+.presets-bar { display:flex; gap:12px; background:#16213e; border-radius:8px; padding:8px 12px; align-items:center; flex-wrap:wrap; }
+.presets-bar .side-label { font-size:12px; font-weight:700; padding:2px 8px; border-radius:4px; }
+.ally-label { background:#1565c0; } .enemy-label { background:#c62828; }
+.preset-btn { padding:2px 7px; border-radius:4px; border:1px solid #0f3460; background:#1a1a2e; color:#aaa; font-size:10px; cursor:pointer; transition:.15s; }
+.preset-btn:hover { border-color:#e94560; color:#fff; }
+.preset-btn.clear { color:#e94560; }
+.preset-sep { width:1px; height:24px; background:#0f3460; margin:0 4px; }
+
+/* ════ 전장 그리드 (수평 배치) ════ */
+.battle-grid-wrap { flex:1; background:#16213e; border-radius:10px; padding:12px; display:flex; flex-direction:column; justify-content:center; }
+.battle-grid-title { text-align:center; font-size:13px; color:#888; margin-bottom:6px; }
+
+.battle-grid { display:grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: auto repeat(3, 1fr) auto; gap:4px; max-width:820px; margin:0 auto; width:100%; }
+
+/* 헤더 (아군/적군 라벨) */
+.grid-header { grid-column: span 3; text-align:center; font-size:13px; font-weight:700; padding:4px; border-radius:4px; }
+.grid-header.ally { background:rgba(21,101,192,0.2); color:#42a5f5; }
+.grid-header.enemy { background:rgba(198,40,40,0.2); color:#ef5350; }
+
+/* 푸터 (후열/중열/전열 라벨) */
+.grid-footer { text-align:center; font-size:11px; color:#666; padding:2px; }
+
+/* 전장 중앙선 */
+.battle-divider { grid-row: 2 / span 3; grid-column: 3 / span 2; display:flex; align-items:center; justify-content:center; pointer-events:none; position:relative; z-index:0; }
+
+/* 셀 */
+.grid-cell { aspect-ratio:1.2; border-radius:10px; border:2px dashed #2a3a5e; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:all .15s; position:relative; cursor:pointer; min-height:65px; }
+.grid-cell:hover { border-color:#e94560; background:rgba(233,69,96,0.08); }
+.grid-cell.occupied { border-style:solid; }
+.grid-cell.occupied.ally-cell { border-color:#42a5f5; background:rgba(21,101,192,0.12); }
+.grid-cell.occupied.enemy-cell { border-color:#ef5350; background:rgba(198,40,40,0.12); }
+.grid-cell.drag-over { border-color:#ffc107; background:rgba(255,193,7,0.15); }
+.grid-cell .cell-num { position:absolute; top:2px; left:5px; font-size:10px; color:#444; font-weight:700; }
+.grid-cell .cell-char { text-align:center; }
+.grid-cell .cell-char .cname { font-size:11px; font-weight:700; }
+.grid-cell .cell-char .crole { font-size:9px; color:#aaa; }
+.grid-cell .cell-char .celem { width:7px; height:7px; border-radius:50%; display:inline-block; }
+.grid-cell .remove-btn { position:absolute; top:1px; right:4px; background:none; border:none; color:#e94560; cursor:pointer; font-size:13px; display:none; line-height:1; }
+.grid-cell:hover .remove-btn { display:block; }
+.grid-cell .cell-placeholder { color:#333; font-size:18px; }
+
+/* ── 컨트롤 + 결과 ── */
+.controls-area { background:#16213e; border-radius:10px; padding:10px 14px; }
+.controls-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.controls-row label { font-size:12px; color:#aaa; }
+.controls-row input[type=number] { width:60px; padding:5px; border-radius:6px; border:1px solid #0f3460; background:#1a1a2e; color:#eee; font-size:12px; }
+.controls-row input[type=checkbox] { accent-color:#e94560; }
+.btn-simulate { padding:8px 24px; border-radius:8px; border:none; background:linear-gradient(135deg,#e94560,#c62828); color:#fff; font-size:14px; font-weight:700; cursor:pointer; transition:.2s; }
+.btn-simulate:hover { transform:scale(1.03); box-shadow:0 4px 16px rgba(233,69,96,0.4); }
+.btn-simulate:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+.result-area { margin-top:8px; display:none; }
+.result-area.show { display:block; }
+.result-header { display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+.result-stat { text-align:center; }
+.result-stat .val { font-size:24px; font-weight:800; }
+.result-stat .label { font-size:10px; color:#aaa; }
+
+.result-bars { display:flex; height:22px; border-radius:6px; overflow:hidden; margin-top:8px; }
+.bar-win { background:#53d769; transition:width .5s; } .bar-loss { background:#e94560; transition:width .5s; } .bar-draw { background:#888; transition:width .5s; }
+
+.survivors { display:flex; gap:16px; margin-top:8px; }
+.survivor-side { flex:1; }
+.survivor-side h4 { font-size:11px; color:#aaa; margin-bottom:3px; }
+.survivor-unit { display:flex; align-items:center; gap:5px; font-size:11px; padding:2px 0; }
+.survivor-unit .hp-bar { width:70px; height:7px; background:#333; border-radius:3px; overflow:hidden; }
+.survivor-unit .hp-fill { height:100%; border-radius:3px; }
+.hp-high { background:#53d769; } .hp-mid { background:#ffc107; } .hp-low { background:#e94560; } .hp-dead { background:#666; }
+
+.log-area { margin-top:8px; max-height:120px; overflow-y:auto; background:#111; border-radius:6px; padding:6px; font-family:monospace; font-size:10px; color:#aaa; white-space:pre-wrap; display:none; }
+.log-area.show { display:block; }
+
+::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:#16213e; }
+::-webkit-scrollbar-thumb { background:#0f3460; border-radius:3px; } ::-webkit-scrollbar-thumb:hover { background:#e94560; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>⚔️ BattleAgent 전투 시뮬레이션 툴</h1>
+    <p>차일드 선택 → 3×3 그리드 배치 → 시뮬레이션 실행</p>
+</div>
+
+<div class="main">
+    <!-- 좌측: 캐릭터 패널 -->
+    <div class="char-panel">
+        <h2>📋 캐릭터 (<span id="charCount">0</span>)</h2>
+        <div class="char-filters">
+            <input type="text" id="searchInput" placeholder="이름 검색...">
+            <select id="filterElement">
+                <option value="">전속성</option>
+                <option value="fire">🔥화</option>
+                <option value="water">💧수</option>
+                <option value="forest">🌿목</option>
+                <option value="light">☀광</option>
+                <option value="dark">🌙암</option>
+            </select>
+            <select id="filterRole">
+                <option value="">전직업</option>
+                <option value="attacker">⚔딜러</option>
+                <option value="defender">🛡탱커</option>
+                <option value="magician">🔮마법사</option>
+                <option value="healer">💚힐러</option>
+                <option value="supporter">🔶서포터</option>
+            </select>
+        </div>
+        <div class="char-list" id="charList"></div>
+    </div>
+
+    <!-- 우측: 전장 -->
+    <div class="battlefield">
+        <!-- 프리셋 바 -->
+        <div class="presets-bar">
+            <span class="side-label ally-label">ALLY</span>
+            <span style="font-size:11px;color:#666">프리셋:</span>
+            <div id="allyPresets" style="display:contents"></div>
+            <div class="preset-sep"></div>
+            <span class="side-label enemy-label">ENEMY</span>
+            <span style="font-size:11px;color:#666">프리셋:</span>
+            <div id="enemyPresets" style="display:contents"></div>
+        </div>
+
+        <!-- 전장 그리드 (수평 배치) -->
+        <div class="battle-grid-wrap">
+            <div class="battle-grid-title">← 아군 후열 ─── 아군 전열 ⚔️ 적군 전열 ─── 적군 후열 →</div>
+            <div class="battle-grid" id="battleGrid">
+                <!-- 헤더 -->
+                <div class="grid-header ally">🔵 아군 (<span id="allyCount">0</span>/5)</div>
+                <div class="grid-header enemy">🔴 적군 (<span id="enemyCount">0</span>/5)</div>
+
+                <!-- Row 0 (3 ally cells + 3 enemy cells) -->
+                <!-- Ally: 후열→중열→전열 (cell 6,3,0) -->
+                <!-- Enemy: 전열→중열→후열 (cell 2,5,8) — but mirrored -->
+
+                <!-- Populated by JS -->
+
+                <!-- 푸터 -->
+            </div>
+        </div>
+
+        <!-- 컨트롤 + 결과 -->
+        <div class="controls-area">
+            <div class="controls-row">
+                <label>반복:</label>
+                <input type="number" id="runCount" value="20" min="1" max="100">
+                <label><input type="checkbox" id="showLog"> 로그</label>
+                <button class="btn-simulate" id="btnSimulate" onclick="runSimulation()">⚔️ 시뮬레이션 실행</button>
+                <span id="statusText" style="font-size:12px;color:#aaa;"></span>
+            </div>
+            <div class="result-area" id="resultArea">
+                <div class="result-header">
+                    <div class="result-stat"><div class="val" style="color:#53d769" id="resWinRate">0%</div><div class="label">승률</div></div>
+                    <div class="result-stat"><div class="val" style="color:#53d769" id="resWins">0</div><div class="label">승</div></div>
+                    <div class="result-stat"><div class="val" style="color:#e94560" id="resLosses">0</div><div class="label">패</div></div>
+                    <div class="result-stat"><div class="val" style="color:#888" id="resDraws">0</div><div class="label">무</div></div>
+                    <div class="result-stat"><div class="val" style="color:#ffc107" id="resTurns">0</div><div class="label">평균턴</div></div>
+                </div>
+                <div class="result-bars"><div class="bar-win" id="barWin"></div><div class="bar-loss" id="barLoss"></div><div class="bar-draw" id="barDraw"></div></div>
+                <div class="survivors">
+                    <div class="survivor-side"><h4>🔵 아군 생존</h4><div id="allySurvivors"></div></div>
+                    <div class="survivor-side"><h4>🔴 적군 생존</h4><div id="enemySurvivors"></div></div>
+                </div>
+                <div class="log-area" id="logArea"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// 셀 번호 체계 (이미지 기준)
+// ════════════════════════════════════════════════════
+// cell = row * 3 + col
+//   row: 전열(0) / 중열(1) / 후열(2)
+//   col: 0 / 1 / 2  (위/중/아래 — 시각적 세로 위치)
+//
+// 전장 수평 배치:
+//   아군 후열  아군 중열  아군 전열  ⚔  적군 전열  적군 중열  적군 후열
+//   [6]       [3]       [0]           [0]       [3]       [6]
+//   [7]       [4]       [1]           [1]       [4]       [7]
+//   [8]       [5]       [2]           [2]       [5]       [8]
+// ════════════════════════════════════════════════════
+
+const ROLE_KR = {attacker:'딜러',defender:'탱커',magician:'마법사',healer:'힐러',supporter:'서포터'};
+
+// cell → (row, col) 변환
+function cellToRowCol(cellNum) {
+    return { row: Math.floor(cellNum / 3), col: cellNum % 3 };
+}
+function rowColToCell(row, col) {
+    return row * 3 + col;
+}
+
+// 전장 시각 배치: 3 visual-rows × 6 visual-cols
+// visual-col 0..2 = 아군 (후열→중열→전열)
+// visual-col 3..5 = 적군 (전열→중열→후열)
+// visual-row 0..2 = col 0..2
+function getVisualMapping() {
+    const cells = [];
+    for (let vRow = 0; vRow < 3; vRow++) {  // col = vRow
+        for (let vCol = 0; vCol < 6; vCol++) {
+            let side, gameRow, gameCol;
+            gameCol = vRow;
+            if (vCol < 3) {
+                // 아군: vCol 0=후열(row2), 1=중열(row1), 2=전열(row0)
+                side = 'ally';
+                gameRow = 2 - vCol;
+            } else {
+                // 적군: vCol 3=전열(row0), 4=중열(row1), 5=후열(row2)
+                side = 'enemy';
+                gameRow = vCol - 3;
+            }
+            const cellNum = rowColToCell(gameRow, gameCol);
+            cells.push({ vRow, vCol, side, gameRow, gameCol, cellNum });
+        }
+    }
+    return cells;
+}
+
+// ── 상태 ──
+let allChars = [];
+let allyGrid = {};   // cellNum(string) -> char data
+let enemyGrid = {};
+let metaTeams = {};
+let dragData = null;
+let activeCell = null;
+
+// ── 초기화 ──
+async function init() {
+    const [chars, teams] = await Promise.all([
+        fetch('/api/characters').then(r=>r.json()),
+        fetch('/api/meta_teams').then(r=>r.json()),
+    ]);
+    allChars = chars;
+    metaTeams = teams;
+    document.getElementById('charCount').textContent = chars.length;
+    renderCharList();
+    renderPresets();
+    buildGrid();
+}
+
+// ── 캐릭터 목록 ──
+function renderCharList() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const elem = document.getElementById('filterElement').value;
+    const role = document.getElementById('filterRole').value;
+
+    let filtered = allChars.filter(c => {
+        if (search && !c.name.toLowerCase().includes(search) && !c.factory.toLowerCase().includes(search)) return false;
+        if (elem && c.element !== elem) return false;
+        if (role && c.role !== role) return false;
+        return true;
+    });
+
+    document.getElementById('charList').innerHTML = filtered.map(c => {
+        const stars = c.grade >= 3.5 ? '★3.5' : c.grade >= 3 ? '★3' : c.grade >= 2 ? '★2' : '★1';
+        const gradeClass = c.grade >= 3.5 ? 'grade-35' : c.grade >= 3 ? 'grade-3' : c.grade >= 2 ? 'grade-2' : 'grade-1';
+        return `
+        <div class="char-item" draggable="true"
+             data-factory="${c.factory}"
+             ondragstart="onDragStart(event,'${c.factory}')"
+             onclick="onCharClick('${c.factory}')">
+            <span class="elem elem-${c.element}"></span>
+            <span class="name">${c.name}</span>
+            <span class="grade-tag ${gradeClass}">${stars}</span>
+            <span class="role-tag role-${c.role}">${ROLE_KR[c.role]||c.role}</span>
+        </div>
+    `}).join('');
+    document.getElementById('charCount').textContent = filtered.length;
+}
+
+// ── 프리셋 ──
+function renderPresets() {
+    for (const side of ['ally', 'enemy']) {
+        const container = document.getElementById(side + 'Presets');
+        let html = '';
+        for (const name of Object.keys(metaTeams)) {
+            html += `<button class="preset-btn" onclick="loadPreset('${side}','${name}')">${name.split(' ')[0]}</button>`;
+        }
+        html += `<button class="preset-btn clear" onclick="clearGrid('${side}')">초기화</button>`;
+        container.innerHTML = html;
+    }
+}
+
+function loadPreset(side, teamName) {
+    const grid = side === 'ally' ? allyGrid : enemyGrid;
+    for (const key in grid) delete grid[key];
+
+    const members = metaTeams[teamName];
+    if (!members) return;
+    members.forEach(m => {
+        const cellNum = rowColToCell(m.row, m.col);
+        grid[cellNum] = { factory: m.factory, name: m.name, element: m.element, role: m.role, grade: m.grade || 3 };
+    });
+    refreshGrid();
+}
+
+function clearGrid(side) {
+    const grid = side === 'ally' ? allyGrid : enemyGrid;
+    for (const key in grid) delete grid[key];
+    refreshGrid();
+}
+
+// ── 전장 그리드 생성 ──
+function buildGrid() {
+    const container = document.getElementById('battleGrid');
+    // 헤더는 이미 HTML에 있음; 그 뒤에 셀과 푸터 추가
+    const mapping = getVisualMapping();
+
+    // 셀 생성 (3 rows × 6 cols)
+    for (const m of mapping) {
+        const div = document.createElement('div');
+        div.className = `grid-cell ${m.side}-cell`;
+        div.dataset.side = m.side;
+        div.dataset.cellnum = m.cellNum;
+        div.dataset.vrow = m.vRow;
+        div.dataset.vcol = m.vCol;
+        div.innerHTML = `<span class="cell-num">${m.cellNum}</span><span class="cell-placeholder">+</span>`;
+
+        // 드래그 (새 배치 + 이동 모두 처리)
+        div.addEventListener('dragover', e => { e.preventDefault(); div.classList.add('drag-over'); });
+        div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+        div.addEventListener('drop', e => {
+            e.preventDefault();
+            div.classList.remove('drag-over');
+            // 그리드 내 이동
+            if (moveDrag && moveDrag.side === m.side) {
+                const grid = m.side === 'ally' ? allyGrid : enemyGrid;
+                const fromChar = grid[moveDrag.fromCell];
+                if (fromChar) {
+                    const toChar = grid[m.cellNum];  // 교환 대상
+                    if (toChar) {
+                        // 스왑
+                        grid[m.cellNum] = fromChar;
+                        grid[moveDrag.fromCell] = toChar;
+                    } else {
+                        // 빈 칸으로 이동
+                        grid[m.cellNum] = fromChar;
+                        delete grid[moveDrag.fromCell];
+                    }
+                    refreshGrid();
+                }
+                moveDrag = null;
+                return;
+            }
+            // 캐릭터 패널에서 드래그
+            if (dragData) {
+                placeChar(m.side, m.cellNum, dragData);
+                dragData = null;
+            }
+        });
+        // 클릭 배치
+        div.addEventListener('click', () => {
+            if (!div.classList.contains('occupied')) {
+                activeCell = { side: m.side, cellNum: m.cellNum };
+                document.querySelectorAll('.grid-cell').forEach(c => c.style.outline = '');
+                div.style.outline = '2px solid #ffc107';
+            }
+        });
+
+        container.appendChild(div);
+    }
+
+    // 푸터 라벨
+    const footerLabels = ['후열', '중열', '전열', '전열', '중열', '후열'];
+    for (const label of footerLabels) {
+        const div = document.createElement('div');
+        div.className = 'grid-footer';
+        div.textContent = label;
+        container.appendChild(div);
+    }
+}
+
+// ── 드래그 ──
+function onDragStart(e, factory) {
+    dragData = factory;
+    e.dataTransfer.effectAllowed = 'copy';
+}
+
+function onCharClick(factory) {
+    if (activeCell) {
+        placeChar(activeCell.side, activeCell.cellNum, factory);
+        document.querySelectorAll('.grid-cell').forEach(c => c.style.outline = '');
+        activeCell = null;
+    }
+}
+
+function placeChar(side, cellNum, factory) {
+    const grid = side === 'ally' ? allyGrid : enemyGrid;
+    if (!grid[cellNum] && Object.keys(grid).length >= 5) {
+        alert('최대 5명까지 배치 가능합니다.');
+        return;
+    }
+    // 중복 배치 방지: 같은 진영에 동일 캐릭터 불가
+    const existing = Object.values(grid).find(ch => ch.factory === factory);
+    if (existing && !(grid[cellNum] && grid[cellNum].factory === factory)) {
+        alert(`${existing.name}은(는) 이미 배치되어 있습니다.`);
+        return;
+    }
+    const char = allChars.find(c => c.factory === factory);
+    if (!char) return;
+    grid[cellNum] = { factory: char.factory, name: char.name, element: char.element, role: char.role, grade: char.grade || 3 };
+    refreshGrid();
+}
+
+// ── 그리드 내 캐릭터 이동 (드래그) ──
+let moveDrag = null;  // {side, fromCell}
+
+function onCellDragStart(e, side, cellNum) {
+    const grid = side === 'ally' ? allyGrid : enemyGrid;
+    if (!grid[cellNum]) return;
+    moveDrag = { side, fromCell: cellNum };
+    dragData = null;  // 캐릭터 패널 드래그가 아님을 표시
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', 'move');
+    e.target.style.opacity = '0.4';
+}
+
+function onCellDragEnd(e) {
+    e.target.style.opacity = '1';
+    moveDrag = null;
+}
+
+function removeChar(side, cellNum) {
+    const grid = side === 'ally' ? allyGrid : enemyGrid;
+    delete grid[cellNum];
+    refreshGrid();
+}
+
+function refreshGrid() {
+    document.querySelectorAll('.grid-cell').forEach(cell => {
+        const side = cell.dataset.side;
+        const cellNum = cell.dataset.cellnum;
+        const grid = side === 'ally' ? allyGrid : enemyGrid;
+        const ch = grid[cellNum];
+
+        if (ch) {
+            cell.classList.add('occupied');
+            cell.draggable = true;
+            cell.ondragstart = (e) => onCellDragStart(e, side, +cellNum);
+            cell.ondragend = onCellDragEnd;
+            const stars = ch.grade >= 3.5 ? '★3.5' : ch.grade >= 3 ? '★3' : ch.grade >= 2 ? '★2' : '★1';
+            const gc = ch.grade >= 3.5 ? 'grade-35' : ch.grade >= 3 ? 'grade-3' : ch.grade >= 2 ? 'grade-2' : 'grade-1';
+            cell.innerHTML = `
+                <span class="cell-num">${cellNum}</span>
+                <div class="cell-char">
+                    <span class="celem elem-${ch.element}"></span>
+                    <div class="cname">${ch.name}</div>
+                    <div class="crole"><span class="grade-tag ${gc}" style="font-size:8px;padding:0 3px">${stars}</span> ${ROLE_KR[ch.role]||ch.role}</div>
+                </div>
+                <button class="remove-btn" onclick="event.stopPropagation();removeChar('${side}',${cellNum})">✕</button>
+            `;
+        } else {
+            cell.classList.remove('occupied');
+            cell.draggable = false;
+            cell.ondragstart = null;
+            cell.ondragend = null;
+            cell.innerHTML = `<span class="cell-num">${cellNum}</span><span class="cell-placeholder">+</span>`;
+        }
+    });
+    document.getElementById('allyCount').textContent = Object.keys(allyGrid).length;
+    document.getElementById('enemyCount').textContent = Object.keys(enemyGrid).length;
+}
+
+// ── 시뮬레이션 ──
+async function runSimulation() {
+    const allies = Object.entries(allyGrid).map(([cellNum, ch]) => {
+        const {row, col} = cellToRowCol(+cellNum);
+        return { factory: ch.factory, row, col };
+    });
+    const enemies = Object.entries(enemyGrid).map(([cellNum, ch]) => {
+        const {row, col} = cellToRowCol(+cellNum);
+        return { factory: ch.factory, row, col };
+    });
+
+    if (allies.length === 0 || enemies.length === 0) {
+        alert('양 진영에 최소 1명 이상 배치해주세요.');
+        return;
+    }
+
+    const runs = parseInt(document.getElementById('runCount').value) || 20;
+    const showLog = document.getElementById('showLog').checked;
+    const btn = document.getElementById('btnSimulate');
+    const status = document.getElementById('statusText');
+
+    btn.disabled = true;
+    btn.textContent = '⏳ 실행 중...';
+    status.textContent = `${allies.length}vs${enemies.length} × ${runs}회...`;
+
+    try {
+        const resp = await fetch('/api/simulate', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ allies, enemies, runs, show_log: showLog }),
+        });
+        const data = await resp.json();
+        if (data.error) { alert(data.error); return; }
+
+        document.getElementById('resultArea').classList.add('show');
+        document.getElementById('resWinRate').textContent = data.win_rate + '%';
+        document.getElementById('resWins').textContent = data.wins;
+        document.getElementById('resLosses').textContent = data.losses;
+        document.getElementById('resDraws').textContent = data.draws;
+        document.getElementById('resTurns').textContent = data.avg_turns;
+
+        const total = data.wins + data.losses + data.draws;
+        document.getElementById('barWin').style.width = (data.wins/total*100)+'%';
+        document.getElementById('barLoss').style.width = (data.losses/total*100)+'%';
+        document.getElementById('barDraw').style.width = (data.draws/total*100)+'%';
+
+        renderSurvivors('allySurvivors', data.ally_survivors);
+        renderSurvivors('enemySurvivors', data.enemy_survivors);
+
+        const logArea = document.getElementById('logArea');
+        if (showLog && data.log.length) {
+            logArea.classList.add('show');
+            logArea.textContent = data.log.join('\n');
+        } else { logArea.classList.remove('show'); }
+
+        status.textContent = `완료! ${total}전투 | 승률 ${data.win_rate}%`;
+    } catch (e) {
+        alert('오류: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '⚔️ 시뮬레이션 실행';
+    }
+}
+
+function renderSurvivors(id, units) {
+    document.getElementById(id).innerHTML = units.map(u => {
+        const pct = u.max_hp > 0 ? (u.hp/u.max_hp*100) : 0;
+        let cls = 'hp-dead';
+        if (u.alive) cls = pct > 60 ? 'hp-high' : pct > 30 ? 'hp-mid' : 'hp-low';
+        return `<div class="survivor-unit">
+            <span>${u.alive?'💚':'💀'}</span>
+            <span style="width:60px">${u.name}</span>
+            <div class="hp-bar"><div class="hp-fill ${cls}" style="width:${Math.max(pct,2)}%"></div></div>
+            <span style="font-size:10px;color:#888">${u.hp}/${u.max_hp}</span>
+        </div>`;
+    }).join('');
+}
+
+// 필터
+document.getElementById('searchInput').addEventListener('input', renderCharList);
+document.getElementById('filterElement').addEventListener('change', renderCharList);
+document.getElementById('filterRole').addEventListener('change', renderCharList);
+
+init();
+</script>
+</body>
+</html>

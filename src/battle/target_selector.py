@@ -6,6 +6,7 @@ import random
 from typing import List, Optional, TYPE_CHECKING
 
 from battle.enums import TargetType, Role, Element
+from battle.rules import FRONT_ROW_PROTECTION_ENABLED
 
 if TYPE_CHECKING:
     from battle.battle_unit import BattleUnit
@@ -187,7 +188,14 @@ class TargetSelector:
 
         # ── 적군 Near 계열 (타일 거리 기반) ───────────────────────
         elif target_type == TargetType.ENEMY_NEAR:
-            # 가장 가까운 적 1명
+            # 전열 보호: 전열 유닛이 살아있으면 전열 우선 타격
+            if FRONT_ROW_PROTECTION_ENABLED:
+                front = self._get_effective_front_row(alive_enemies)
+                if front and len(front) < len(alive_enemies):
+                    # 전열이 살아있고, 전열 외 유닛도 있음 → 전열 내에서 최근접
+                    near = self._nearest_enemy(caster, front)
+                    return [near] if near else []
+            # 전열 보호 미적용 또는 전열만 있음 → 기본 최근접
             near = self._nearest_enemy(caster, alive_enemies)
             return [near] if near else []
 
@@ -264,6 +272,17 @@ class TargetSelector:
                 and abs(u.tile_col - caster.tile_col) <= 1
             ]
             return adjacent if adjacent else list(alive_enemies)
+
+        elif target_type == TargetType.ENEMY_BACK_ROW_PRIORITY:
+            # 후열 우선: 후열 → 중열 → 전열 순으로 1명 선택
+            back = self._get_effective_back_row(alive_enemies)
+            if back:
+                return [min(back, key=lambda u: u.current_hp)]
+            mid = [u for u in alive_enemies if u.tile_row == 1]
+            if mid:
+                return [min(mid, key=lambda u: u.current_hp)]
+            front = self._get_effective_front_row(alive_enemies)
+            return [min(front, key=lambda u: u.current_hp)] if front else []
 
         elif target_type == TargetType.ENEMY_ELEMENT_WEAK:
             # 상성 약점 적 우선 타겟 (없으면 ENEMY_NEAR fallback)

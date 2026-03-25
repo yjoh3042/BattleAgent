@@ -8,6 +8,7 @@ import random
 from typing import Optional, TYPE_CHECKING
 
 from battle.enums import Element
+from battle.rules import get_row_damage_taken_mult, get_position_scale_mult
 
 if TYPE_CHECKING:
     from battle.battle_unit import BattleUnit
@@ -80,11 +81,13 @@ def calc_final_damage(
     elem_mult: float,
     crit_mult: float,
     burn_bonus: float = 1.0,   # 화상 스택 보너스 배율
+    position_mult: float = 1.0,  # 3×3 그리드 위치 보정 배율
 ) -> int:
     """
-    최종 데미지 = floor(Base × SkillMult × ElemMult × CritMult × BurnBonus)
+    최종 데미지 = floor(Base × SkillMult × ElemMult × CritMult × BurnBonus × PosMult)
+    position_mult: 행(row)별 받는 피해 보정 (전열 +5%, 후열 -10%)
     """
-    return max(0, math.floor(base * skill_mult * elem_mult * crit_mult * burn_bonus))
+    return max(0, math.floor(base * skill_mult * elem_mult * crit_mult * burn_bonus * position_mult))
 
 
 # ─── 힐 계산 ──────────────────────────────────────────────────────
@@ -148,7 +151,8 @@ def compute_damage_penetration(
         elem_mult = 1.0
     is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
     crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
-    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, 1.0, pos_mult)
     return final, is_crit, False
 
 
@@ -175,7 +179,8 @@ def compute_damage_guaranteed_crit(
     if getattr(attacker, 'ignore_element', False):
         elem_mult = 1.0
     crit_mult = get_crit_mult(attacker.cri_dmg_ratio, True)  # 무조건 크리
-    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, 1.0, pos_mult)
     return final, True, False
 
 
@@ -197,7 +202,8 @@ def compute_damage_buff_scale(
     is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
     crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
     buff_bonus = 1.0 + buff_count * scale_per_buff
-    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, buff_bonus)
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, buff_bonus, pos_mult)
     return final, is_crit, False
 
 
@@ -231,7 +237,10 @@ def compute_damage(
     burn_stack = defender.get_tag_count("burn") if burn_bonus_per_stack > 0 else 0
     burn_bonus = get_burn_bonus_mult(burn_stack, burn_bonus_per_stack) if burn_stack > 0 else 1.0
 
-    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, burn_bonus)
+    # 3×3 그리드 위치 보정
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, burn_bonus, pos_mult)
     return final, is_crit, False
 
 
@@ -255,7 +264,8 @@ def compute_damage_spd_scale(
     is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
     crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
     spd_bonus = 1.0 + attacker.spd * spd_ratio
-    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, spd_bonus)
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, spd_bonus, pos_mult)
     return final, is_crit, False
 
 
@@ -274,7 +284,8 @@ def compute_damage_def_scale(
         elem_mult = 1.0
     is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
     crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
-    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, 1.0, pos_mult)
     return final, is_crit, False
 
 
@@ -294,7 +305,8 @@ def compute_damage_dual_scale(
         elem_mult = 1.0
     is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
     crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
-    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, 1.0, pos_mult)
     return final, is_crit, False
 
 
@@ -313,7 +325,8 @@ def compute_damage_weakpoint(
         elem_mult = 1.0
     is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
     crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
-    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, 1.0, pos_mult)
     return final, is_crit, False
 
 
@@ -339,7 +352,8 @@ def compute_damage_chain(
     is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
     crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
     chain_mult = max(0.1, 1.0 - decay_rate * chain_index)
-    final = calc_final_damage(base, skill_mult * chain_mult, elem_mult, crit_mult)
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+    final = calc_final_damage(base, skill_mult * chain_mult, elem_mult, crit_mult, 1.0, pos_mult)
     return final, is_crit, False
 
 
@@ -358,7 +372,8 @@ def compute_damage_counter_bonus(
         elem_mult = 1.0
     is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
     crit_mult = get_crit_mult(attacker.cri_dmg_ratio + counter_crit_bonus, is_crit)
-    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, 1.0, pos_mult)
     return final, is_crit, False
 
 
@@ -378,3 +393,32 @@ def compute_break_damage(
     """격파 피해: 속성별 기본 격파 데미지."""
     base_break = target.max_hp * 0.1 * break_effect
     return max(1, math.floor(base_break))
+
+
+# ─── 위치(행) 기반 대미지 스케일링 ──────────────────────────────────
+def compute_damage_position_scale(
+    attacker: "BattleUnit",
+    defender: "BattleUnit",
+    skill_mult: float,
+    position_scale_value: float = 0.15,
+) -> tuple[int, bool, bool]:
+    """
+    DAMAGE_POSITION_SCALE: 대상의 행 위치에 따라 추가 배율.
+    전열(row 0) 대상: +position_scale_value × 2 (예: +30%)
+    중열(row 1) 대상: +position_scale_value × 1 (예: +15%)
+    후열(row 2) 대상: +0%
+    """
+    if roll_dodge(defender.dodge, attacker.acc):
+        return 0, False, True
+    base = calc_base_damage(attacker.atk, defender.def_, attacker.penetration)
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
+    # 위치 스케일: 전열일수록 높은 배율
+    scale_mult = get_position_scale_mult(defender.tile_row, position_scale_value)
+    # 행별 받는 피해 보정도 적용
+    pos_mult = get_row_damage_taken_mult(defender.tile_row)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, scale_mult, pos_mult)
+    return final, is_crit, False

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 
 from battle.enums import CCType, LogicType, StatType
 from battle.models import CharacterData, BuffData
+from battle.rules import get_row_def_bonus
 
 if TYPE_CHECKING:
     pass
@@ -35,6 +36,10 @@ class BattleUnit:
         self.id = data.id
         self.name = data.name
         self.side = data.side
+
+        # ── 3×3 그리드 위치 (가변) ──────────────────────────────
+        self._tile_row: int = data.tile_pos[0]
+        self._tile_col: int = data.tile_pos[1]
 
         # HP
         self.max_hp: float = data.stats.hp
@@ -138,17 +143,22 @@ class BattleUnit:
     # ─── 타일 포지션 (3×3 그리드) ────────────────────────────────
     @property
     def tile_pos(self) -> tuple:
-        return self.data.tile_pos
+        return (self._tile_row, self._tile_col)
 
     @property
     def tile_row(self) -> int:
         """행(row): 0=전열, 1=중열, 2=후열"""
-        return self.data.tile_pos[0]
+        return self._tile_row
 
     @property
     def tile_col(self) -> int:
         """열(col): 0=좌, 1=중, 2=우"""
-        return self.data.tile_pos[1]
+        return self._tile_col
+
+    def set_tile_pos(self, row: int, col: int):
+        """타일 위치 변경 (넉백/이동 등)"""
+        self._tile_row = max(0, min(2, row))
+        self._tile_col = max(0, min(2, col))
 
     # ─── 스탯 (버프 합산) ─────────────────────────────────────────
     def _get_buff_delta(self, stat: str) -> float:
@@ -170,7 +180,10 @@ class BattleUnit:
 
     @property
     def def_(self) -> float:
-        return max(0.0, self.data.stats.def_ + self._get_buff_delta("def_"))
+        base_def = self.data.stats.def_ + self._get_buff_delta("def_")
+        # 행(Row)별 DEF 보정: 전열 +15%, 후열 -5%
+        row_bonus = get_row_def_bonus(self._tile_row)
+        return max(0.0, base_def * (1.0 + row_bonus))
 
     @property
     def spd(self) -> float:

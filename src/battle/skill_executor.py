@@ -12,7 +12,10 @@ from battle.damage_calc import (
     compute_damage_spd_scale, compute_damage_def_scale,
     compute_damage_dual_scale, compute_damage_weakpoint,
     compute_damage_fixed, compute_damage_chain,
-    compute_damage_counter_bonus,
+    compute_damage_counter_bonus, compute_damage_position_scale,
+)
+from battle.rules import (
+    KNOCKBACK_ROWS, KNOCKBACK_WALL_DAMAGE_RATIO,
 )
 from battle.target_selector import TargetSelector
 
@@ -2519,6 +2522,141 @@ class SkillExecutor:
                 if not target.is_alive:
                     self._killed_this_skill.append(target)
                     ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── KNOCKBACK (넉백: 전열→후열 강제 이동) ─────────────────
+        elif logic == LogicType.KNOCKBACK:
+            old_row = target.tile_row
+            new_row = min(2, old_row + KNOCKBACK_ROWS)
+            if new_row != old_row:
+                target.set_tile_pos(new_row, target.tile_col)
+                row_names = {0: "전열", 1: "중열", 2: "후열"}
+                ctx.log.append(
+                    f"    {caster.name} → {target.name}: 넉백! "
+                    f"{row_names[old_row]}→{row_names[new_row]}"
+                )
+                # ON_KNOCKBACK 트리거
+                if ctx.trigger_system:
+                    from battle.enums import TriggerEvent
+                    ctx.trigger_system.evaluate(TriggerEvent.ON_KNOCKBACK, caster, ctx)
+            else:
+                # 이미 최후열(row 2) → 벽꿍 대미지
+                wall_dmg = target.max_hp * KNOCKBACK_WALL_DAMAGE_RATIO
+                actual = target.take_damage(wall_dmg)
+                ctx.log.append(
+                    f"    {caster.name} → {target.name}: 넉백 — 벽꿍! "
+                    f"{actual:.0f} 피해 (HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+                )
+                if not target.is_alive:
+                    self._killed_this_skill.append(target)
+                    ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── DAMAGE_POSITION_SCALE (위치 기반 대미지) ───────────────
+        elif logic == LogicType.DAMAGE_POSITION_SCALE:
+            scale_value = effect.value if effect.value else 0.15
+            dmg, is_crit, is_dodged = compute_damage_position_scale(
+                caster, target, effect.multiplier, scale_value
+            )
+            if is_dodged:
+                ctx.log.append(
+                    f"    {caster.name} → {target.name}: {skill.name} 회피!"
+                )
+                return
+            actual = target.take_damage(dmg)
+            row_names = {0: "전열", 1: "중열", 2: "후열"}
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
+                f"(위치:{row_names[target.tile_row]}) "
+                f"(HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if is_crit and caster.is_alive and ctx.trigger_system:
+                ctx.trigger_system.evaluate_on_critical_hit(caster, target, ctx)
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── DAMAGE_POISON_SCALE (중독 스택 비례 대미지) ─────────────
+        elif logic == LogicType.DAMAGE_POISON_SCALE:
+            poison_stacks = target.get_tag_count("poison")
+            bonus = 1.0 + (effect.value if effect.value else 0.20) * poison_stacks
+            dmg, is_crit, is_dodged = compute_damage(caster, target, effect.multiplier)
+            if is_dodged:
+                ctx.log.append(
+                    f"    {caster.name} → {target.name}: {skill.name} 회피!"
+                )
+                return
+            dmg = int(dmg * bonus)
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
+                f"(중독 {poison_stacks}스택, ×{bonus:.1f}) "
+                f"(HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── DAMAGE_STONE_BONUS (석화 대상 2배 대미지) ───────────────
+        elif logic == LogicType.DAMAGE_STONE_BONUS:
+            is_stoned = target.hard_cc == CCType.STONE
+            bonus = 2.0 if is_stoned else 1.0
+            dmg, is_crit, is_dodged = compute_damage(caster, target, effect.multiplier)
+            if is_dodged:
+                ctx.log.append(
+                    f"    {caster.name} → {target.name}: {skill.name} 회피!"
+                )
+                return
+            dmg = int(dmg * bonus)
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            stone_str = " [석화 보너스!]" if is_stoned else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str}{stone_str} "
+                f"(HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+
+        # ─── INSTANT_KILL (즉사: HP% 이하 시) ──────────────────────
+        elif logic == LogicType.INSTANT_KILL:
+            threshold = effect.value if effect.value else 0.25
+            if target.hp_ratio <= threshold:
+                target.current_hp = 0
+                ctx.log.append(
+                    f"    {caster.name} → {target.name}: 즉사! "
+                    f"(HP {target.hp_ratio*100:.0f}% ≤ {threshold*100:.0f}%)"
+                )
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
+            else:
+                ctx.log.append(
+                    f"    {caster.name} → {target.name}: 즉사 실패 "
+                    f"(HP {target.hp_ratio*100:.0f}% > {threshold*100:.0f}%)"
+                )
+
+        # ─── EXECUTE (처형: 최저HP 대상 배율 증가) ───────────────────
+        elif logic == LogicType.EXECUTE:
+            # HP가 낮을수록 배율 증가: mult × (1 + (1 - hp_ratio) × execute_bonus)
+            execute_bonus = effect.value if effect.value else 0.5
+            extra_mult = 1.0 + (1.0 - target.hp_ratio) * execute_bonus
+            dmg, is_crit, is_dodged = compute_damage(caster, target, effect.multiplier * extra_mult)
+            if is_dodged:
+                ctx.log.append(
+                    f"    {caster.name} → {target.name}: {skill.name} 회피!"
+                )
+                return
+            actual = target.take_damage(dmg)
+            crit_str = " [크리티컬!]" if is_crit else ""
+            ctx.log.append(
+                f"    {caster.name} → {target.name}: {skill.name} {actual:.0f} 피해{crit_str} "
+                f"(처형 ×{extra_mult:.2f}) "
+                f"(HP {target.current_hp:.0f}/{target.max_hp:.0f})"
+            )
+            if not target.is_alive:
+                self._killed_this_skill.append(target)
+                ctx.log.append(f"    💀 {target.name} 사망!")
 
     # ─── 조건 체크 ────────────────────────────────────────────────
     def _check_condition(
