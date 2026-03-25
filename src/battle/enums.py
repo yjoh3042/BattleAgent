@@ -203,6 +203,14 @@ class LogicType(Enum):
     SHIELD_PHASE = "shield_phase"                            # 쉴드 페이즈 (약점만 격파)
     PART_BREAK = "part_break"                                # 보스 부위 파괴
 
+    # ── 스킬컨셉 NEW v2 추가 ──────────────────────────────────────
+    KNOCKBACK = "knockback"                                  # 넉백 (전열→후열 강제 이동)
+    DAMAGE_POISON_SCALE = "damage_poison_scale"              # 중독 스택 비례 대미지
+    DAMAGE_STONE_BONUS = "damage_stone_bonus"                # 석화 대상 2배 대미지
+    DAMAGE_POSITION_SCALE = "damage_position_scale"          # 위치(행) 기반 대미지 증가
+    INSTANT_KILL = "instant_kill"                            # 즉사 (HP% 이하 시)
+    EXECUTE = "execute"                                      # 처형 (최저HP 대상 배율 증가)
+
 
 class CCType(Enum):
     """상태이상 타입"""
@@ -280,6 +288,9 @@ class TargetType(Enum):
     ALLY_MOST_BUFFS = "ally_most_buffs"        # 버프 가장 많은 아군
     ENEMY_LOWEST_DEF = "enemy_lowest_def"      # DEF 가장 낮은 적
 
+    # ── 스킬컨셉 NEW v2 추가 ──────────────────────────────────────
+    ENEMY_BACK_ROW_PRIORITY = "enemy_back_row_priority"  # 후열 우선 (후열 없으면 전열)
+
 
 class TriggerEvent(Enum):
     """트리거 발동 이벤트"""
@@ -311,6 +322,13 @@ class TriggerEvent(Enum):
     ON_BOMB_EXPLODE = "on_bomb_explode"      # 폭탄 폭발 시
     ON_TOUGHNESS_BREAK = "on_toughness_break"  # 터프니스 격파 시
     ON_ENERGY_FULL = "on_energy_full"        # 에너지 만충 시
+
+    # ── 스킬컨셉 NEW v2 추가 ──────────────────────────────────────
+    ON_KNOCKBACK = "on_knockback"            # 넉백 성공 시
+    ON_STONE_APPLIED = "on_stone_applied"    # 석화 부여 시
+    ON_POISON_APPLIED = "on_poison_applied"  # 중독 부여 시
+    ON_DEBUFF_REMOVED = "on_debuff_removed"  # 디버프 제거 시
+    ON_ALLY_DODGE = "on_ally_dodge"          # 아군 회피 시 (ON_DODGE는 자신, 이건 아군)
 
 
 class Side(Enum):

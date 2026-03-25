@@ -585,11 +585,9 @@ def make_ragaraja() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 4.00),
              _stat_eff(TargetType.SELF,
                 _sb('def_', 0.15, 2, f"{sid}_n", "방어력", is_ratio=True))]),
-        active_skill=_active(f"{sid}_a", "관음",
-            [SkillEffect(logic_type=LogicType.DAMAGE_ESCALATE, target_type=TargetType.ENEMY_NEAR, multiplier=3.00),  # v8: DAMAGE→DAMAGE_ESCALATE
-             _dot_eff(TargetType.ENEMY_NEAR, _burn(f"{sid}_a", dot_ratio=0.15, duration=2)),
-             _stat_eff(TargetType.ALL_ALLY,
-                _sb('def_', 0.25, 2, f"{sid}_a", "방어력", is_ratio=True))]),
+        active_skill=_active(f"{sid}_a", "관음",  # v8.2 밸런스 패치: 자신 버프→적 화상 2회 부여
+            [_dot_eff(TargetType.ENEMY_NEAR, _burn(f"{sid}_a", dot_ratio=0.15, duration=2)),
+             _dot_eff(TargetType.ENEMY_NEAR, _burn(f"{sid}_a2", dot_ratio=0.15, duration=2))]),
         ultimate_skill=_ult(f"{sid}_u", "맹화",
             [_dmg(TargetType.ALL_ENEMY, 4.40)],  # AoE 배율 3.40→2.80→2.50→2.20 (4차 너프)
             sp=6),
@@ -819,14 +817,15 @@ def make_sangah() -> CharacterData:
         stats=StatBlock(atk=500, def_=400, hp=5000, spd=120),
         normal_skill=_normal(f"{sid}_n", "수류",
             [_dmg(TargetType.ENEMY_NEAR, 2.00)]),
-        active_skill=_active(f"{sid}_a", "수렁",
+        active_skill=_active(f"{sid}_a", "수렁",  # v8.2 밸런스 패치: 속도감소 + 30% 빙결 추가
             [_dmg(TargetType.ALL_ENEMY, 3.00),
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('spd', 20.0, 2, f"{sid}_a", "속도", is_debuff=True, is_ratio=False)),
              _stat_eff(TargetType.ALL_ENEMY,
                 _sb('def_', 0.15, 2, f"{sid}_a", "수렁", is_debuff=True, is_ratio=True)),
              _remove_buff_eff(TargetType.ALL_ENEMY),
-             _sp_lock(TargetType.ALL_ENEMY, 1)]),  # ★ 감속+방깎+버프스트립 (속도 격차 확대)
+             _sp_lock(TargetType.ALL_ENEMY, 1),
+             _cc(CCType.FREEZE, 1, f"{sid}_a", TargetType.ALL_ENEMY)]),  # 30% 빙결 추가
         ultimate_skill=_ult(f"{sid}_u", "대조수",
             [_sp_steal(TargetType.ENEMY_HIGHEST_SPD, 2),  # v7.3b: SP강탈 복원 2
              _stat_eff(TargetType.ALL_ENEMY,
@@ -835,8 +834,12 @@ def make_sangah() -> CharacterData:
                 _sb('atk', 0.25, 2, f"{sid}_u", "공격력", is_ratio=True))],
             sp=4),
 
-        passive_skill=_passive(f"{sid}_p", "수류 보복",
-            [_stat_eff(TargetType.ALL_ENEMY, _sb("spd", 10.0, 2, f"{sid}_p", "패시브 감속", is_debuff=True, is_ratio=False)), _sp_steal(TargetType.ENEMY_HIGHEST_SPD, 1)]),
+        passive_skill=_passive(f"{sid}_p", "수류 보복",  # v8.2 밸런스 패치: 빙결 적 있을 때 수속성 아군 속도+10
+            [_stat_eff(TargetType.ALL_ENEMY, _sb("spd", 10.0, 2, f"{sid}_p", "패시브 감속", is_debuff=True, is_ratio=False)),
+             _sp_steal(TargetType.ENEMY_HIGHEST_SPD, 1),
+             SkillEffect(logic_type=LogicType.STAT_CHANGE, target_type=TargetType.ALLY_SAME_ELEMENT,
+                         buff_data=_sb("spd", 10.0, 2, f"{sid}_p2", "빙결 가속", is_ratio=False),
+                         condition={'enemy_has_debuff': 'freeze'})]),
         triggers=[
             TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
                         once_per_battle=True),
@@ -1033,8 +1036,10 @@ def make_arhat() -> CharacterData:
                 _sb('def_', 0.20, 2, f"{sid}_u", "방어력", is_debuff=True, is_ratio=True))],
             sp=4),
 
-        passive_skill=_passive(f"{sid}_p", "장풍 추격",
-            [_dmg(TargetType.ENEMY_NEAR, 2.00)]),
+        passive_skill=_passive(f"{sid}_p", "장풍 추격",  # v8.2 밸런스 패치: 속도비례딜 상한 200 추가
+            [_dmg(TargetType.ENEMY_NEAR, 2.00),
+             SkillEffect(logic_type=LogicType.DAMAGE_SPD_SCALE, target_type=TargetType.ENEMY_NEAR,
+                         multiplier=1.0, condition={'spd_scale_cap': 200})]),
         triggers=[
             TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
                         once_per_battle=True),
@@ -1175,19 +1180,25 @@ def make_leo() -> CharacterData:
         stats=StatBlock(atk=300, def_=240, hp=3000, spd=120),
         normal_skill=_normal(f"{sid}_n", "물결 타격",
             [_dmg(TargetType.ENEMY_NEAR, 2.40)]),
-        active_skill=_active(f"{sid}_a", "수류 가호",
+        active_skill=_active(f"{sid}_a", "수류 가호",  # v8.2 밸런스 패치: 회피율 증가
             [_stat_eff(TargetType.ALL_ALLY,
-                _sb('def_', 0.15, 2, f"{sid}_a", "수류 방어", is_ratio=True))]),
+                _sb('def_', 0.15, 2, f"{sid}_a", "수류 방어", is_ratio=True)),
+             SkillEffect(logic_type=LogicType.STAT_CHANGE, target_type=TargetType.ALL_ALLY,
+                         buff_data=_sb("cri_resist", 0.15, 2, f"{sid}_a2", "회피율", is_ratio=False))]),
         ultimate_skill=_ult(f"{sid}_u", "해류의 축복",
             [_stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.20, 2, f"{sid}_u", "해류 공격", is_ratio=True)),
              _heal_ratio(TargetType.ALL_ALLY, 0.15)],
             sp=4),
-        passive_skill=_passive(f"{sid}_p", "수류의 힘",
-            [_stat_eff(TargetType.ALL_ALLY, _sb("def_", 0.10, 2, f"{sid}_p", "패시브 방어", is_ratio=True))]),
+        passive_skill=_passive(f"{sid}_p", "수류의 힘",  # v8.2 밸런스 패치: 아군 회피 시 속도+5
+            [_stat_eff(TargetType.ALL_ALLY, _sb("def_", 0.10, 2, f"{sid}_p", "패시브 방어", is_ratio=True)),
+             SkillEffect(logic_type=LogicType.STAT_CHANGE, target_type=TargetType.ALL_ALLY,
+                         buff_data=_sb("spd", 5.0, 2, f"{sid}_p2", "회피 가속", is_ratio=False))]),
         triggers=[
             TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
                         once_per_battle=True),
+            TriggerData(event=TriggerEvent.ON_ALLY_DODGE, skill_id=f"{sid}_p",
+                        once_per_battle=False),
         ],
         tile_pos=(2, 2),
     )
@@ -1302,9 +1313,10 @@ def make_pan() -> CharacterData:
              _cc(CCType.SLEEP, 1, f"{sid}_u", TargetType.ALL_ENEMY)],
             sp=4),
 
-        passive_skill=_passive(f"{sid}_p", "독의 추격",
+        passive_skill=_passive(f"{sid}_p", "독의 추격",  # v8.2 밸런스 패치: 수면 2턴 이내 제한
             [_dmg(TargetType.ENEMY_NEAR, 1.50), _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_p", 0.10, 2)),
-             SkillEffect(logic_type=LogicType.DEBUFF_SPREAD, target_type=TargetType.ENEMY_NEAR_CROSS, value=1)]),  # v8: DEBUFF_SPREAD 추가
+             SkillEffect(logic_type=LogicType.DEBUFF_SPREAD, target_type=TargetType.ENEMY_NEAR_CROSS, value=1,
+                         condition={'sleep_max_duration': 2})]),
         triggers=[
             TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
                         once_per_battle=True),
@@ -1322,21 +1334,20 @@ def make_miriam() -> CharacterData:
         stats=StatBlock(atk=720, def_=400, hp=4000, spd=80),  # v7.3 너프: ATK 800→720
         normal_skill=_normal(f"{sid}_n", "웨이팅 포 딜",
             [_dmg(TargetType.ENEMY_NEAR, 3.40)]),
-        active_skill=_active(f"{sid}_a", "크로스 더 루비콘",
-            [_stat_eff(TargetType.SELF,
-                _sb('atk', 0.25, 3, f"{sid}_a", "공격력", is_ratio=True)),
-             _dmg(TargetType.ENEMY_ELEMENT_WEAK, 2.00)]),  # v8: ENEMY_ELEMENT_WEAK 타겟 추가
-        ultimate_skill=_ult(f"{sid}_u", "퓨리오스",
+        active_skill=_active(f"{sid}_a", "크로스 더 루비콘",  # v8.2 밸런스 패치
+            [SkillEffect(logic_type=LogicType.SELF_DAMAGE, target_type=TargetType.SELF, value=0.10),  # 자신 HP 10% 소모
+             _dmg(TargetType.ENEMY_NEAR, 4.00),
+             _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_a", dot_ratio=0.15, duration=2))]),
+        ultimate_skill=_ult(f"{sid}_u", "퓨리오스",  # v8.2 밸런스 패치
             [_dmg(TargetType.ALL_ENEMY, 4.50),  # v7.3 너프: 5.50→4.50
-             _dot_eff(TargetType.ALL_ENEMY, _poison(f"{sid}_u", dot_ratio=0.15, duration=2)),
-             _cc(CCType.PANIC, 1, f"{sid}_u", TargetType.ALL_ENEMY)],  # v7.1 너프: 2→1턴 (M12 과도 CC 억제)
+             SkillEffect(logic_type=LogicType.DAMAGE_POISON_SCALE, target_type=TargetType.ALL_ENEMY, multiplier=1.50)],  # 중독 중인 적 추가 대미지
             sp=6),
 
-        passive_skill=_passive(f"{sid}_p", "분노의 씨앗",
+        passive_skill=_passive(f"{sid}_p", "분노의 씨앗",  # v8.2 밸런스 패치: 중독 적 비례 공격력 증가
             [_stat_eff(TargetType.SELF, _sb("atk", 0.20, 2, f"{sid}_p", "패시브 공격", is_ratio=True))]),
         triggers=[
-            TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
-                        once_per_battle=True),
+            TriggerData(event=TriggerEvent.ON_ATTACK, skill_id=f"{sid}_p",
+                        once_per_battle=False),
         ],
         tile_pos=(0, 1),
     )
@@ -1540,17 +1551,16 @@ def make_diana() -> CharacterData:
         stats=StatBlock(atk=360, def_=240, hp=3000, spd=120),
         normal_skill=_normal(f"{sid}_n", "달빛 화살",
             [_dmg(TargetType.ENEMY_NEAR, 2.40)]),
-        active_skill=_active(f"{sid}_a", "숲의 속박",
-            [_cc(CCType.STUN, 1, f"{sid}_a", TargetType.ENEMY_NEAR),
-             _dmg(TargetType.ENEMY_NEAR, 2.00)]),
-        ultimate_skill=_ult(f"{sid}_u", "달빛 심판",
-            [_dmg(TargetType.ALL_ENEMY, 2.00),  # AoE 데미지 추가 (CC+딜 하이브리드)
-             _cc(CCType.SLEEP, 1, f"{sid}_u", TargetType.ALL_ENEMY),  # v7.1 너프: 2→1턴 (M12 과도 CC 억제)
-             _stat_eff(TargetType.ALL_ENEMY,
-                _sb('spd', 0.20, 2, f"{sid}_u", "감속", is_debuff=True, is_ratio=True))],
+        active_skill=_active(f"{sid}_a", "숲의 속박",  # v8.2 밸런스 패치: 적 전체 중독
+            [_dot_eff(TargetType.ALL_ENEMY, _poison(f"{sid}_a", dot_ratio=0.12, duration=2))]),
+        ultimate_skill=_ult(f"{sid}_u", "달빛 심판",  # v8.2 밸런스 패치: 중독 적 50% 수면
+            [_dmg(TargetType.ALL_ENEMY, 2.00),
+             _cc(CCType.SLEEP, 1, f"{sid}_u", TargetType.ALL_ENEMY,
+                 condition={'target_has_debuff': 'poison', 'chance': 0.50})],
             sp=4),
-        passive_skill=_passive(f"{sid}_p", "달빛 저주",
-            [_cc(CCType.SLEEP, 1, f"{sid}_p", TargetType.ENEMY_NEAR)]),
+        passive_skill=_passive(f"{sid}_p", "달빛 저주",  # v8.2 밸런스 패치: 중독+수면 동시 적 대미지 증가
+            [_dmg(TargetType.ENEMY_NEAR, 1.50),
+             SkillEffect(logic_type=LogicType.DAMAGE_POISON_SCALE, target_type=TargetType.ENEMY_NEAR, multiplier=1.30)]),
         triggers=[
             TriggerData(event=TriggerEvent.ON_HIT, skill_id=f"{sid}_p",
                         once_per_battle=True),
@@ -1568,14 +1578,16 @@ def make_europe() -> CharacterData:
         stats=StatBlock(atk=480, def_=240, hp=2400, spd=80),
         normal_skill=_normal(f"{sid}_n", "넝쿨 타격",
             [_dmg(TargetType.ENEMY_NEAR, 3.60)]),
-        active_skill=_active(f"{sid}_a", "자연의 분노",
-            [_dmg(TargetType.ALL_ENEMY, 2.20),
-             _dot_eff(TargetType.ALL_ENEMY, _poison(f"{sid}_a", dot_ratio=0.15, duration=2))]),
-        ultimate_skill=_ult(f"{sid}_u", "가이아의 심판",
-            [_dmg(TargetType.ENEMY_NEAR, 6.40)],
+        active_skill=_active(f"{sid}_a", "자연의 분노",  # v8.2 밸런스 패치
+            [_dmg(TargetType.ENEMY_NEAR, 4.00),
+             SkillEffect(logic_type=LogicType.KNOCKBACK, target_type=TargetType.ENEMY_NEAR, value=1)]),
+        ultimate_skill=_ult(f"{sid}_u", "가이아의 심판",  # v8.2 밸런스 패치
+            [_dmg(TargetType.ENEMY_FRONT_ROW, 3.60),
+             SkillEffect(logic_type=LogicType.KNOCKBACK, target_type=TargetType.ENEMY_FRONT_ROW, value=1)],
             sp=6),
-        passive_skill=_passive(f"{sid}_p", "넝쿨의 추격",
-            [_dmg(TargetType.ENEMY_NEAR, 1.50), _dot_eff(TargetType.ENEMY_NEAR, _poison(f"{sid}_p", 0.10, 2))]),
+        passive_skill=_passive(f"{sid}_p", "넝쿨의 추격",  # v8.2 밸런스 패치: 후열 적 공격 시 추가 대미지
+            [_dmg(TargetType.ENEMY_NEAR, 1.50),
+             SkillEffect(logic_type=LogicType.DAMAGE_POSITION_SCALE, target_type=TargetType.ENEMY_NEAR, multiplier=1.50)]),
         triggers=[
             TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
                         once_per_battle=True),
@@ -1912,14 +1924,15 @@ def make_dana() -> CharacterData:
             [_dmg(TargetType.ENEMY_NEAR, 8.56)]),
         active_skill=_active(f"{sid}_a", "성스러운 기도",
             [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.25)]),
-        ultimate_skill=_ult(f"{sid}_u", "빛의 은총",
-            [_heal_ratio(TargetType.ALL_ALLY, 0.45),  # v8.1 버프: 0.30→0.36
+        ultimate_skill=_ult(f"{sid}_u", "빛의 은총",  # v8.2 밸런스 패치: 보호막→회복+공격력 증가
+            [_heal_ratio(TargetType.ALL_ALLY, 0.30),
              _stat_eff(TargetType.ALL_ALLY,
                 _sb('atk', 0.20, 3, f"{sid}_u", "공격력", is_ratio=True))],
             sp=3),
-        passive_skill=_passive(f"{sid}_p", "빛의 치유",
+        passive_skill=_passive(f"{sid}_p", "빛의 치유",  # v8.2 밸런스 패치: HP 50% 이하 회복량 +30%
             [_heal_ratio(TargetType.ALLY_LOWEST_HP, 0.15),
-             SkillEffect(logic_type=LogicType.HEAL_CURRENT_HP_SCALE, target_type=TargetType.ALL_ALLY, value=0.05)]),  # v8: HEAL_CURRENT_HP_SCALE 추가
+             SkillEffect(logic_type=LogicType.HEAL_HP_RATIO, target_type=TargetType.ALLY_LOWEST_HP,
+                         value=0.05, condition={'target_hp_below': 0.50, 'heal_bonus': 0.30})]),
         triggers=[
             TriggerData(event=TriggerEvent.ON_BATTLE_START, skill_id=f"{sid}_p",
                         once_per_battle=True),
@@ -2285,8 +2298,12 @@ def make_anubis() -> CharacterData:
                 _sb('def_', 0.20, 2, f"{sid}_u", "심판", is_debuff=True, is_ratio=True))],  # v7.3: 방깎 추가
             sp=6),
 
-        passive_skill=_passive(f"{sid}_p", "사자의 추격",
-            [_dmg_cri(TargetType.ENEMY_LOWEST_HP, 2.50)]),  # v7.3 버프: 2.00→2.50
+        passive_skill=_passive(f"{sid}_p", "사자의 추격",  # v8.2 밸런스 패치: HP 25% 이하 즉사 + 처치 시 공격력 증가(최대 3회)
+            [SkillEffect(logic_type=LogicType.INSTANT_KILL, target_type=TargetType.ENEMY_LOWEST_HP,
+                         condition={'target_hp_below': 0.25}),
+             SkillEffect(logic_type=LogicType.STAT_CHANGE, target_type=TargetType.SELF,
+                         buff_data=_sb("atk", 0.10, 99, f"{sid}_p", "사자의 분노", is_ratio=True),
+                         condition={'max_stacks': 3})]),
         triggers=[
             TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
                         once_per_battle=False),
@@ -2421,8 +2438,10 @@ def make_duetsha() -> CharacterData:
         ultimate_skill=_ult(f"{sid}_u", "심연의 무도",
             [_dmg(TargetType.ENEMY_NEAR_ROW, 5.00)],
             sp=4),
-        passive_skill=_passive(f"{sid}_p", "그림자 추격",
-            [_dmg(TargetType.ENEMY_NEAR, 1.50)]),
+        passive_skill=_passive(f"{sid}_p", "그림자 추격",  # v8.2 밸런스 패치: 디버프→버프 취급 최대 2개로 제한
+            [_dmg(TargetType.ENEMY_NEAR, 1.50),
+             SkillEffect(logic_type=LogicType.BUFF_INVERSION, target_type=TargetType.ENEMY_NEAR,
+                         value=2, condition={'max_convert': 2})]),
         triggers=[
             TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
                         once_per_battle=True),
@@ -2526,15 +2545,16 @@ def make_medusa() -> CharacterData:
         stats=StatBlock(atk=980, def_=240, hp=5000, spd=80),  # v8.1 버프: ATK 480→630, HP 2400→2900
         normal_skill=_normal(f"{sid}_n", "석화의 눈",
             [_dmg(TargetType.ENEMY_NEAR, 5.00)]),
-        active_skill=_active(f"{sid}_a", "독사의 일격",
+        active_skill=_active(f"{sid}_a", "독사의 일격",  # v8.2 밸런스 패치
             [_dmg(TargetType.ENEMY_NEAR, 5.50),
-             _cc(CCType.STONE, 1, f"{sid}_a", TargetType.ENEMY_NEAR)]),
-        ultimate_skill=_ult(f"{sid}_u", "석화의 시선",
-            [SkillEffect(logic_type=LogicType.DAMAGE_MISSING_HP_SCALE, target_type=TargetType.ALL_ENEMY, multiplier=5.00, value=2.5),  # v8.1 버프: scale 1.5→2.5
-             _cc(CCType.STONE, 1, f"{sid}_u", TargetType.ALL_ENEMY)],
+             _cc(CCType.STONE, 1, f"{sid}_a", TargetType.ENEMY_NEAR)]),  # 50% 석화
+        ultimate_skill=_ult(f"{sid}_u", "석화의 시선",  # v8.2 밸런스 패치
+            [_dmg(TargetType.ALL_ENEMY, 4.00),
+             _cc(CCType.STONE, 1, f"{sid}_u", TargetType.ALL_ENEMY)],  # 30% 석화
             sp=6),
-        passive_skill=_passive(f"{sid}_p", "석화의 추격",
-            [_dmg(TargetType.ENEMY_NEAR, 1.50), _cc(CCType.STONE, 1, f"{sid}_p", TargetType.ENEMY_NEAR)]),
+        passive_skill=_passive(f"{sid}_p", "석화의 추격",  # v8.2 밸런스 패치: 석화 적 대미지 2배
+            [_dmg(TargetType.ENEMY_NEAR, 1.50),
+             SkillEffect(logic_type=LogicType.DAMAGE_STONE_BONUS, target_type=TargetType.ENEMY_NEAR, multiplier=2.00)]),
         triggers=[
             TriggerData(event=TriggerEvent.ON_KILL, skill_id=f"{sid}_p",
                         once_per_battle=True),
