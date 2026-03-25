@@ -36,12 +36,28 @@ body { font-family:'Segoe UI','Malgun Gothic',sans-serif; background:#1a1a2e; co
 .grade-3 { background:#6a1b9a; color:#fff; }
 .grade-2 { background:#1565c0; color:#fff; }
 .grade-1 { background:#555; color:#ccc; }
+.char-item.selected { border-color:#ffc107; background:#2a2a10; box-shadow:0 0 8px rgba(255,193,7,0.3); }
+
+/* ── 스킬 툴팁 ── */
+.char-tooltip { display:none; position:fixed; z-index:9999; background:#1a1a2e; border:1px solid #e94560; border-radius:10px; padding:10px 14px; max-width:360px; min-width:240px; box-shadow:0 8px 32px rgba(0,0,0,0.6); pointer-events:none; font-size:11px; line-height:1.5; }
+.char-tooltip.show { display:block; }
+.char-tooltip .tt-header { display:flex; align-items:center; gap:6px; margin-bottom:6px; padding-bottom:5px; border-bottom:1px solid #2a3a5e; }
+.char-tooltip .tt-name { font-size:14px; font-weight:700; }
+.char-tooltip .tt-stats { display:flex; gap:8px; margin-bottom:6px; font-size:10px; color:#aaa; }
+.char-tooltip .tt-stats span { background:#0f3460; padding:1px 5px; border-radius:3px; }
+.char-tooltip .tt-skill { margin-bottom:5px; }
+.char-tooltip .tt-skill-name { font-weight:700; color:#ffc107; font-size:11px; }
+.char-tooltip .tt-skill-type { font-size:9px; padding:1px 4px; border-radius:3px; color:#fff; margin-left:4px; }
+.tt-type-일반 { background:#555; } .tt-type-액티브 { background:#1565c0; }
+.tt-type-궁극기 { background:#c62828; } .tt-type-패시브 { background:#6a1b9a; }
+.char-tooltip .tt-skill-desc { color:#ccc; font-size:10px; margin-top:1px; padding-left:8px; }
+.char-tooltip .tt-trigger { color:#ffa726; font-size:10px; margin-top:4px; }
 
 /* ── 우측: 전장 + 결과 ── */
 .battlefield { flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
 
 /* 프리셋 행 */
-.presets-bar { display:flex; gap:12px; background:#16213e; border-radius:8px; padding:8px 12px; align-items:center; flex-wrap:wrap; }
+.presets-bar { display:flex; flex-direction:column; gap:6px; background:#16213e; border-radius:8px; padding:8px 12px; }
 .presets-bar .side-label { font-size:12px; font-weight:700; padding:2px 8px; border-radius:4px; }
 .ally-label { background:#1565c0; } .enemy-label { background:#c62828; }
 .preset-btn { padding:2px 7px; border-radius:4px; border:1px solid #0f3460; background:#1a1a2e; color:#aaa; font-size:10px; cursor:pointer; transition:.15s; }
@@ -119,6 +135,8 @@ body { font-family:'Segoe UI','Malgun Gothic',sans-serif; background:#1a1a2e; co
 </head>
 <body>
 
+<div class="char-tooltip" id="charTooltip"></div>
+
 <div class="header">
     <h1>⚔️ BattleAgent 전투 시뮬레이션 툴</h1>
     <p>차일드 선택 → 3×3 그리드 배치 → 시뮬레이션 실행</p>
@@ -154,13 +172,16 @@ body { font-family:'Segoe UI','Malgun Gothic',sans-serif; background:#1a1a2e; co
     <div class="battlefield">
         <!-- 프리셋 바 -->
         <div class="presets-bar">
-            <span class="side-label ally-label">ALLY</span>
-            <span style="font-size:11px;color:#666">프리셋:</span>
-            <div id="allyPresets" style="display:contents"></div>
-            <div class="preset-sep"></div>
-            <span class="side-label enemy-label">ENEMY</span>
-            <span style="font-size:11px;color:#666">프리셋:</span>
-            <div id="enemyPresets" style="display:contents"></div>
+            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                <span class="side-label ally-label">ALLY</span>
+                <span style="font-size:11px;color:#666">프리셋:</span>
+                <div id="allyPresets" style="display:flex; gap:4px; flex-wrap:wrap;"></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                <span class="side-label enemy-label">ENEMY</span>
+                <span style="font-size:11px;color:#666">프리셋:</span>
+                <div id="enemyPresets" style="display:flex; gap:4px; flex-wrap:wrap;"></div>
+            </div>
         </div>
 
         <!-- 전장 그리드 (수평 배치) -->
@@ -282,6 +303,72 @@ async function init() {
     buildGrid();
 }
 
+// ── 선택 상태 ──
+let selectedFactory = null;  // 현재 선택된 캐릭터 factory
+
+// ── 스킬 툴팁 ──
+function buildTooltipHTML(c) {
+    const stars = c.grade >= 3.5 ? '★3.5' : c.grade >= 3 ? '★3' : c.grade >= 2 ? '★2' : '★1';
+    const gc = c.grade >= 3.5 ? 'grade-35' : c.grade >= 3 ? 'grade-3' : c.grade >= 2 ? 'grade-2' : 'grade-1';
+    let html = `<div class="tt-header">
+        <span class="elem elem-${c.element}"></span>
+        <span class="tt-name">${c.name}</span>
+        <span class="grade-tag ${gc}">${stars}</span>
+        <span class="role-tag role-${c.role}">${ROLE_KR[c.role]||c.role}</span>
+    </div>`;
+    html += `<div class="tt-stats">
+        <span>ATK ${c.stats.atk}</span><span>DEF ${c.stats['def']}</span>
+        <span>HP ${c.stats.hp}</span><span>SPD ${c.stats.spd}</span>
+        <span>CRI ${(c.stats.cri_ratio*100).toFixed(0)}%</span>
+    </div>`;
+    if (c.skills) {
+        for (const [key, label] of [['normal','일반'], ['active','액티브'], ['ultimate','궁극기'], ['passive','패시브']]) {
+            const sk = c.skills[key];
+            if (!sk) continue;
+            let meta = '';
+            if (sk.sp_cost) meta += ` SP:${sk.sp_cost}`;
+            if (sk.cooldown) meta += ` CD:${sk.cooldown}`;
+            html += `<div class="tt-skill">
+                <span class="tt-skill-name">${sk.name}</span>
+                <span class="tt-skill-type tt-type-${sk.type}">${sk.type}${meta}</span>
+                <div class="tt-skill-desc">${sk.effects.join('<br>')}</div>
+            </div>`;
+        }
+    }
+    if (c.triggers && c.triggers.length) {
+        html += `<div class="tt-trigger">${c.triggers.join(' / ')}</div>`;
+    }
+    return html;
+}
+
+let tooltipTimer = null;
+function showTooltip(e, factory) {
+    clearTimeout(tooltipTimer);
+    const c = allChars.find(ch => ch.factory === factory);
+    if (!c) return;
+    const tip = document.getElementById('charTooltip');
+    tip.innerHTML = buildTooltipHTML(c);
+    tip.classList.add('show');
+    positionTooltip(e);
+}
+function positionTooltip(e) {
+    const tip = document.getElementById('charTooltip');
+    const rect = tip.getBoundingClientRect();
+    let x = e.clientX + 16;
+    let y = e.clientY - 10;
+    if (x + rect.width > window.innerWidth - 10) x = e.clientX - rect.width - 16;
+    if (y + rect.height > window.innerHeight - 10) y = window.innerHeight - rect.height - 10;
+    if (y < 10) y = 10;
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+}
+function hideTooltip() {
+    clearTimeout(tooltipTimer);
+    tooltipTimer = setTimeout(() => {
+        document.getElementById('charTooltip').classList.remove('show');
+    }, 100);
+}
+
 // ── 캐릭터 목록 ──
 function renderCharList() {
     const search = document.getElementById('searchInput').value.toLowerCase();
@@ -298,11 +385,15 @@ function renderCharList() {
     document.getElementById('charList').innerHTML = filtered.map(c => {
         const stars = c.grade >= 3.5 ? '★3.5' : c.grade >= 3 ? '★3' : c.grade >= 2 ? '★2' : '★1';
         const gradeClass = c.grade >= 3.5 ? 'grade-35' : c.grade >= 3 ? 'grade-3' : c.grade >= 2 ? 'grade-2' : 'grade-1';
+        const selClass = c.factory === selectedFactory ? ' selected' : '';
         return `
-        <div class="char-item" draggable="true"
+        <div class="char-item${selClass}" draggable="true"
              data-factory="${c.factory}"
              ondragstart="onDragStart(event,'${c.factory}')"
-             onclick="onCharClick('${c.factory}')">
+             onclick="onCharClick('${c.factory}')"
+             onmouseenter="showTooltip(event,'${c.factory}')"
+             onmousemove="positionTooltip(event)"
+             onmouseleave="hideTooltip()">
             <span class="elem elem-${c.element}"></span>
             <span class="name">${c.name}</span>
             <span class="grade-tag ${gradeClass}">${stars}</span>
@@ -318,7 +409,7 @@ function renderPresets() {
         const container = document.getElementById(side + 'Presets');
         let html = '';
         for (const name of Object.keys(metaTeams)) {
-            html += `<button class="preset-btn" onclick="loadPreset('${side}','${name}')">${name.split(' ')[0]}</button>`;
+            html += `<button class="preset-btn" onclick="loadPreset('${side}','${name}')">${name}</button>`;
         }
         html += `<button class="preset-btn clear" onclick="clearGrid('${side}')">초기화</button>`;
         container.innerHTML = html;
@@ -392,8 +483,16 @@ function buildGrid() {
                 dragData = null;
             }
         });
-        // 클릭 배치
+        // 클릭 배치: 선택된 캐릭터가 있으면 즉시 배치, 없으면 셀 선택
         div.addEventListener('click', () => {
+            if (selectedFactory && !div.classList.contains('occupied')) {
+                placeChar(m.side, m.cellNum, selectedFactory);
+                selectedFactory = null;
+                renderCharList();
+                document.querySelectorAll('.grid-cell').forEach(c => c.style.outline = '');
+                activeCell = null;
+                return;
+            }
             if (!div.classList.contains('occupied')) {
                 activeCell = { side: m.side, cellNum: m.cellNum };
                 document.querySelectorAll('.grid-cell').forEach(c => c.style.outline = '');
@@ -421,11 +520,22 @@ function onDragStart(e, factory) {
 }
 
 function onCharClick(factory) {
+    // 셀이 선택된 상태면 즉시 배치 (기존 동작 유지)
     if (activeCell) {
         placeChar(activeCell.side, activeCell.cellNum, factory);
         document.querySelectorAll('.grid-cell').forEach(c => c.style.outline = '');
         activeCell = null;
+        selectedFactory = null;
+        renderCharList();
+        return;
     }
+    // 캐릭터 선택 토글
+    if (selectedFactory === factory) {
+        selectedFactory = null;  // 이미 선택된 캐릭터 재클릭 → 해제
+    } else {
+        selectedFactory = factory;
+    }
+    renderCharList();
 }
 
 function placeChar(side, cellNum, factory) {

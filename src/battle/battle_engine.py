@@ -95,8 +95,10 @@ class BattleEngine:
         # 3×3 그리드 배치 시각화
         self._log_grid_layout()
 
-        # 유닛 큐 초기화
-        self.turn_manager.initialize(list(self.all_units.values()))
+        # 유닛 큐 초기화 (등록 순서 셔플 → 동일 SPD 선공 편향 제거)
+        init_units = list(self.all_units.values())
+        random.shuffle(init_units)
+        self.turn_manager.initialize(init_units)
 
         # 전투 시작 트리거
         ctx = self._make_ctx()

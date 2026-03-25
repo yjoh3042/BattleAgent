@@ -9,6 +9,7 @@ import sys
 import os
 import json
 import copy
+import random
 
 # 프로젝트 루트 경로 설정
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -61,6 +62,144 @@ def _detect_grade(char: CharacterData) -> float:
     return 3.0
 
 
+LOGIC_KR = {
+    'damage': '피해', 'heal': '회복', 'heal_hp_ratio': 'HP%회복',
+    'stat_change': '스탯변경', 'dot': '지속피해', 'dot_heal_hp_ratio': '지속회복',
+    'barrier': '보호막', 'taunt': '도발', 'revive': '부활',
+    'sp_increase': 'SP증가', 'cc': '상태이상', 'remove_buff': '버프제거',
+    'remove_debuff': '디버프해제', 'counter': '반격준비', 'absorb': '흡수',
+    'damage_penetration': '관통피해', 'damage_hp_ratio': 'HP%피해',
+    'damage_cri': '확정크리', 'damage_buff_scale': '버프비례피해',
+    'damage_buff_scale_target': '적버프비례', 'damage_debuff_scale_target': '적디버프비례',
+    'heal_loss_scale': '잃은HP비례회복', 'barrier_ratio': 'HP%보호막',
+    'invincibility': '무적', 'undying': '불사', 'debuff_immune': '디버프면역',
+    'sp_steal': 'SP강탈', 'sp_lock': 'SP잠금',
+    'buff_turn_increase': '버프턴증가', 'debuff_turn_increase': '디버프턴증가',
+    'damage_burn_bonus': '화상대상2배', 'damage_escalate': '연속사용강화',
+    'damage_repeat_target': '반복대상강화', 'damage_missing_hp_scale': '잃은HP비례피해',
+    'heal_per_hit': '적중당회복', 'stat_steal': '스탯탈취', 'debuff_spread': '디버프전이',
+    'self_damage': '자해', 'extra_turn': '추가행동', 'trick_room': '속도반전',
+    'link_buff': '버프공유', 'damage_spd_scale': '속도비례피해',
+    'damage_def_scale': '방어비례피해', 'damage_dual_scale': '이중스케일',
+    'damage_current_hp_scale': '현재HP비례피해', 'knockback': '넉백',
+    'damage_position_scale': '위치비례피해', 'damage_poison_scale': '중독비례피해',
+    'damage_stone_bonus': '석화2배', 'instant_kill': '즉사', 'execute': '멸살',
+    'active_cd_change': '쿨타임변경', 'cri_unavailable': '크리불가',
+    'counter_unavailable': '반격불가', 'ignore_element': '속성무시',
+    'heal_current_hp_scale': '현재HP비례회복',
+}
+TARGET_KR = {
+    'self': '자신', 'ally_lowest_hp': '최저HP아군', 'ally_highest_atk': '최고ATK아군',
+    'all_ally': '아군전체', 'enemy_lowest_hp': '최저HP적', 'enemy_highest_hp': '최고HP적',
+    'enemy_highest_spd': '최고SPD적', 'enemy_random': '적랜덤1', 'all_enemy': '적전체',
+    'enemy_random_2': '적랜덤2', 'enemy_random_3': '적랜덤3',
+    'ally_dead_random': '사망아군1', 'ally_lowest_hp_2': '최저HP아군2',
+    'enemy_near': '근접적', 'enemy_near_row': '근접행', 'enemy_near_cross': '근접십자',
+    'enemy_front_row': '적전열', 'enemy_back_row': '적후열', 'enemy_same_col': '동일열적',
+    'enemy_adjacent': '인접적', 'ally_same_row': '동일행아군', 'ally_behind': '후방아군',
+    'ally_lowest_hp_3': '최저HP아군3', 'ally_same_element': '동속성아군',
+    'ally_adjacent': '양옆아군', 'ally_front': '전방아군',
+    'enemy_element_weak': '약점적', 'all_units': '전체', 'ally_dead_all': '사망아군전체',
+    'enemy_marked': '낙인적', 'enemy_most_debuffs': '디버프최다적',
+    'enemy_most_buffs': '버프최다적', 'ally_most_buffs': '버프최다아군',
+    'enemy_lowest_def': '최저DEF적', 'enemy_back_row_priority': '후열우선',
+    'enemy_last_col': '적최우열', 'ally_role_attacker': '아군딜러전체',
+    'ally_role_defender': '아군탱커전체',
+}
+TRIGGER_KR = {
+    'on_battle_start': '전투시작', 'on_round_start': '라운드시작',
+    'on_turn_start': '턴시작', 'on_turn_end': '턴종료',
+    'on_hit': '피격시', 'on_attack': '공격시', 'on_kill': '처치시',
+    'on_death': '사망시', 'on_hp_threshold': 'HP임계', 'on_burn_applied': '화상부여시',
+}
+SKILL_TYPE_KR = {'normal': '일반', 'active': '액티브', 'ultimate': '궁극기', 'passive': '패시브'}
+CC_KR = {
+    'stun': '기절', 'freeze': '빙결', 'sleep': '수면', 'silence': '침묵',
+    'blind': '실명', 'petrify': '석화', 'confuse': '혼란', 'charm': '매혹',
+    'fear': '공포', 'taunt': '도발',
+}
+
+
+def _describe_effect(eff) -> str:
+    """SkillEffect → 한줄 한국어 설명"""
+    logic = LOGIC_KR.get(eff.logic_type.value, eff.logic_type.value)
+    target = TARGET_KR.get(eff.target_type.value, eff.target_type.value)
+    parts = [f"[{target}]"]
+
+    lt = eff.logic_type.value
+    if 'damage' in lt or lt in ('execute', 'instant_kill'):
+        if eff.multiplier and eff.multiplier != 1.0:
+            parts.append(f"{logic} {eff.multiplier:.1f}×")
+        else:
+            parts.append(logic)
+        if eff.hit_count > 1:
+            parts.append(f"({eff.hit_count}연타)")
+        if eff.execute_threshold > 0:
+            parts.append(f"HP{eff.execute_threshold*100:.0f}%이하")
+    elif lt in ('heal', 'heal_hp_ratio', 'heal_loss_scale', 'heal_per_hit', 'heal_current_hp_scale'):
+        if eff.value:
+            parts.append(f"{logic} {eff.value*100:.0f}%")
+        else:
+            parts.append(logic)
+    elif lt == 'barrier' or lt == 'barrier_ratio':
+        parts.append(f"보호막 {eff.value*100:.0f}%")
+    elif lt == 'sp_increase':
+        parts.append(f"SP+{eff.value:.0f}")
+    elif lt == 'cc' and eff.buff_data:
+        cc_name = CC_KR.get(eff.buff_data.cc_type.value, str(eff.buff_data.cc_type.value)) if eff.buff_data.cc_type else '상태이상'
+        parts.append(f"{cc_name} {eff.buff_data.duration}턴")
+    elif lt == 'stat_change' and eff.buff_data:
+        stat = eff.buff_data.stat or '?'
+        val = eff.buff_data.value
+        sign = '+' if val >= 0 else ''
+        if eff.buff_data.is_ratio:
+            parts.append(f"{stat.upper()} {sign}{val*100:.0f}% {eff.buff_data.duration}턴")
+        else:
+            parts.append(f"{stat.upper()} {sign}{val:.0f} {eff.buff_data.duration}턴")
+    elif lt == 'dot' and eff.buff_data:
+        dot_name = eff.buff_data.dot_type or '지속피해'
+        parts.append(f"{dot_name} {eff.buff_data.value*100:.0f}% {eff.buff_data.duration}턴")
+    elif lt == 'revive':
+        parts.append(f"부활 HP{eff.value*100:.0f}%")
+    else:
+        parts.append(logic)
+
+    return ' '.join(parts)
+
+
+def _describe_skill(skill) -> dict:
+    """SkillData → {name, type, sp_cost, cooldown, description}"""
+    if skill is None:
+        return None
+    effects_desc = [_describe_effect(e) for e in skill.effects]
+    stype = SKILL_TYPE_KR.get(skill.skill_type.value, skill.skill_type.value)
+    meta = f"[{stype}]"
+    if skill.sp_cost:
+        meta += f" SP:{skill.sp_cost}"
+    if skill.cooldown_turns:
+        meta += f" CD:{skill.cooldown_turns}"
+    return {
+        'name': skill.name,
+        'type': stype,
+        'sp_cost': skill.sp_cost,
+        'cooldown': skill.cooldown_turns,
+        'effects': effects_desc,
+        'summary': f"{meta} {' / '.join(effects_desc)}",
+    }
+
+
+def _describe_triggers(triggers) -> list:
+    """TriggerData 리스트 → 한국어 설명 리스트"""
+    descs = []
+    for t in triggers:
+        event = TRIGGER_KR.get(t.event.value, t.event.value)
+        parts = [f"⚡{event}"]
+        if t.once_per_battle:
+            parts.append("(1회한정)")
+        descs.append(' '.join(parts))
+    return descs
+
+
 def _build_char_registry():
     """test_data 모듈에서 make_* 함수를 자동 수집하여 캐릭터 목록 생성"""
     registry = {}
@@ -87,7 +226,14 @@ def _build_char_registry():
                                 'hp': char.stats.hp,
                                 'spd': char.stats.spd,
                                 'cri_ratio': char.stats.cri_ratio,
-                            }
+                            },
+                            'skills': {
+                                'normal': _describe_skill(char.normal_skill),
+                                'active': _describe_skill(char.active_skill),
+                                'ultimate': _describe_skill(char.ultimate_skill),
+                                'passive': _describe_skill(char.passive_skill),
+                            },
+                            'triggers': _describe_triggers(char.triggers),
                         }
                 except Exception:
                     pass
@@ -169,7 +315,8 @@ def api_simulate():
     ally_survivors = []
     enemy_survivors = []
 
-    for seed in range(runs):
+    base_seed = random.randint(0, 1_000_000)
+    for seed in range(base_seed, base_seed + runs):
         try:
             # 매 시행마다 새로운 캐릭터 인스턴스 생성
             a_party, _ = build_party(ally_specs, 'ally')
@@ -191,7 +338,7 @@ def api_simulate():
                 draws += 1
 
             # 마지막 시행의 로그 및 생존자 기록
-            if seed == runs - 1:
+            if seed == base_seed + runs - 1:
                 if show_log:
                     last_log = engine.get_log()[-50:]  # 마지막 50줄
                 ally_survivors = [
@@ -337,4 +484,4 @@ if __name__ == '__main__':
     print("  BattleAgent 전투 시뮬레이션 툴")
     print("  http://localhost:5000")
     print("=" * 60)
-    app.run(debug=False, port=5000)
+    app.run(debug=True, port=5000, use_reloader=True)
