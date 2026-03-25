@@ -27,6 +27,8 @@ _ALLY_TARGET_TYPES = frozenset({
     TargetType.ALLY_SAME_ELEMENT,
     TargetType.ALLY_ADJACENT,
     TargetType.ALLY_FRONT,
+    TargetType.ALLY_DEAD_ALL,
+    TargetType.ALLY_MOST_BUFFS,
 })
 
 
@@ -280,6 +282,47 @@ class TargetSelector:
             # fallback: nearest enemy
             near = self._nearest_enemy(caster, alive_enemies)
             return [near] if near else []
+
+        # ── 3대 RPG 확장 타겟 타입 ───────────────────────────────
+        # 전체 (적+아군)
+        if target_type == TargetType.ALL_UNITS:
+            return alive_allies + alive_enemies
+
+        # 사망 아군 전체
+        if target_type == TargetType.ALLY_DEAD_ALL:
+            dead = [u for u in allies if not u.is_alive]
+            return dead
+
+        # 표적/낙인 적 우선
+        if target_type == TargetType.ENEMY_MARKED:
+            marked = [u for u in alive_enemies if getattr(u, 'is_marked', False)]
+            if marked:
+                return [min(marked, key=lambda u: u.current_hp)]
+            return [min(alive_enemies, key=lambda u: u.current_hp)] if alive_enemies else []
+
+        # 디버프 가장 많은 적
+        if target_type == TargetType.ENEMY_MOST_DEBUFFS:
+            if not alive_enemies:
+                return []
+            return [max(alive_enemies, key=lambda u: u.debuff_count)]
+
+        # 버프 가장 많은 적
+        if target_type == TargetType.ENEMY_MOST_BUFFS:
+            if not alive_enemies:
+                return []
+            return [max(alive_enemies, key=lambda u: u.buff_count)]
+
+        # 버프 가장 많은 아군
+        if target_type == TargetType.ALLY_MOST_BUFFS:
+            if not alive_allies:
+                return []
+            return [max(alive_allies, key=lambda u: u.buff_count)]
+
+        # DEF 가장 낮은 적
+        if target_type == TargetType.ENEMY_LOWEST_DEF:
+            if not alive_enemies:
+                return []
+            return [min(alive_enemies, key=lambda u: u.def_)]
 
         return []
 

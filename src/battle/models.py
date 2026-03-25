@@ -59,6 +59,15 @@ class SkillEffect:
     buff_data: Optional[BuffData] = None   # STAT_CHANGE, DOT, CC 등 부여할 버프
     hit_count: int = 1              # 타격 횟수 (다단 히트)
     condition: Optional[Dict[str, Any]] = None  # 발동 조건
+    # ── 3대 RPG 확장 필드 ────────────────────────────────────────
+    secondary_value: float = 0.0    # 보조값 (반사 비율, 분산 비율, 체인 감소율 등)
+    secondary_multiplier: float = 0.0  # 보조 배율 (스플래시%, ATB%, 게이지 등)
+    duration: int = 0               # 효과 지속 턴 (폭탄 타이머, 추방 기간 등)
+    max_stacks: int = 0             # 최대 스택 수 (풍화 5, 투지 100 등)
+    chain_decay: float = 0.0        # 체인/연쇄 감소율 (0.2 = 타격당 20% 감소)
+    soul_cost: int = 0              # 소울번 비용
+    execute_threshold: float = 0.0  # 멸살 HP% 임계값
+    transform_skill_id: Optional[str] = None  # 변신 시 대체 스킬 ID
 
 
 @dataclass

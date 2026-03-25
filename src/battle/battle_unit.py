@@ -73,6 +73,56 @@ class BattleUnit:
         self.is_silenced: bool = False         # 침묵
         self.ignore_element: bool = False      # 속성 상성 무시
 
+        # ── 3대 RPG 확장 상태 플래그 ─────────────────────────────
+        self.is_stealthed: bool = False         # 스텔스 (타겟 불가)
+        self.is_heal_blocked: bool = False      # 회복 불가
+        self.is_cursed: bool = False            # 저주 (회복→피해)
+        self.is_doomed: bool = False            # 파멸
+        self.is_buff_blocked: bool = False      # 버프 적용 불가
+        self.is_passive_sealed: bool = False    # 패시브 봉인
+        self.is_revive_sealed: bool = False     # 부활 봉인
+        self.is_banished: bool = False          # 추방 (전투 제외)
+        self.is_marked: bool = False            # 표적/낙인
+        self.is_transformed: bool = False       # 변신 상태
+        self.is_reflecting: bool = False        # 반사 상태
+        self.protect_target_id: Optional[str] = None  # 보호 대상 ID
+        self.protected_by_id: Optional[str] = None    # 보호자 ID
+
+        # ── 게이지/리소스 시스템 ─────────────────────────────────
+        self.energy: float = 0.0                # 에너지 게이지 (궁극기)
+        self.max_energy: float = 100.0          # 최대 에너지
+        self.fighting_spirit: float = 0.0       # 투지 게이지
+        self.max_fighting_spirit: float = 100.0
+        self.focus: int = 0                     # 집중 스택
+        self.max_focus: int = 5
+        self.soul_stacks: int = 0               # 영혼 수집 스택
+        self.toughness: float = 100.0           # 터프니스 (격파 게이지)
+        self.max_toughness: float = 100.0
+        self.atb_gauge: float = 0.0             # ATB 게이지 (0~100)
+
+        # ── 전투 내 추적 카운터 ──────────────────────────────────
+        self.kill_count: int = 0                # 이번 전투 처치 수
+        self.survival_turns: int = 0            # 생존 턴 수
+        self.damage_accumulated: float = 0.0    # 받은 피해 축적 (카운터용)
+        self.consecutive_hits_this_turn: int = 0  # 이번 턴 피격 횟수
+        self.first_attack_used: bool = False    # 첫 공격 사용 여부
+
+        # ── 보스 전용 ────────────────────────────────────────────
+        self.boss_phase: int = 0                # 보스 페이즈
+        self.enrage_stacks: int = 0             # 광폭화 스택
+        self.countdown: int = -1                # 카운트다운 (-1=비활성)
+        self.parts: Dict[str, float] = {}       # 부위별 HP
+
+        # ── 반사/피해감소 수치 ───────────────────────────────────
+        self.reflect_ratio: float = 0.0         # 반사 비율
+        self.damage_cap_value: float = 0.0      # 피해 상한
+        self.damage_share_ratio: float = 0.0    # 분산 비율
+        self.heal_reduce_ratio: float = 0.0     # 회복 감소 비율
+        self.consecutive_hit_reduce_ratio: float = 0.0  # 연속 피격 감소율
+
+        # ── 변신 백업 ────────────────────────────────────────────
+        self._original_skills: Optional[dict] = None  # 변신 전 스킬 백업
+
         # 전투당 트리거 발동 기록
         self._triggered_once: set = set()
 
@@ -151,15 +201,27 @@ class BattleUnit:
         return max(0.0, self.data.stats.dodge + self._get_buff_delta("dodge"))
 
     # ─── HP 조작 ──────────────────────────────────────────────────
-    def take_damage(self, amount: float) -> float:
-        """피해 적용. 무적/불사/보호막 우선 처리. 실제 HP 감소량 반환."""
+    def take_damage(self, amount: float, pierce_barrier: bool = False) -> float:
+        """피해 적용. 무적/불사/보호막/피해상한/반사 우선 처리. 실제 HP 감소량 반환."""
         if amount <= 0:
+            return 0.0
+        # 추방 상태: 피해 무효
+        if self.is_banished:
             return 0.0
         # 무적: 모든 피해 무효
         if self.is_invincible:
             return 0.0
+        # 피해 상한 적용
+        if self.damage_cap_value > 0:
+            amount = min(amount, self.damage_cap_value)
+        # 연속 피격 감소
+        if self.consecutive_hit_reduce_ratio > 0 and self.consecutive_hits_this_turn > 0:
+            reduction = min(0.7, self.consecutive_hit_reduce_ratio * self.consecutive_hits_this_turn)
+            amount *= (1.0 - reduction)
+        self.consecutive_hits_this_turn += 1
         actual = amount
-        if self.barrier_hp > 0:
+        # 보호막 관통
+        if not pierce_barrier and self.barrier_hp > 0:
             absorbed = min(self.barrier_hp, amount)
             self.barrier_hp -= absorbed
             actual = amount - absorbed
@@ -167,15 +229,46 @@ class BattleUnit:
         # 불사: HP 1 미만 불가
         if self.is_undying and self.current_hp < 1.0 and actual > 0:
             self.current_hp = 1.0
+        # 피해 축적 (카운터용)
+        self.damage_accumulated += actual
         return actual
 
-    def heal(self, amount: float) -> float:
-        """힐 적용. 실제 회복량 반환."""
+    def heal(self, amount: float, ignore_block: bool = False) -> float:
+        """힐 적용. 회복 불가/저주/파멸/회복 감소 처리. 실제 회복량 반환."""
         if amount <= 0 or not self.is_alive:
             return 0.0
+        # 회복 불가
+        if self.is_heal_blocked and not ignore_block:
+            return 0.0
+        # 저주: 회복 → 피해로 전환
+        if self.is_cursed:
+            self.take_damage(amount)
+            return -amount
+        # 파멸: 회복 불가 + 회복 시도 시 피해
+        if self.is_doomed:
+            self.take_damage(amount * 0.5)
+            return -amount * 0.5
+        # 회복 효율 감소
+        if self.heal_reduce_ratio > 0:
+            amount *= (1.0 - self.heal_reduce_ratio)
         old = self.current_hp
         self.current_hp = min(self.max_hp, self.current_hp + amount)
         return self.current_hp - old
+
+    def heal_with_overheal(self, amount: float) -> tuple:
+        """힐 적용 + 초과 회복분 반환. (실제회복량, 초과량) 튜플."""
+        if amount <= 0 or not self.is_alive:
+            return 0.0, 0.0
+        if self.is_heal_blocked:
+            return 0.0, 0.0
+        if self.is_cursed:
+            self.take_damage(amount)
+            return -amount, 0.0
+        old = self.current_hp
+        self.current_hp = min(self.max_hp, self.current_hp + amount)
+        actual = self.current_hp - old
+        overheal = max(0.0, amount - actual)
+        return actual, overheal
 
     def add_barrier(self, amount: float):
         """보호막 추가"""
@@ -380,6 +473,36 @@ class BattleUnit:
         self.is_cri_unavailable = "cri_unavailable_marker" in buff_ids or "cri_unavailable" in buff_tags
         self.is_counter_unavailable = "counter_unavailable_marker" in buff_ids or "counter_unavailable" in buff_tags
         self.ignore_element = "ignore_element_marker" in buff_ids or "ignore_element" in buff_tags
+        # ── 3대 RPG 확장 플래그 동기화 ───────────────────────────
+        self.is_stealthed = "stealth" in buff_tags
+        self.is_heal_blocked = "heal_block" in buff_tags
+        self.is_cursed = "cursed" in buff_tags
+        self.is_doomed = "doomed" in buff_tags
+        self.is_buff_blocked = "buff_blocked" in buff_tags
+        self.is_passive_sealed = "passive_sealed" in buff_tags
+        self.is_revive_sealed = "revive_sealed" in buff_tags
+        self.is_banished = "banished" in buff_tags
+        self.is_marked = "marked" in buff_tags
+        self.is_reflecting = "reflecting" in buff_tags
+        # 수치형 마커 동기화
+        self.reflect_ratio = 0.0
+        self.damage_cap_value = 0.0
+        self.damage_share_ratio = 0.0
+        self.heal_reduce_ratio = 0.0
+        self.consecutive_hit_reduce_ratio = 0.0
+        for ab in self.active_buffs:
+            t = ab.buff_data.tags or []
+            if "reflect_ratio" in t:
+                self.reflect_ratio = max(self.reflect_ratio, ab.buff_data.value)
+            if "damage_cap" in t:
+                self.damage_cap_value = max(self.damage_cap_value, ab.buff_data.value)
+            if "damage_share" in t:
+                self.damage_share_ratio = max(self.damage_share_ratio, ab.buff_data.value)
+            if "heal_reduce" in t:
+                self.heal_reduce_ratio = max(self.heal_reduce_ratio, ab.buff_data.value)
+            if "consec_hit_reduce" in t:
+                self.consecutive_hit_reduce_ratio = max(
+                    self.consecutive_hit_reduce_ratio, ab.buff_data.value)
 
     # ─── 트리거 중복 방지 ─────────────────────────────────────────
     def mark_triggered(self, trigger_id: str):
@@ -392,6 +515,110 @@ class BattleUnit:
     @property
     def hp_ratio(self) -> float:
         return self.current_hp / self.max_hp if self.max_hp > 0 else 0.0
+
+    # ─── 게이지/리소스 메서드 ──────────────────────────────────────
+    def add_energy(self, amount: float) -> float:
+        """에너지 추가. 실제 추가량 반환."""
+        old = self.energy
+        self.energy = min(self.max_energy, self.energy + amount)
+        return self.energy - old
+
+    def spend_energy(self, amount: float) -> bool:
+        """에너지 소모. 성공 시 True."""
+        if self.energy < amount:
+            return False
+        self.energy -= amount
+        return True
+
+    def add_fighting_spirit(self, amount: float) -> float:
+        """투지 게이지 추가."""
+        old = self.fighting_spirit
+        self.fighting_spirit = min(self.max_fighting_spirit, self.fighting_spirit + amount)
+        return self.fighting_spirit - old
+
+    def spend_fighting_spirit(self, amount: float) -> bool:
+        """투지 게이지 소모."""
+        if self.fighting_spirit < amount:
+            return False
+        self.fighting_spirit -= amount
+        return True
+
+    def add_focus(self, amount: int = 1) -> int:
+        """집중 스택 추가."""
+        old = self.focus
+        self.focus = min(self.max_focus, self.focus + amount)
+        return self.focus - old
+
+    def spend_focus(self, amount: int = 1) -> bool:
+        """집중 스택 소모."""
+        if self.focus < amount:
+            return False
+        self.focus -= amount
+        return True
+
+    def add_toughness_damage(self, amount: float) -> bool:
+        """터프니스 피해. 격파 시 True 반환."""
+        self.toughness = max(0.0, self.toughness - amount)
+        return self.toughness <= 0.0
+
+    def reset_toughness(self):
+        """터프니스 복구."""
+        self.toughness = self.max_toughness
+
+    # ─── 변신 ───────────────────────────────────────────────────
+    def transform(self, new_normal=None, new_active=None, new_ultimate=None):
+        """변신: 현재 스킬 백업 후 교체."""
+        if not self.is_transformed:
+            self._original_skills = {
+                'normal': self.data.normal_skill,
+                'active': self.data.active_skill,
+                'ultimate': self.data.ultimate_skill,
+            }
+            self.is_transformed = True
+        if new_normal:
+            self.data.normal_skill = new_normal
+        if new_active:
+            self.data.active_skill = new_active
+        if new_ultimate:
+            self.data.ultimate_skill = new_ultimate
+
+    def revert_transform(self):
+        """변신 해제: 원래 스킬 복원."""
+        if self.is_transformed and self._original_skills:
+            self.data.normal_skill = self._original_skills['normal']
+            self.data.active_skill = self._original_skills['active']
+            self.data.ultimate_skill = self._original_skills['ultimate']
+            self._original_skills = None
+            self.is_transformed = False
+
+    # ─── 카운트다운 ─────────────────────────────────────────────
+    def tick_countdown(self) -> bool:
+        """카운트다운 1 감소. 0에 도달하면 True (즉사기 발동)."""
+        if self.countdown > 0:
+            self.countdown -= 1
+            return self.countdown <= 0
+        return False
+
+    # ─── 턴 시작 리셋 ───────────────────────────────────────────
+    def on_new_turn_reset(self):
+        """자기 턴 시작 시 리셋할 카운터들."""
+        self.consecutive_hits_this_turn = 0
+        self.survival_turns += 1
+
+    # ─── 최저 스탯 조회 (약점 탐지) ─────────────────────────────
+    @property
+    def lowest_stat(self) -> float:
+        """ATK, DEF 중 최저값 반환 (약점 탐지용)."""
+        return min(self.atk, self.def_)
+
+    # ─── 버프/디버프 카운트 ──────────────────────────────────────
+    @property
+    def buff_count(self) -> int:
+        return len([ab for ab in self.active_buffs if not ab.buff_data.is_debuff])
+
+    @property
+    def debuff_count(self) -> int:
+        return len([ab for ab in self.active_buffs if ab.buff_data.is_debuff])
 
     def __repr__(self) -> str:
         return (f"BattleUnit({self.name}, HP={self.current_hp:.0f}/{self.max_hp:.0f}, "

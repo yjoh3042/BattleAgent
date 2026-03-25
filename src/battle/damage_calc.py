@@ -233,3 +233,148 @@ def compute_damage(
 
     final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, burn_bonus)
     return final, is_crit, False
+
+
+# ══════════════════════════════════════════════════════════════
+# 3대 RPG 확장 데미지 계산 함수 (서머너즈워/스타레일/에픽세븐)
+# ══════════════════════════════════════════════════════════════
+
+def compute_damage_spd_scale(
+    attacker: "BattleUnit",
+    defender: "BattleUnit",
+    skill_mult: float,
+    spd_ratio: float = 0.01,
+) -> tuple[int, bool, bool]:
+    """SPD 비례 데미지: 기본 데미지 × (1 + SPD × spd_ratio)"""
+    if roll_dodge(defender.dodge, attacker.acc):
+        return 0, False, True
+    base = calc_base_damage(attacker.atk, defender.def_, attacker.penetration)
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
+    spd_bonus = 1.0 + attacker.spd * spd_ratio
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult, spd_bonus)
+    return final, is_crit, False
+
+
+def compute_damage_def_scale(
+    attacker: "BattleUnit",
+    defender: "BattleUnit",
+    skill_mult: float,
+) -> tuple[int, bool, bool]:
+    """DEF 비례 데미지: ATK 대신 DEF를 사용한 데미지 계산"""
+    if roll_dodge(defender.dodge, attacker.acc):
+        return 0, False, True
+    # 시전자 DEF를 ATK로 사용
+    base = calc_base_damage(attacker.def_, defender.def_, attacker.penetration)
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    return final, is_crit, False
+
+
+def compute_damage_dual_scale(
+    attacker: "BattleUnit",
+    defender: "BattleUnit",
+    skill_mult: float,
+    spd_weight: float = 0.5,
+) -> tuple[int, bool, bool]:
+    """ATK+SPD 이중 스케일링: (ATK + SPD × weight) 기반 데미지"""
+    if roll_dodge(defender.dodge, attacker.acc):
+        return 0, False, True
+    effective_atk = attacker.atk + attacker.spd * spd_weight
+    base = calc_base_damage(effective_atk, defender.def_, attacker.penetration)
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    return final, is_crit, False
+
+
+def compute_damage_weakpoint(
+    attacker: "BattleUnit",
+    defender: "BattleUnit",
+    skill_mult: float,
+) -> tuple[int, bool, bool]:
+    """약점 탐지: 적의 ATK/DEF 중 최저 스탯으로 방어 계산"""
+    if roll_dodge(defender.dodge, attacker.acc):
+        return 0, False, True
+    weak_def = min(defender.atk, defender.def_)
+    base = calc_base_damage(attacker.atk, weak_def, attacker.penetration)
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    return final, is_crit, False
+
+
+def compute_damage_fixed(fixed_amount: float) -> int:
+    """고정 피해: 스탯 무관."""
+    return max(1, math.floor(fixed_amount))
+
+
+def compute_damage_chain(
+    attacker: "BattleUnit",
+    defender: "BattleUnit",
+    skill_mult: float,
+    chain_index: int,
+    decay_rate: float = 0.2,
+) -> tuple[int, bool, bool]:
+    """체인 라이트닝: 연쇄 회수마다 데미지 감소"""
+    if roll_dodge(defender.dodge, attacker.acc):
+        return 0, False, True
+    base = calc_base_damage(attacker.atk, defender.def_, attacker.penetration)
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio, is_crit)
+    chain_mult = max(0.1, 1.0 - decay_rate * chain_index)
+    final = calc_final_damage(base, skill_mult * chain_mult, elem_mult, crit_mult)
+    return final, is_crit, False
+
+
+def compute_damage_counter_bonus(
+    attacker: "BattleUnit",
+    defender: "BattleUnit",
+    skill_mult: float,
+    counter_crit_bonus: float = 0.3,
+) -> tuple[int, bool, bool]:
+    """문스트라이크: 반격 시 크리 데미지 보너스"""
+    if roll_dodge(defender.dodge, attacker.acc):
+        return 0, False, True
+    base = calc_base_damage(attacker.atk, defender.def_, attacker.penetration)
+    elem_mult = get_element_mult(attacker.data.element, defender.data.element)
+    if getattr(attacker, 'ignore_element', False):
+        elem_mult = 1.0
+    is_crit = False if getattr(attacker, 'is_cri_unavailable', False) else roll_crit(attacker.cri_ratio, defender.cri_resist)
+    crit_mult = get_crit_mult(attacker.cri_dmg_ratio + counter_crit_bonus, is_crit)
+    final = calc_final_damage(base, skill_mult, elem_mult, crit_mult)
+    return final, is_crit, False
+
+
+def compute_toughness_damage(
+    attacker: "BattleUnit",
+    base_toughness_dmg: float = 30.0,
+) -> float:
+    """터프니스/격파 게이지 피해 계산."""
+    return base_toughness_dmg
+
+
+def compute_break_damage(
+    target: "BattleUnit",
+    element: "Element",
+    break_effect: float = 1.0,
+) -> int:
+    """격파 피해: 속성별 기본 격파 데미지."""
+    base_break = target.max_hp * 0.1 * break_effect
+    return max(1, math.floor(base_break))

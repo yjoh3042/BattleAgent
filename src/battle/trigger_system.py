@@ -149,6 +149,143 @@ class TriggerSystem:
             extra={'buff': buff_data}
         )
 
+    # ══════════════════════════════════════════════════════════════
+    # 3대 RPG 확장 트리거 이벤트 핸들러
+    # ══════════════════════════════════════════════════════════════
+
+    def evaluate_on_ally_death(
+        self,
+        survivor: BattleUnit,
+        dead_ally: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """아군 사망 시 트리거 (분노 버프, 각성 등)"""
+        return self.evaluate(
+            TriggerEvent.ON_ALLY_DEATH, survivor, ctx,
+            extra={'dead_ally': dead_ally}
+        )
+
+    def evaluate_on_enemy_death(
+        self,
+        dead_enemy: BattleUnit,
+        killer: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """적 사망 시 트리거 (디버프 전염 등)"""
+        return self.evaluate(
+            TriggerEvent.ON_ENEMY_DEATH, dead_enemy, ctx,
+            extra={'killer': killer}
+        )
+
+    def evaluate_on_ally_attack(
+        self,
+        ally: BattleUnit,
+        attacker: BattleUnit,
+        target: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """아군 공격 시 트리거 (추격 공격, 듀얼어택)"""
+        return self.evaluate(
+            TriggerEvent.ON_ALLY_ATTACK, ally, ctx,
+            extra={'attacker': attacker, 'target': target}
+        )
+
+    def evaluate_on_debuff_applied(
+        self,
+        unit: BattleUnit,
+        debuff_data,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """디버프 부여 시 트리거"""
+        return self.evaluate(
+            TriggerEvent.ON_DEBUFF_APPLIED, unit, ctx,
+            extra={'debuff': debuff_data}
+        )
+
+    def evaluate_on_barrier_break(
+        self,
+        unit: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """보호막 파괴 시 트리거"""
+        return self.evaluate(TriggerEvent.ON_BARRIER_BREAK, unit, ctx)
+
+    def evaluate_on_revive(
+        self,
+        unit: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """부활 시 트리거"""
+        return self.evaluate(TriggerEvent.ON_REVIVE, unit, ctx)
+
+    def evaluate_on_heal(
+        self,
+        unit: BattleUnit,
+        heal_amount: float,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """회복 시 트리거"""
+        return self.evaluate(
+            TriggerEvent.ON_HEAL, unit, ctx,
+            extra={'heal_amount': heal_amount}
+        )
+
+    def evaluate_on_counter(
+        self,
+        counter_unit: BattleUnit,
+        target: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """반격 발동 시 트리거"""
+        return self.evaluate(
+            TriggerEvent.ON_COUNTER, counter_unit, ctx,
+            extra={'target': target}
+        )
+
+    def evaluate_on_dodge(
+        self,
+        dodger: BattleUnit,
+        attacker: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """회피 성공 시 트리거"""
+        return self.evaluate(
+            TriggerEvent.ON_DODGE, dodger, ctx,
+            extra={'attacker': attacker}
+        )
+
+    def evaluate_on_bomb_explode(
+        self,
+        unit: BattleUnit,
+        damage: int,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """폭탄 폭발 시 트리거"""
+        return self.evaluate(
+            TriggerEvent.ON_BOMB_EXPLODE, unit, ctx,
+            extra={'damage': damage}
+        )
+
+    def evaluate_on_toughness_break(
+        self,
+        unit: BattleUnit,
+        attacker: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """터프니스 격파 시 트리거"""
+        return self.evaluate(
+            TriggerEvent.ON_TOUGHNESS_BREAK, unit, ctx,
+            extra={'attacker': attacker}
+        )
+
+    def evaluate_on_energy_full(
+        self,
+        unit: BattleUnit,
+        ctx: EngineContext,
+    ) -> List[BattleUnit]:
+        """에너지 만충 시 트리거"""
+        return self.evaluate(TriggerEvent.ON_ENERGY_FULL, unit, ctx)
+
     # ─── 조건 평가 ────────────────────────────────────────────────
     def _check_condition(
         self,
@@ -184,6 +321,70 @@ class TriggerSystem:
         if cond.get('target_has_burn') and extra:
             target = extra.get('killed') or extra.get('attacker')
             if target and target.get_tag_count('burn') == 0:
+                return False
+
+        # ── 3대 RPG 확장 조건 ────────────────────────────────────
+        # HP 상한 (HP가 이 비율 이상일 때)
+        if 'hp_above' in cond:
+            if unit.hp_ratio < cond['hp_above']:
+                return False
+
+        # 특정 디버프 보유 여부
+        if 'has_debuff_type' in cond:
+            required = cond['has_debuff_type']
+            has_it = any(
+                ab.buff_data.dot_type == required or
+                (ab.buff_data.cc_type and ab.buff_data.cc_type.value == required)
+                for ab in unit.active_buffs if ab.buff_data.is_debuff
+            )
+            if not has_it:
+                return False
+
+        # 특정 버프 보유 여부
+        if 'has_buff_tag' in cond:
+            tag = cond['has_buff_tag']
+            has_it = any(
+                tag in (ab.buff_data.tags or [])
+                for ab in unit.active_buffs
+            )
+            if not has_it:
+                return False
+
+        # 아군 수 조건
+        if 'ally_count_max' in cond:
+            allies = ctx.get_allies_of(unit)
+            if len(allies) > cond['ally_count_max']:
+                return False
+
+        # 에너지 임계값
+        if 'energy_threshold' in cond:
+            if unit.energy < cond['energy_threshold']:
+                return False
+
+        # 투지 게이지 임계값
+        if 'fighting_spirit_threshold' in cond:
+            if unit.fighting_spirit < cond['fighting_spirit_threshold']:
+                return False
+
+        # 집중 스택 조건
+        if 'focus_min' in cond:
+            if unit.focus < cond['focus_min']:
+                return False
+
+        # 킬 카운트 조건
+        if 'kill_count_min' in cond:
+            if unit.kill_count < cond['kill_count_min']:
+                return False
+
+        # 변신 상태 조건
+        if 'is_transformed' in cond:
+            if unit.is_transformed != cond['is_transformed']:
+                return False
+
+        # 확률 기반 트리거
+        if 'probability' in cond:
+            import random
+            if random.random() > cond['probability']:
                 return False
 
         return True
