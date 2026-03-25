@@ -2896,3 +2896,72 @@ def get_meta_v8_shadow_assault():
 def get_meta_v8_holy_bond():
     """M10. 성속결속 — ALLY_SAME_ELEMENT + LINK_BUFF"""
     return [make_ashtoreth(), make_oneiroi(), make_sitri(), make_mona(), make_tiwaz()]
+
+
+# ══════════════════════════════════════════════════════════════
+# v8.2 메타팀 팩토리 — 스킬컨셉 NEW.xlsx 밸런스 패치 기반
+# ══════════════════════════════════════════════════════════════
+
+def as_enemy_party(chars: list) -> list:
+    """아군 파티를 적군으로 변환 (deep copy + side 교체)."""
+    import copy
+    result = []
+    for c in chars:
+        e = copy.deepcopy(c)
+        e.side = "enemy"
+        result.append(e)
+    return result
+
+
+def get_meta_v82_m01():
+    """M01. 화상연소 — 화상 스택 → 카라라트리 패시브 폭딜"""
+    return [make_kararatri(), make_dabi_sup(), make_salmakis(), make_jiva(), make_deresa()]
+
+
+def get_meta_v82_m02():
+    """M02. 빙결제어 — 속도감소 → 빙결 연쇄 → 행동봉쇄
+    v8.2b: 도계화(3★)→마야우엘(1★)로 교체, 니르티→비루파(2★)로 교체 — 성급 하향 너프"""
+    return [make_bari(), make_virupa(), make_mayahuel(), make_thisbe(), make_sangah()]
+
+
+def get_meta_v82_m03():
+    """M03. 수면폭발 — 중독+수면 축적 → 에레보스 2배딜"""
+    return [make_c601(), make_pan(), make_diana(), make_aurora(), make_grilla()]
+
+
+def get_meta_v82_m04():
+    """M04. 치명타학살 — 크리 풀스택 → 아누비스 즉사"""
+    return [make_anubis(), make_batory(), make_yuna(), make_artemis(), make_persephone()]
+
+
+def get_meta_v82_m05():
+    """M05. 속도압도 — 속도 극대화 → 멀티히트 압살
+    v8.2b: 리자(2★)→엘리시온(3★), 레오(1★)→상아(3★) — 성급 상향 버프"""
+    return [make_arhat(), make_eve(), make_elysion(), make_euros(), make_sangah()]
+
+
+def get_meta_v82_m06():
+    """M06. 철벽수호 — 방어력 3중 스택 + 보호막 + 디버프 제거
+    v8.2b: 자청비(2★SUP)→다누(3★ATK) 교체 — 방어비례 딜러 추가로 DPS 보강"""
+    return [make_mammon(), make_metis(), make_mona(), make_brownie(), make_danu()]
+
+
+def get_meta_v82_m07():
+    """M07. 출혈암살 — 출혈 축적 + 쿨감 순환"""
+    return [make_batory(), make_mircalla(), make_duetsha(), make_frey(), make_kubaba()]
+
+
+def get_meta_v82_m08():
+    """M08. 보호막연합 — 보호막 다중부여 + 디버프 면역"""
+    return [make_c600(), make_titania(), make_oneiroi(), make_dana(), make_sitri()]
+
+
+def get_meta_v82_m09():
+    """M09. 디버프착취 — 디버프 축적 → 아슈토레스 폭발"""
+    return [make_ashtoreth(), make_demeter(), make_c600(), make_cain(), make_morgan()]
+
+
+def get_meta_v82_m10():
+    """M10. 혼성엘리트 — 3.5★ 파워 + 속성 분산
+    v8.2b: 힐러 아우로라→지바(화/힐)로 교체, 루미나→아라한(수/서폿)으로 교체 — 힐+속도 시너지 강화"""
+    return [make_anubis(), make_c601(), make_kararatri(), make_arhat(), make_jiva()]
